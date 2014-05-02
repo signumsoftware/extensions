@@ -27,6 +27,7 @@ using Signum.Engine.Basics;
 using Signum.Engine.Linq;
 using System.Linq.Expressions;
 using System.IO;
+using Signum.Engine.Disconnected;
 
 namespace Signum.Engine.Cache
 {
@@ -167,8 +168,12 @@ namespace Signum.Engine.Cache
 
                 using (Connector.Override(sub))
                 {
+                    string currentUser;
 
-                    string currentUser = (string)Executor.ExecuteScalar("select SYSTEM_USER");
+                    if (DisconnectedLogic.OfflineMode == true)
+                        currentUser = DisconnectedLogic.LocalDBUser;
+                    else
+                        currentUser = (string)Executor.ExecuteScalar("select SYSTEM_USER");
 
                     AssertNonIntegratedSecurity(currentUser);
 
@@ -292,8 +297,14 @@ namespace Signum.Engine.Cache
         {
             var type = Database.View<SysServerPrincipals>().Where(a => a.name == currentUser).Select(a => a.type_desc).Single();
 
-            if (type != "SQL_LOGIN")
+            //if (type != "SQL_LOGIN")
+            //    throw new InvalidOperationException("The current login '{0}' is a {1} instead of a SQL_LOGIN. Avoid using Integrated Security with Cache Logic".Formato(currentUser, type));
+
+            //TFS #1163
+            if (type != "SQL_LOGIN" && DisconnectedLogic.OfflineMode == false)
+            {
                 throw new InvalidOperationException("The current login '{0}' is a {1} instead of a SQL_LOGIN. Avoid using Integrated Security with Cache Logic".Formato(currentUser, type));
+            }
         }
 
         private static InvalidOperationException EnableBlocker(DatabaseName database)

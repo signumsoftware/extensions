@@ -27,6 +27,7 @@ namespace Signum.Engine.Disconnected
         public static string DatabaseFolder = @"C:\Databases";
         public static string BackupFolder = @"C:\Backups";
         public static string BackupNetworkFolder = @"C:\Backups";
+        public static string LocalDBUser = "sa"; //@@@ TFS #1163
 
         internal static Dictionary<Type, IDisconnectedStrategy> strategies = new Dictionary<Type, IDisconnectedStrategy>();
 

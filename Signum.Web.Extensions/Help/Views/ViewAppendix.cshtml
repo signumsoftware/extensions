@@ -25,7 +25,11 @@
             {
             @Html.HiddenRuntimeInfo(ac)
             @Html.HiddenRuntimeInfo(ac, e => e.Culture)
-                Html.RenderPartial(HelpClient.Menu);
+
+            if(!Navigator.IsReadOnly(typeof(AppendixHelpDN)))
+            {
+                Html.RenderPartial(HelpClient.Buttons);
+            }
                 if (ac.Value.UniqueName == null)
                 {
                     <br />
@@ -51,7 +55,7 @@
                 }
             @Html.TextArea(ac.SubContextPrefix(a => a.Description), ah.Description, 5, 80, new { @class = "editable" })
             <span class="wiki">
-                @Html.WikiParse(ah.Description, HelpClient.DefaultWikiSettings)
+                @Html.WikiParse(ah.Description, HelpWiki.DefaultWikiSettings)
             </span>
             }
         }

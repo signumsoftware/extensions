@@ -139,16 +139,49 @@ namespace Signum.Web.AuthAdmin
         private static void RegisterSaveButton<T>(string partialViewName, bool embedded)
             where T : ModifiableEntity
         {
-            ButtonBarEntityHelper.RegisterEntityButtons<T>((ctx, entity) => new[] { 
-                new ToolBarButton (ctx.Prefix,partialViewName)
-                { 
-                    Text = AuthMessage.Save.NiceToString(),
-                    Style = BootstrapStyle.Primary,
-                    OnClick =  embedded?
-                      Module["postDialog"](ctx.Url.Action( "save" +  partialViewName, "AuthAdmin"), ctx.Prefix):
-                      Module["submitPage"](ctx.Url.Action( partialViewName, "AuthAdmin"), ctx.Prefix),
-                }});
+            ButtonBarEntityHelper.RegisterEntityButtons<T>((ctx, entity) =>
+                {
+                    if (EnabledButtonSave(typeof(T)))
+                        return new[] { 
+                        new ToolBarButton (ctx.Prefix,partialViewName)
+                        { 
+                            Text = AuthMessage.Save.NiceToString(),
+                            Style = BootstrapStyle.Primary,
+                            OnClick =  embedded?
+                              Module["postDialog"](ctx.Url.Action( "save" +  partialViewName, "AuthAdmin"), ctx.Prefix):
+                              Module["submitPage"](ctx.Url.Action( partialViewName, "AuthAdmin"), ctx.Prefix),
+                        }};
+
+                    return new ToolBarButton[] { };
+
+                }
+            );
+
         }
+
+
+        static Dictionary<Type, Type> HandledTypeDic = new Dictionary<Type, Type> {
+        {typeof(TypeRulePack),typeof(RuleTypeDN)},
+        {typeof(PropertyRulePack),typeof(RulePropertyDN)},
+        {typeof(QueryRulePack),typeof(RuleQueryDN)},
+        {typeof(OperationRulePack),typeof(RuleOperationDN)},
+        {typeof(PermissionRulePack),typeof(RulePermissionDN)},
+        
+      };
+
+        public static bool EnabledButtonSave(Type type)
+        {
+
+            var handledType = HandledTypeDic.TryGetC(type);
+            if (handledType != null && TypeAuthLogic.GetAllowed(handledType).MaxUI() >= TypeAllowedBasic.Modify)
+                return true;
+
+            return false;
+        }
+
+
+
+
 
     }
 }

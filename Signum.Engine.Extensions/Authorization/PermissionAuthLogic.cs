@@ -137,6 +137,8 @@ namespace Signum.Engine.Authorization
 
         public static void SetPermissionRules(PermissionRulePack rules)
         {
+            TypeAuthLogic.VerifyAuthSetRule(typeof(RulePermissionDN));
+            
             cache.SetRules(rules, r => true);
         }
     }

@@ -163,6 +163,8 @@ namespace Signum.Engine.Authorization
 
         public static void SetOperationRules(OperationRulePack rules)
         {
+            TypeAuthLogic.VerifyAuthSetRule(typeof(RuleOperationDN));
+
             var keys = OperationLogic.GetAllOperationInfos(TypeLogic.DnToType[rules.Type])
                 .Select(a => a.OperationSymbol).ToHashSet();
 

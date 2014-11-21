@@ -21,6 +21,10 @@ using Signum.Entities;
 using Signum.Engine.Operations;
 using Signum.Engine.Maps;
 using Signum.Engine.Authorization;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using Signum.Engine.DynamicQuery;
+using Signum.Services;
 
 namespace Signum.Web.Help
 {
@@ -184,6 +188,32 @@ namespace Signum.Web.Help
                     return JsonAction.RedirectAjax(RouteHelper.New().Action((HelpController a) => a.ViewAppendix(entity.UniqueName)));
                 return null;
             }
+        }
+
+        public ActionResult PropertyRoutes()
+        {
+            string[] routes = JsonConvert.DeserializeObject<string[]>(this.Request["routes"]);
+
+            var parsed = routes.Select(r => PropertyRoute.Parse(r)).Distinct().ToList();
+
+            return this.JsonNet(HelpLogic.GetPropertyRoutesService(parsed).ToDictionary(a=>a.Key.ToString(), a=>a.Value));
+        }
+
+        public ActionResult ComplexColumns()
+        {
+            object queryName = QueryLogic.ToQueryName(this.Request["queryName"]);
+
+            string[] columns = JsonConvert.DeserializeObject<string[]>(this.Request["columns"]);
+
+            var description = DynamicQueryManager.Current.QueryDescription(queryName);
+
+            var parsed = columns.Select(r => QueryUtils.Parse(r, description, SubTokensOptions.CanAnyAll | SubTokensOptions.CanElement)).Distinct().ToList();
+
+            var routes = parsed.Select(a => a.GetPropertyRoute()).NotNull().Distinct().ToList();
+
+            var help = HelpLogic.GetPropertyRoutesService(routes);
+
+            return this.JsonNet(parsed.ToDictionary(a => a.FullKey(), a => { var pr = a.GetPropertyRoute(); return pr == null ? null : help.TryGetC(pr); }));
         }
 
         [AcceptVerbs(HttpVerbs.Get)]

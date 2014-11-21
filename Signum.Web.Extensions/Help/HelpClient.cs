@@ -30,10 +30,11 @@ namespace Signum.Web.Help
     public static class HelpClient
     {
         public static string ViewPrefix = "~/Help/Views/{0}.cshtml";
-        public static JsModule Module = new JsModule("Extensions/Signum.Web.Extensions/Help/Scripts/help"); 
+        public static JsModule Module = new JsModule("Extensions/Signum.Web.Extensions/Help/Scripts/help");
+        public static JsModule WidgetModule = new JsModule("Extensions/Signum.Web.Extensions/Help/Scripts/helpWidget");
 
         //pages        
-        public static string IndexUrl =  ViewPrefix.Formato("Index");
+        public static string IndexUrl = ViewPrefix.Formato("Index");
         public static string ViewEntityUrl = ViewPrefix.Formato("ViewEntity");
         public static string ViewAppendixUrl = ViewPrefix.Formato("ViewAppendix");
         public static string ViewNamespaceUrl = ViewPrefix.Formato("ViewNamespace");
@@ -46,7 +47,7 @@ namespace Signum.Web.Help
         public static string ViewEntityPropertyUrl = ViewPrefix.Formato("EntityProperty");
         public static string NamespaceControlUrl = ViewPrefix.Formato("NamespaceControl");
 
-        public static void Start(string baseUrl, string imageFolder)
+        public static void Start(string imageFolder,string baseUrl)
         {
             if (Navigator.Manager.NotDefined(MethodInfo.GetCurrentMethod()))
             {
@@ -74,8 +75,119 @@ namespace Signum.Web.Help
                     });
 
                 RegisterHelpRoutes();
+
+                Common.CommonTask += Common_CommonTask;
+
+                WidgetsHelper.GetWidget += WidgetsHelper_GetWidget;
+
+                ButtonBarQueryHelper.RegisterGlobalButtons(ButtonBarQueryHelper_RegisterGlobalButtons);
             }
         }
+
+        static void Common_CommonTask(LineBase line)
+        {
+            if (line.PropertyRoute != null)
+                line.FormGroupHtmlProps["data-route"] = line.PropertyRoute.ToString();
+        }
+
+        static ToolBarButton[] ButtonBarQueryHelper_RegisterGlobalButtons(QueryButtonContext ctx)
+        {
+            HeloToolBarButton btn = new HeloToolBarButton(ctx.Prefix, "helpButton")
+            {
+                QueryName = ctx.QueryName,
+                Order = 1000,
+            };
+
+            return new ToolBarButton[] { btn };
+        }
+
+        public class HeloToolBarButton : ToolBarButton
+        {
+            public object QueryName;
+            public string Prefix;
+
+            public HeloToolBarButton(string prefix, string idToAppend)
+                : base(prefix, idToAppend)
+            {
+                this.Prefix = prefix;
+            }
+
+            public override MvcHtmlString ToHtml(HtmlHelper helper)
+            {
+                var a = new HtmlTag("button").Id(this.Id)
+                    .Class("btn btn-default btn-help")
+                    .Class(HelpLogic.GetQueryHelp(QueryName).HasEntity ? "hasItems" : null)
+                    .Attr("type", "button")
+                    .SetInnerText("?");
+
+                var query = HelpLogic.GetQueryHelpService(this.QueryName);
+
+                var jsType = new
+                {
+                    QueryName = QueryUtils.GetQueryUniqueKey(query.QueryName),
+                    Info = query.Info,
+                    Columns = query.Columns,
+                };
+
+                var result = new HtmlTag("div").Class("btn-group").InnerHtml(a).ToHtml();
+
+                result = result.Concat(helper.ScriptCss("~/Help/Content/helpWidget.css"));
+                result = result.Concat(MvcHtmlString.Create("<script>$('#" + this.Id + "').on('mouseup', function(event){ if(event.which == 3) return; " +
+                        HelpClient.WidgetModule["searchClick"](JsFunction.This, this.Prefix, jsType, helper.UrlHelper().Action((HelpController c) => c.ComplexColumns())).ToString() +
+                        " })</script>"));
+
+                return result;
+            }
+
+        }
+
+        static IWidget WidgetsHelper_GetWidget(WidgetContext ctx)
+        {
+            if (ctx.Entity is Entity)
+                return new HelpButton { Prefix = ctx.Prefix, RootType = ctx.TypeContext.PropertyRoute.RootType };
+            return null;
+        }
+
+        class HelpButton : IWidget
+        {
+            public string Prefix;
+            public Type RootType;
+
+            public MvcHtmlString ToHtml(HtmlHelper helper)
+            {
+                HtmlStringBuilder sb = new HtmlStringBuilder();
+                using (sb.SurroundLine("li"))
+                {
+                    sb.Add(helper.ScriptCss("~/Help/Content/helpWidget.css"));
+
+                    var id = TypeContextUtilities.Compose(Prefix, "helpButton");
+
+                    sb.Add(new HtmlTag("button").Id(id)
+                        .Class("btn btn-xs btn-help btn-help-widget")
+                        .Class(HelpLogic.GetEntityHelp(RootType).HasEntity ? "hasItems" : null)
+                        .Attr("type", "button")
+                        .SetInnerText("?"));
+
+                    var type = HelpLogic.GetEntityHelpService(this.RootType);
+
+                    var jsType = new
+                    {
+                        Type = TypeLogic.GetCleanName(type.Type),
+                        Info = type.Info,
+                        Operations = type.Operations.ToDictionary(a => a.Key.Key, a => a.Value),
+                        Properties = type.Properties.ToDictionary(a => a.Key.ToString(), a => a.Value),
+                    };
+
+                    sb.Add(MvcHtmlString.Create("<script>$('#" + id + "').on('mouseup', function(event){ if(event.which == 3) return; " +
+                        HelpClient.WidgetModule["entityClick"](JsFunction.This, this.Prefix, jsType, helper.UrlHelper().Action((HelpController c) => c.PropertyRoutes())).ToString() +
+                        " })</script>"));
+                }
+
+                return sb.ToHtml();
+            }
+        }
+
+
 
         private static void RegisterHelpRoutes()
         {
@@ -99,7 +211,7 @@ namespace Signum.Web.Help
 
             if (result.SecondMatch != null)
                 html = html.Concat(" {0}".FormatHtml(result.SecondMatch.ToHtml()));
-            else if(result.SearchString.HasText())
+            else if (result.SearchString.HasText())
                 html = html.Concat(" \"{0}\"".FormatHtml(result.SearchString));
             else
                 html = html.Concat(this.ColoredSpan(typeof(TypeDN).NiceName() + "...", "lightgray"));

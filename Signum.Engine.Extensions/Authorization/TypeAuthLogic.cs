@@ -84,12 +84,12 @@ namespace Signum.Engine.Authorization
                               }).ToList();
 
                 foreach (var tuple in result)
-	            {
+                {
                     SafeConsole.WriteLineColor(ConsoleColor.DarkGray, "Type: {0} is [{1}] but the related entity {2} is just [{3}]".Formato(
                         tuple.parent.Type.Name,
                         tuple.parentAllowed,
                         tuple.related.Type.Name,
-                        tuple.relAllowed                       
+                        tuple.relAllowed
                         ));
 
                     if (tuple.relAllowed.Conditions.IsNullOrEmpty() && tuple.relAllowed.Conditions.IsNullOrEmpty())
@@ -103,11 +103,11 @@ namespace Signum.Engine.Authorization
                             SafeConsole.WriteLineColor(ConsoleColor.Green, "Granted");
                         }
                         else
-                        {   
+                        {
                             SafeConsole.WriteLineColor(ConsoleColor.White, "Skipped");
                         }
                     }
-	            }
+                }
             };
         }
 
@@ -190,7 +190,15 @@ namespace Signum.Engine.Authorization
 
         public static void SetTypeRules(TypeRulePack rules)
         {
+            VerifyAuthSetRule(typeof(RoleDN));
             cache.SetRules(rules);
+        }
+
+
+        public static void VerifyAuthSetRule(Type type)
+        {
+            if (TypeAuthLogic.GetAllowed(type).MaxUI() < TypeAllowedBasic.Modify)
+                throw new ApplicationException(AuthMessage.NotAuthorizedToSave0.NiceToString().Formato(type.NicePluralName()));
         }
 
         public static TypeAllowedAndConditions GetAllowed(Type type)
@@ -262,7 +270,7 @@ namespace Signum.Engine.Authorization
         public TypeAllowedAndConditions Merge(Type key, Lite<RoleDN> role, IEnumerable<KeyValuePair<Lite<RoleDN>, TypeAllowedAndConditions>> baseValues)
         {
             if (AuthLogic.GetMergeStrategy(role) == MergeStrategy.Union)
-                return MergeBase(baseValues.Select(a=>a.Value), MaxTypeAllowed, TypeAllowed.Create, TypeAllowed.None);
+                return MergeBase(baseValues.Select(a => a.Value), MaxTypeAllowed, TypeAllowed.Create, TypeAllowed.None);
             else
                 return MergeBase(baseValues.Select(a => a.Value), MinTypeAllowed, TypeAllowed.None, TypeAllowed.Create);
         }
@@ -304,7 +312,7 @@ namespace Signum.Engine.Authorization
             var taac = new TypeAllowedAndConditions(AuthLogic.GetDefaultAllowed(role) ? TypeAllowed.Create : TypeAllowed.None);
             return new ConstantFunction<Type, TypeAllowedAndConditions>(taac).GetValue;
         }
-      
+
         public static TypeAllowedAndConditions MergeBase(IEnumerable<TypeAllowedAndConditions> baseRules, Func<IEnumerable<TypeAllowed>, TypeAllowed> maxMerge, TypeAllowed max, TypeAllowed min)
         {
             TypeAllowedAndConditions only = baseRules.Only();
@@ -332,7 +340,7 @@ namespace Signum.Engine.Authorization
                 conditions.Select((c, i) => new TypeConditionRule(c, maxMerge(baseRules.Where(br => !br.Conditions.IsNullOrEmpty()).Select(br => br.Conditions[i].Allowed)))).ToArray());
         }
 
-     
+
     }
 
     public static class AuthThumbnailExtensions

@@ -39,15 +39,13 @@ namespace Signum.Engine.Files
 
         public static void AssertStarted(SchemaBuilder sb)
         {
-            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => FilePathLogic.Start(null, null, null)));
+            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => FilePathLogic.Start(null, null)));
         }
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm, string defaultExtesionIfEmpty = null)
+        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
-                FilePathDN.DefaultExtesionIfEmpty = defaultExtesionIfEmpty;
-
                 sb.Include<FilePathDN>();
 
                 SymbolLogic<FileTypeSymbol>.Start(sb, () => fileTypes.Keys.ToHashSet());
@@ -56,20 +54,17 @@ namespace Signum.Engine.Files
                 sb.Schema.EntityEvents<FilePathDN>().PreUnsafeDelete += new PreUnsafeDeleteHandler<FilePathDN>(FilePathLogic_PreUnsafeDelete);
 
                 dqm.RegisterQuery(typeof(FilePathDN), () =>
-         from p in Database.Query<FilePathDN>()
-         select new
-         {
-             Entity = p,
-             p.Id,
-             p.FileName,
-             p.FileType,
-             p.FullPhysicalPath,
-             p.FullWebPath,
-             p.Repository
-         });
-
-
-
+                    from p in Database.Query<FilePathDN>()
+                    select new
+                    {
+                        Entity = p,
+                        p.Id,
+                        p.FileName,
+                        p.FileType,
+                        p.FullPhysicalPath,
+                        p.FullWebPath,
+                        p.Repository
+                    });
 
                 new Graph<FilePathDN>.Execute(FilePathOperation.Save)
                 {

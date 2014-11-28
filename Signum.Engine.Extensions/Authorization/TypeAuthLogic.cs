@@ -219,8 +219,6 @@ namespace Signum.Engine.Authorization
             return cache.GetAllowed(RoleDN.Current.ToLite(), type);
         }
 
-
-
         public static TypeAllowedAndConditions GetAllowed(Lite<RoleDN> role, Type type)
         {
             return cache.GetAllowed(role, type);

@@ -16,7 +16,7 @@ namespace Signum.Entities.Files
     [Serializable,  EntityKind(EntityKind.SharedPart, EntityData.Transactional)]
     public class FilePathDN : LockableEntity, IFile	
     {
-        public static string DefaultExtesionIfEmpty = null;
+        public static string ForceExtensionIfEmpty = ".dat";
 
         public FilePathDN() { }
 
@@ -56,8 +56,8 @@ namespace Signum.Entities.Files
             set
             {
                 var newValue=fileName;
-                if (DefaultExtesionIfEmpty.HasText() && !Path.GetExtension(value).HasText())
-                    value += DefaultExtesionIfEmpty;
+                if (ForceExtensionIfEmpty.HasText() && !Path.GetExtension(value).HasText())
+                    value += ForceExtensionIfEmpty;
 
                 SetToStr(ref fileName, value);
                

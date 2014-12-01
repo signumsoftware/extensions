@@ -10,7 +10,7 @@
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Signum.Web</RootNamespace>
+    <RootNamespace>Signum.Web.Extensions</RootNamespace>
     <AssemblyName>Signum.Web.Extensions</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <SignAssembly>false</SignAssembly>
@@ -168,72 +168,17 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Types.cshtml</DependentUpon>
     </Compile>
-    <Compile Include="AuthAdmin\Views\User.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>User.cshtml</DependentUpon>
-    </Compile>
     <Compile Include="Auth\UserTicketClient.cs" />
-    <Compile Include="Auth\Views\ChangePassword.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ChangePassword.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\ResetPasswordSend.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ResetPasswordSend.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Cultures\CultureInfoClient.cs" />
-    <Compile Include="Cultures\Views\CultureInfoView.generated.cs">
+    <Compile Include="CultureInfo\CultureInfoClient.cs" />
+    <Compile Include="CultureInfo\Views\CultureInfoView.generated.cs">
       <DependentUpon>CultureInfoView.cshtml</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-    <Compile Include="Auth\Views\ChangePasswordSuccess.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ChangePasswordSuccess.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\Login.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Login.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\LoginUserControl.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>LoginUserControl.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\Register.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Register.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\ResetPassword.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ResetPassword.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\ResetPasswordSetNew.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ResetPasswordSetNew.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\ResetPasswordSuccess.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>ResetPasswordSuccess.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Auth\Views\SetPassword.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>SetPassword.cshtml</DependentUpon>
-    </Compile>
-    <Compile Include="Cultures\Views\_ViewStart.generated.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
+    <Compile Include="CultureInfo\Views\_ViewStart.generated.cs">
       <DependentUpon>_ViewStart.cshtml</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="DiffLog\DiffLogClient.cs" />
     <Compile Include="Dashboard\GridRepeaterHelper.cs" />
@@ -287,7 +232,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>_ViewStart.cshtml</DependentUpon>
     </Compile>
-    <Compile Include="Help\HelpTranslator.cs" />
     <Compile Include="Files\Views\FilePath.generated.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -428,6 +372,11 @@
     <Compile Include="Note\Controllers\NoteController.cs" />
     <Compile Include="AuthAdmin\AuthAdminClient.cs" />
     <Compile Include="AuthAdmin\Controllers\AuthAdminController.cs" />
+    <Compile Include="AuthAdmin\Views\User.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>User.cshtml</DependentUpon>
+    </Compile>
     <Compile Include="AuthAdmin\Views\_ViewStart.generated.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -438,6 +387,56 @@
     <Compile Include="Auth\SessionLogClient.cs" />
     <Compile Include="Auth\UserMapping.cs" />
     <Compile Include="Auth\Controllers\AuthController.cs" />
+    <Compile Include="Auth\Views\ChangePassword.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ChangePassword.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\ChangePasswordSuccess.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ChangePasswordSuccess.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\Login.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Login.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\LoginUserControl.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LoginUserControl.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\Register.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Register.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\ResetPassword.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ResetPassword.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\ResetPasswordSend.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ResetPasswordSend.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\ResetPasswordSetNew.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ResetPasswordSetNew.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\ResetPasswordSuccess.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>ResetPasswordSuccess.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Auth\Views\SetPassword.generated.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SetPassword.cshtml</DependentUpon>
+    </Compile>
     <Compile Include="Auth\Views\_ViewStart.generated.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -1421,12 +1420,12 @@
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>MiniMenu.generated.cs</LastGenOutput>
     </Content>
-    <Content Include="Cultures\Views\CultureInfoView.cshtml">
+    <Content Include="CultureInfo\Views\CultureInfoView.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>CultureInfoView.generated.cs</LastGenOutput>
     </Content>
-    <Content Include="Cultures\Views\Web.config" />
-    <Content Include="Cultures\Views\_ViewStart.cshtml">
+    <Content Include="CultureInfo\Views\Web.config" />
+    <Content Include="CultureInfo\Views\_ViewStart.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>_ViewStart.generated.cs</LastGenOutput>
     </Content>

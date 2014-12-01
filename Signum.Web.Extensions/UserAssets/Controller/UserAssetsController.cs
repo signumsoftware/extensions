@@ -23,7 +23,7 @@ using Signum.Engine.Operations;
 using Signum.Engine.Authorization;
 using Signum.Engine.UserAssets;
 using Signum.Entities.UserAssets;
-using Signum.Web.UserAssets;
+using Signum.Web.Extensions.UserAssets;
 
 
 namespace Signum.Web.UserAssets

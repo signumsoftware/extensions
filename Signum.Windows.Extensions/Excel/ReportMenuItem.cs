@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.IO;
 using Microsoft.Win32;
+using Prop = Signum.Windows.Extensions.Properties;
 using Signum.Services;
 using System.Windows.Documents;
 using Signum.Utilities;

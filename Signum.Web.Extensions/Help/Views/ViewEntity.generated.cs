@@ -9,7 +9,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Signum.Web.Help.Views
+namespace Signum.Web.Extensions.Help.Views
 {
     using System;
     using System.Collections.Generic;
@@ -397,15 +397,7 @@ WriteLiteral(">\r\n");
                                                     
                 if (!Navigator.IsReadOnly(typeof(EntityHelpDN)))
                 {
-                    Html.RenderPartial(HelpClient.Buttons, new ViewDataDictionary
-                    {
-                        { "options",  Database.Query<EntityHelpDN>()
-                        .Where(e => e.Type == ec.Value.Type && e.Culture != ec.Value.Culture)
-                        .Select(e => new { e.Culture })
-                        .ToList()
-                        .Select(e => KVP.Create(e.Culture.ToCultureInfo(), this.Url.Action((HelpController a) => a.TraslateEntity(e.Culture.Name))))
-                        .ToDictionary() }
-                    });
+                    Html.RenderPartial(HelpClient.Buttons);
                 }
 
             
@@ -417,20 +409,20 @@ WriteLiteral(" class=\"edit-container\"");
 
 WriteLiteral(">\r\n                <h1");
 
-WriteAttribute("title", Tuple.Create(" title=\"", 2854), Tuple.Create("\"", 2880)
+WriteAttribute("title", Tuple.Create(" title=\"", 2334), Tuple.Create("\"", 2360)
             
-            #line 76 "..\..\Help\Views\ViewEntity.cshtml"
-, Tuple.Create(Tuple.Create("", 2862), Tuple.Create<System.Object, System.Int32>(eh.Type.Namespace
+            #line 68 "..\..\Help\Views\ViewEntity.cshtml"
+, Tuple.Create(Tuple.Create("", 2342), Tuple.Create<System.Object, System.Int32>(eh.Type.Namespace
             
             #line default
             #line hidden
-, 2862), false)
+, 2342), false)
 );
 
 WriteLiteral(">");
 
             
-            #line 76 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 68 "..\..\Help\Views\ViewEntity.cshtml"
                                           Write(eh.Type.NiceName());
 
             
@@ -443,7 +435,7 @@ WriteLiteral(" class=\'shortcut\'");
 WriteLiteral(">[e:");
 
             
-            #line 77 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 69 "..\..\Help\Views\ViewEntity.cshtml"
                                      Write(name);
 
             
@@ -458,7 +450,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                    ");
 
             
-            #line 79 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 71 "..\..\Help\Views\ViewEntity.cshtml"
                Write(Html.WikiParse(eh.Info, HelpWiki.DefaultWikiSettings));
 
             
@@ -469,7 +461,7 @@ WriteLiteral("\r\n                </span>\r\n");
 WriteLiteral("                ");
 
             
-            #line 81 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 73 "..\..\Help\Views\ViewEntity.cshtml"
            Write(Html.TextArea(ec.SubContextPrefix(a => a.Description), eh.Description, 5, 80, new { @class = "editable" }));
 
             
@@ -484,7 +476,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                    ");
 
             
-            #line 83 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 75 "..\..\Help\Views\ViewEntity.cshtml"
                Write(Html.WikiParse(eh.Description, HelpWiki.DefaultWikiSettings));
 
             
@@ -501,13 +493,13 @@ WriteLiteral(" class=\"help_left\"");
 WriteLiteral(">\r\n");
 
             
-            #line 87 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 79 "..\..\Help\Views\ViewEntity.cshtml"
                 
             
             #line default
             #line hidden
             
-            #line 87 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 79 "..\..\Help\Views\ViewEntity.cshtml"
                   
                 var allowedProps = eh.Properties.Where(a => a.Value.IsAllowed() == null).ToDictionary();
                 
@@ -517,13 +509,13 @@ WriteLiteral(">\r\n");
 WriteLiteral("\r\n\r\n");
 
             
-            #line 91 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 83 "..\..\Help\Views\ViewEntity.cshtml"
                 
             
             #line default
             #line hidden
             
-            #line 91 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 83 "..\..\Help\Views\ViewEntity.cshtml"
                  if (allowedProps.Any())
                 {
 
@@ -541,7 +533,7 @@ WriteLiteral(" class=\"greyTitle\"");
 WriteLiteral(">");
 
             
-            #line 94 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 86 "..\..\Help\Views\ViewEntity.cshtml"
                                          Write(Html.PropertyNiceName(() => eh.Entity.Value.Properties));
 
             
@@ -550,13 +542,13 @@ WriteLiteral(">");
 WriteLiteral("</h2>\r\n");
 
             
-            #line 95 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 87 "..\..\Help\Views\ViewEntity.cshtml"
                         
             
             #line default
             #line hidden
             
-            #line 95 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 87 "..\..\Help\Views\ViewEntity.cshtml"
                            
                     var elementContexts = ec.TypeElementContext(e => e.Properties).ToDictionary(a => a.Value.Property.Path);
 
@@ -584,13 +576,13 @@ WriteLiteral(" class=\"dl-horizontal\"");
 WriteLiteral(">\r\n");
 
             
-            #line 114 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 106 "..\..\Help\Views\ViewEntity.cshtml"
                             
             
             #line default
             #line hidden
             
-            #line 114 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 106 "..\..\Help\Views\ViewEntity.cshtml"
                              foreach (var node in roots)
                             {
                                 
@@ -598,14 +590,14 @@ WriteLiteral(">\r\n");
             #line default
             #line hidden
             
-            #line 116 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 108 "..\..\Help\Views\ViewEntity.cshtml"
                            Write(WriteProperty(node, name));
 
             
             #line default
             #line hidden
             
-            #line 116 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 108 "..\..\Help\Views\ViewEntity.cshtml"
                                                           ;
                             }
 
@@ -615,7 +607,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                        </dl>\r\n                    </div>\r\n");
 
             
-            #line 120 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 112 "..\..\Help\Views\ViewEntity.cshtml"
                 }
 
             
@@ -624,13 +616,13 @@ WriteLiteral("                        </dl>\r\n                    </div>\r\n");
 WriteLiteral("\r\n");
 
             
-            #line 122 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 114 "..\..\Help\Views\ViewEntity.cshtml"
                 
             
             #line default
             #line hidden
             
-            #line 122 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 114 "..\..\Help\Views\ViewEntity.cshtml"
                   
                 var allowedOperations = eh.Operations.Where(a => a.Value.IsAllowed() == null).ToDictionary();
                 
@@ -640,13 +632,13 @@ WriteLiteral("\r\n");
 WriteLiteral("\r\n\r\n");
 
             
-            #line 126 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 118 "..\..\Help\Views\ViewEntity.cshtml"
                 
             
             #line default
             #line hidden
             
-            #line 126 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 118 "..\..\Help\Views\ViewEntity.cshtml"
                  if (allowedOperations.Any())
                 {
                     var operations = ec.TypeElementContext(e => e.Operations).ToDictionary(a => a.Value.Operation);
@@ -666,7 +658,7 @@ WriteLiteral(" class=\"greyTitle\"");
 WriteLiteral(">");
 
             
-            #line 131 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 123 "..\..\Help\Views\ViewEntity.cshtml"
                                          Write(Html.PropertyNiceName(() => eh.Entity.Value.Operations));
 
             
@@ -679,13 +671,13 @@ WriteLiteral(" class=\"dl-horizontal\"");
 WriteLiteral(">\r\n");
 
             
-            #line 133 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 125 "..\..\Help\Views\ViewEntity.cshtml"
                             
             
             #line default
             #line hidden
             
-            #line 133 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 125 "..\..\Help\Views\ViewEntity.cshtml"
                              foreach (var op in allowedOperations)
                             {
                                 using (TypeElementContext<OperationHelpDN> ctx = operations.GetOrThrow(op.Key))
@@ -696,20 +688,20 @@ WriteLiteral(">\r\n");
             #line hidden
 WriteLiteral("                                <dt");
 
-WriteAttribute("id", Tuple.Create(" id=\"", 5927), Tuple.Create("\"", 5961)
+WriteAttribute("id", Tuple.Create(" id=\"", 5407), Tuple.Create("\"", 5441)
             
-            #line 137 "..\..\Help\Views\ViewEntity.cshtml"
-, Tuple.Create(Tuple.Create("", 5932), Tuple.Create<System.Object, System.Int32>(HelpUrls.IdOperation(op.Key)
+            #line 129 "..\..\Help\Views\ViewEntity.cshtml"
+, Tuple.Create(Tuple.Create("", 5412), Tuple.Create<System.Object, System.Int32>(HelpUrls.IdOperation(op.Key)
             
             #line default
             #line hidden
-, 5932), false)
+, 5412), false)
 );
 
 WriteLiteral(">");
 
             
-            #line 137 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 129 "..\..\Help\Views\ViewEntity.cshtml"
                                                                   Write(op.Key.NiceToString());
 
             
@@ -722,7 +714,7 @@ WriteLiteral(" class=\'shortcut\'");
 WriteLiteral(">[o:");
 
             
-            #line 137 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 129 "..\..\Help\Views\ViewEntity.cshtml"
                                                                                                                   Write(op.Key.Key);
 
             
@@ -739,7 +731,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                                        ");
 
             
-            #line 140 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 132 "..\..\Help\Views\ViewEntity.cshtml"
                                    Write(Html.WikiParse(op.Value.Info, HelpWiki.DefaultWikiSettings));
 
             
@@ -750,7 +742,7 @@ WriteLiteral("\r\n                                    </span>\r\n");
 WriteLiteral("                                    ");
 
             
-            #line 142 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 134 "..\..\Help\Views\ViewEntity.cshtml"
                                Write(Html.HiddenRuntimeInfo(ctx));
 
             
@@ -761,7 +753,7 @@ WriteLiteral("\r\n");
 WriteLiteral("                                    ");
 
             
-            #line 143 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 135 "..\..\Help\Views\ViewEntity.cshtml"
                                Write(Html.HiddenRuntimeInfo(ctx, e => e.Culture));
 
             
@@ -772,7 +764,7 @@ WriteLiteral("\r\n");
 WriteLiteral("                                    ");
 
             
-            #line 144 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 136 "..\..\Help\Views\ViewEntity.cshtml"
                                Write(Html.HiddenRuntimeInfo(ctx, a => a.Operation));
 
             
@@ -783,7 +775,7 @@ WriteLiteral("\r\n");
 WriteLiteral("                                    ");
 
             
-            #line 145 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 137 "..\..\Help\Views\ViewEntity.cshtml"
                                Write(Html.TextArea(ctx.SubContextPrefix(a => a.Description), op.Value.UserDescription, new { @class = "editable" }));
 
             
@@ -798,7 +790,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                                        ");
 
             
-            #line 147 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 139 "..\..\Help\Views\ViewEntity.cshtml"
                                    Write(Html.WikiParse(op.Value.UserDescription, HelpWiki.DefaultWikiSettings));
 
             
@@ -808,7 +800,7 @@ WriteLiteral("\r\n                                    </span>\r\n               
 "dd>\r\n");
 
             
-            #line 150 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 142 "..\..\Help\Views\ViewEntity.cshtml"
                                 }
                             }
 
@@ -818,7 +810,7 @@ WriteLiteral("\r\n                                    </span>\r\n               
 WriteLiteral("                        </dl>\r\n                    </div>\r\n");
 
             
-            #line 154 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 146 "..\..\Help\Views\ViewEntity.cshtml"
                 }
 
             
@@ -827,13 +819,13 @@ WriteLiteral("                        </dl>\r\n                    </div>\r\n");
 WriteLiteral("\r\n");
 
             
-            #line 156 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 148 "..\..\Help\Views\ViewEntity.cshtml"
                 
             
             #line default
             #line hidden
             
-            #line 156 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 148 "..\..\Help\Views\ViewEntity.cshtml"
                   
                 var allowedQueries = eh.Queries.Where(a => a.Value.IsAllowed() == null).ToDictionary();
                 
@@ -843,13 +835,13 @@ WriteLiteral("\r\n");
 WriteLiteral("\r\n\r\n");
 
             
-            #line 160 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 152 "..\..\Help\Views\ViewEntity.cshtml"
                 
             
             #line default
             #line hidden
             
-            #line 160 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 152 "..\..\Help\Views\ViewEntity.cshtml"
                  if (allowedQueries.Any())
                 {
                     var queries = ec.TypeElementContext(e => e.Queries).ToDictionary(a => a.Value.Query);
@@ -869,7 +861,7 @@ WriteLiteral(" class=\"greyTitle\"");
 WriteLiteral(">");
 
             
-            #line 165 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 157 "..\..\Help\Views\ViewEntity.cshtml"
                                          Write(typeof(QueryDN).NicePluralName());
 
             
@@ -878,13 +870,13 @@ WriteLiteral(">");
 WriteLiteral("</h2>\r\n");
 
             
-            #line 166 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 158 "..\..\Help\Views\ViewEntity.cshtml"
                         
             
             #line default
             #line hidden
             
-            #line 166 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 158 "..\..\Help\Views\ViewEntity.cshtml"
                          foreach (var mq in allowedQueries)
                         {
                             using (TypeElementContext<QueryHelpDN> qctx = queries.GetOrThrow(QueryLogic.GetQuery(mq.Key)))
@@ -895,42 +887,42 @@ WriteLiteral("</h2>\r\n");
             #line default
             #line hidden
             
-            #line 171 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 163 "..\..\Help\Views\ViewEntity.cshtml"
                        Write(Html.HiddenRuntimeInfo(qctx));
 
             
             #line default
             #line hidden
             
-            #line 171 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 163 "..\..\Help\Views\ViewEntity.cshtml"
                                                           
                             
             
             #line default
             #line hidden
             
-            #line 172 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 164 "..\..\Help\Views\ViewEntity.cshtml"
                        Write(Html.HiddenRuntimeInfo(qctx, e => e.Culture));
 
             
             #line default
             #line hidden
             
-            #line 172 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 164 "..\..\Help\Views\ViewEntity.cshtml"
                                                                                                             
                             
             
             #line default
             #line hidden
             
-            #line 173 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 165 "..\..\Help\Views\ViewEntity.cshtml"
                        Write(Html.HiddenRuntimeInfo(qctx, a => a.Query));
 
             
             #line default
             #line hidden
             
-            #line 173 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 165 "..\..\Help\Views\ViewEntity.cshtml"
                                                                                                            
 
             
@@ -938,20 +930,20 @@ WriteLiteral("</h2>\r\n");
             #line hidden
 WriteLiteral("                            <h3");
 
-WriteAttribute("id", Tuple.Create(" id=\"", 8123), Tuple.Create("\"", 8153)
+WriteAttribute("id", Tuple.Create(" id=\"", 7603), Tuple.Create("\"", 7633)
             
-            #line 174 "..\..\Help\Views\ViewEntity.cshtml"
-, Tuple.Create(Tuple.Create("", 8128), Tuple.Create<System.Object, System.Int32>(HelpUrls.IdQuery(mq.Key)
+            #line 166 "..\..\Help\Views\ViewEntity.cshtml"
+, Tuple.Create(Tuple.Create("", 7608), Tuple.Create<System.Object, System.Int32>(HelpUrls.IdQuery(mq.Key)
             
             #line default
             #line hidden
-, 8128), false)
+, 7608), false)
 );
 
 WriteLiteral(">");
 
             
-            #line 174 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 166 "..\..\Help\Views\ViewEntity.cshtml"
                                                           Write(QueryUtils.GetNiceName(mq.Key));
 
             
@@ -970,7 +962,7 @@ WriteLiteral(" class=\'shortcut\'");
 WriteLiteral(">[q:");
 
             
-            #line 176 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 168 "..\..\Help\Views\ViewEntity.cshtml"
                                                      Write(QueryUtils.GetQueryUniqueKey(mq.Key));
 
             
@@ -985,7 +977,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                                    ");
 
             
-            #line 178 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 170 "..\..\Help\Views\ViewEntity.cshtml"
                                Write(Html.WikiParse(mq.Value.Info, HelpWiki.DefaultWikiSettings));
 
             
@@ -996,7 +988,7 @@ WriteLiteral("\r\n                                </span>\r\n");
 WriteLiteral("                                ");
 
             
-            #line 180 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 172 "..\..\Help\Views\ViewEntity.cshtml"
                            Write(Html.TextArea(qctx.SubContextPrefix(a => a.Description), mq.Value.UserDescription, new { @class = "editable" }));
 
             
@@ -1011,7 +1003,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                                    ");
 
             
-            #line 182 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 174 "..\..\Help\Views\ViewEntity.cshtml"
                                Write(Html.WikiParse(mq.Value.UserDescription, HelpWiki.DefaultWikiSettings));
 
             
@@ -1020,7 +1012,7 @@ WriteLiteral("                                    ");
 WriteLiteral("\r\n                                </span>\r\n                            </div>\r\n");
 
             
-            #line 185 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 177 "..\..\Help\Views\ViewEntity.cshtml"
 
                                 var allowedColumn = mq.Value.Columns.Where(a => a.Value.IsAllowed() == null);                               
                                 if (allowedColumn.Any())
@@ -1038,13 +1030,13 @@ WriteLiteral(" class=\"dl-horizontal columns\"");
 WriteLiteral(">\r\n");
 
             
-            #line 192 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 184 "..\..\Help\Views\ViewEntity.cshtml"
                                 
             
             #line default
             #line hidden
             
-            #line 192 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 184 "..\..\Help\Views\ViewEntity.cshtml"
                                  foreach (var qc in allowedColumn)
                                 {
                                     using (var ctx = columns.GetOrThrow(qc.Value.Column.Name))
@@ -1054,14 +1046,14 @@ WriteLiteral(">\r\n");
             #line default
             #line hidden
             
-            #line 196 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 188 "..\..\Help\Views\ViewEntity.cshtml"
                                Write(Html.HiddenRuntimeInfo(ctx));
 
             
             #line default
             #line hidden
             
-            #line 196 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 188 "..\..\Help\Views\ViewEntity.cshtml"
                                                                      
 
             
@@ -1070,7 +1062,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                                    <dt>");
 
             
-            #line 197 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 189 "..\..\Help\Views\ViewEntity.cshtml"
                                    Write(qc.Value.NiceName);
 
             
@@ -1088,7 +1080,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                                            ");
 
             
-            #line 200 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 192 "..\..\Help\Views\ViewEntity.cshtml"
                                        Write(Html.WikiParse(qc.Value.Info, HelpWiki.DefaultWikiSettings));
 
             
@@ -1099,7 +1091,7 @@ WriteLiteral("\r\n                                        </span>\r\n");
 WriteLiteral("                                        ");
 
             
-            #line 202 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 194 "..\..\Help\Views\ViewEntity.cshtml"
                                    Write(Html.Hidden(ctx.SubContextPrefix(a => a.ColumnName), ctx.Value.ColumnName));
 
             
@@ -1110,7 +1102,7 @@ WriteLiteral("\r\n");
 WriteLiteral("                                        ");
 
             
-            #line 203 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 195 "..\..\Help\Views\ViewEntity.cshtml"
                                    Write(Html.TextArea(ctx.SubContextPrefix(a => a.Description), ctx.Value.Description, new { @class = "editable" }));
 
             
@@ -1125,7 +1117,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("                                            ");
 
             
-            #line 205 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 197 "..\..\Help\Views\ViewEntity.cshtml"
                                        Write(Html.WikiParse(qc.Value.UserDescription, HelpWiki.DefaultWikiSettings));
 
             
@@ -1135,7 +1127,7 @@ WriteLiteral("\r\n                                        </span>\r\n           
 "      </dd>\r\n");
 
             
-            #line 208 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 200 "..\..\Help\Views\ViewEntity.cshtml"
                                     }
                                 }
 
@@ -1145,7 +1137,7 @@ WriteLiteral("\r\n                                        </span>\r\n           
 WriteLiteral("                            </dl>\r\n");
 
             
-            #line 211 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 203 "..\..\Help\Views\ViewEntity.cshtml"
                                 }
                             }
 
@@ -1157,7 +1149,7 @@ WriteLiteral("                            </dl>\r\n");
 WriteLiteral("                    </div>\r\n");
 
             
-            #line 216 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 208 "..\..\Help\Views\ViewEntity.cshtml"
                 }
 
             
@@ -1166,7 +1158,7 @@ WriteLiteral("                    </div>\r\n");
 WriteLiteral("            </div>\r\n");
 
             
-            #line 218 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 210 "..\..\Help\Views\ViewEntity.cshtml"
             }
         }
 
@@ -1180,13 +1172,13 @@ WriteLiteral(" class=\"col-md-3\"");
 WriteLiteral(">\r\n");
 
             
-            #line 223 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 215 "..\..\Help\Views\ViewEntity.cshtml"
         
             
             #line default
             #line hidden
             
-            #line 223 "..\..\Help\Views\ViewEntity.cshtml"
+            #line 215 "..\..\Help\Views\ViewEntity.cshtml"
            Html.RenderPartial(HelpClient.MiniMenu, new ViewDataDictionary { { "type", eh.Type } });
             
             #line default

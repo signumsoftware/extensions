@@ -134,9 +134,7 @@ namespace Signum.Entities.Help
         Options,
         Edit,
         Save,
-        Syntax,
-        [Description("Translate from...")]
-        TranslateFrom
+        Syntax
 
     }
 

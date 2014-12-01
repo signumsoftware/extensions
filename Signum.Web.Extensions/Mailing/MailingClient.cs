@@ -28,7 +28,6 @@ using Signum.Entities.UserAssets;
 using Signum.Web.UserAssets;
 using Signum.Web.Basic;
 using Signum.Entities.Processes;
-using Signum.Web.Cultures;
 #endregion
 
 namespace Signum.Web.Mailing

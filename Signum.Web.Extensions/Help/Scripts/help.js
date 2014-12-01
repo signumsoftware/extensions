@@ -8,7 +8,6 @@ define(["require", "exports"], function(require, exports) {
         "edit-action".get().hide();
         "syntax-action".get().show();
         "save-action".get().show();
-        "translate-action".get().show();
     }
     exports.edit = edit;
 
@@ -22,21 +21,21 @@ define(["require", "exports"], function(require, exports) {
             success: function (result) {
                 if (!result) {
                     location.reload(true);
+                    $("#saving-error").hide();
                 }
-            }
-        });
-    }
-
-    function translate(v) {
-        v.preventDefault();
-        $.ajax({
-            url: $(v.currentTarget).attr("href"),
-            async: false,
-            data: $("form#form-save :input").serializeObject(),
-            success: function (result) {
-                if (!result) {
-                    location.reload(true);
+            },
+            error: function (XMLHttpRequest, textStatus, errorThrown) {
+                var msg;
+                if (XMLHttpRequest.responseText != null && XMLHttpRequest.responseText != undefined) {
+                    var startError = XMLHttpRequest.responseText.indexOf("<title>");
+                    var endError = XMLHttpRequest.responseText.indexOf("</title>");
+                    if ((startError != -1) && (endError != -1))
+                        msg = XMLHttpRequest.responseText.substring(startError + 7, endError);
+                    else
+                        msg = XMLHttpRequest.responseText;
                 }
+                $("#saving-error .text").html(msg);
+                $("#saving-error").show();
             }
         });
     }
@@ -61,14 +60,10 @@ define(["require", "exports"], function(require, exports) {
             "save-action".get().click(save);
             "edit-action".get().click(exports.edit);
 
-            "syntax-action".get().click(function (e) {
+            "syntax-action".get().click(function () {
                 $("#syntax-list").slideToggle("slow");
-                $(e.currentTarget).toggleClass("active");
+                $(this).toggleClass("active");
                 return null;
-            });
-
-            "translate-action".get().find("a").click(function (args) {
-                return translate(args);
             });
         });
     }

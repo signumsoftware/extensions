@@ -51,7 +51,8 @@ namespace Signum.Engine.Authorization
 
         static void User_PreSaving(UserDN user, ref bool graphModified)
         {
-            user.UserTickets().UnsafeDelete();
+            if (!user.IsNew)
+                user.UserTickets().UnsafeDelete();
         }
 
         static Expression<Func<UserDN, IQueryable<UserTicketDN>>> UserTicketsExpression =
@@ -98,7 +99,7 @@ namespace Signum.Engine.Authorization
                 {
                     throw new UnauthorizedAccessException("User attempted to log-in with an invalid ticket");
                 }
-                
+
                 UserTicketDN result = new UserTicketDN
                 {
                     User = user.ToLite(),

@@ -43,7 +43,15 @@ namespace Signum.Engine.Authorization
                     });
 
                 dqm.RegisterExpression((UserDN u) => u.UserTickets(), () => typeof(UserTicketDN).NicePluralName());
+
+                sb.Schema.EntityEvents<UserDN>().PreSaving += User_PreSaving;
+
             }
+        }
+
+        static void User_PreSaving(UserDN user, ref bool graphModified)
+        {
+            user.UserTickets().UnsafeDelete();
         }
 
         static Expression<Func<UserDN, IQueryable<UserTicketDN>>> UserTicketsExpression =

@@ -12,6 +12,7 @@ using Signum.Entities.DynamicQuery;
 using Signum.Entities.Mailing;
 using Signum.Utilities;
 using Signum.Utilities.ExpressionTrees;
+using Signum.Entities.Isolation;
 
 namespace Signum.Engine.Mailing
 {
@@ -65,14 +66,14 @@ namespace Signum.Engine.Mailing
         class SystemEmailInfo
         {
             public Func<EmailTemplateDN> DefaultTemplateConstructor;
-            public object QueryName; 
+            public object QueryName;
         }
 
         static ResetLazy<Dictionary<Lite<SystemEmailDN>, List<EmailTemplateDN>>> SystemEmailsToEmailTemplates;
         static Dictionary<Type, SystemEmailInfo> systemEmails = new Dictionary<Type, SystemEmailInfo>();
         static ResetLazy<Dictionary<Type, SystemEmailDN>> systemEmailToDN;
         static ResetLazy<Dictionary<SystemEmailDN, Type>> systemEmailToType;
-     
+
         public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
@@ -152,7 +153,7 @@ namespace Signum.Engine.Mailing
         public static void RegisterSystemEmail(Type model, Func<EmailTemplateDN> defaultTemplateConstructor, object queryName = null)
         {
             if (defaultTemplateConstructor == null)
-                throw new ArgumentNullException("defaultTemplateConstructor"); 
+                throw new ArgumentNullException("defaultTemplateConstructor");
 
             systemEmails[model] = new SystemEmailInfo
             {
@@ -165,7 +166,7 @@ namespace Signum.Engine.Mailing
         {
             var baseType = model.Follow(a => a.BaseType).FirstOrDefault(b => b.IsInstantiationOf(typeof(SystemEmail<>)));
 
-            if(baseType != null)
+            if (baseType != null)
             {
                 return baseType.GetGenericArguments()[0];
             }
@@ -176,10 +177,10 @@ namespace Signum.Engine.Mailing
         internal static List<SystemEmailDN> GenerateTemplates()
         {
             var list = (from type in systemEmails.Keys
-                         select new SystemEmailDN
-                         {
-                             FullClassName = type.FullName
-                         }).ToList();
+                        select new SystemEmailDN
+                        {
+                            FullClassName = type.FullName
+                        }).ToList();
             return list;
         }
 
@@ -206,20 +207,31 @@ namespace Signum.Engine.Mailing
 
         public static IEnumerable<EmailMessageDN> CreateEmailMessage(this ISystemEmail systemEmail)
         {
+
             if (systemEmail.UntypedEntity == null)
                 throw new InvalidOperationException("Entity property not set on SystemEmail");
 
-            var systemEmailDN = ToSystemEmailDN(systemEmail.GetType());
-            var template = GetDefaultTemplate(systemEmailDN);
+            var e = systemEmail.UntypedEntity as Entity;
+            var isolation = e.Isolation() ?? IsolationDN.Current;
 
-            return EmailTemplateLogic.CreateEmailMessage(template.ToLite(), systemEmail.UntypedEntity, systemEmail);
+            using (IsolationDN.Override(isolation))
+            {
+
+
+                var systemEmailDN = ToSystemEmailDN(systemEmail.GetType());
+                var template = GetDefaultTemplate(systemEmailDN);
+
+                return EmailTemplateLogic.CreateEmailMessage(template.ToLite(), systemEmail.UntypedEntity, systemEmail);
+            }
         }
 
         private static EmailTemplateDN GetDefaultTemplate(SystemEmailDN systemEmailDN)
         {
-            var list = SystemEmailsToEmailTemplates.Value.TryGetC(systemEmailDN.ToLite()); 
+            var list = IsolationDN.Current == null ?
+                SystemEmailsToEmailTemplates.Value.TryGetC(systemEmailDN.ToLite()) :
+                 SystemEmailsToEmailTemplates.Value.TryGetC(systemEmailDN.ToLite()).Where(e => e.Isolation().Is(IsolationDN.Current));
 
-            if(list.IsNullOrEmpty())
+            if (list.IsNullOrEmpty())
             {
                 using (Transaction tr = Transaction.ForceNew())
                 {

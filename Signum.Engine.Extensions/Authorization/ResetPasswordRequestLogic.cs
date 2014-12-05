@@ -13,6 +13,8 @@ using Signum.Entities.Mailing;
 using Signum.Engine.Basics;
 using System.Globalization;
 using Signum.Engine.Translation;
+using Signum.Entities.Basics;
+using Signum.Engine.Operations;
 
 
 namespace Signum.Engine.Authorization
@@ -39,19 +41,60 @@ namespace Signum.Engine.Authorization
 
                 EmailLogic.AssertStarted(sb);
 
-                SystemEmailLogic.RegisterSystemEmail<ResetPasswordRequestMail>(() => new EmailTemplateDN
-                {
-                    Messages = CultureInfoLogic.ForEachCulture(culture => new EmailTemplateMessageDN(culture)
-                    {
-                        Text = "<p>{0}</p>".Formato(AuthEmailMessage.YouRecentlyRequestedANewPassword.NiceToString()) +
-                            "<p>{0} @[User.UserName]</p>".Formato(AuthEmailMessage.YourUsernameIs.NiceToString()) +
-                            "<p>{0}</p>".Formato(AuthEmailMessage.YouCanResetYourPasswordByFollowingTheLinkBelow.NiceToString()) +
-                            "<p><a href=\"@model[Url]\">@model[Url]</a></p>",
-                        Subject = AuthEmailMessage.ResetPasswordRequestSubject.NiceToString()
-                    }).ToMList()
-                });
+
+            
+                //SystemEmailLogic.RegisterSystemEmail<ResetPasswordRequestMail>(() => new EmailTemplateDN
+                //{
+                //    Messages = CultureInfoLogic.ForEachCulture(culture => new EmailTemplateMessageDN(culture)
+                //    {
+                //        Text = "<p>{0}</p>".Formato(AuthEmailMessage.YouRecentlyRequestedANewPassword.NiceToString()) +
+                //            "<p>{0} @[User.UserName]</p>".Formato(AuthEmailMessage.YourUsernameIs.NiceToString()) +
+                //            "<p>{0}</p>".Formato(AuthEmailMessage.YouCanResetYourPasswordByFollowingTheLinkBelow.NiceToString()) +
+                //            "<p><a href=\"@model[Url]\">@model[Url]</a></p>",
+                //        Subject = AuthEmailMessage.ResetPasswordRequestSubject.NiceToString()
+                //    }).ToMList()
+                //});
+
+                SystemEmailLogic.RegisterSystemEmail<ResetPasswordRequestMail>(() => null);
+
             }
         }
+
+
+
+        public static void RegisterResetPasswordRequestTemplates(Lite<SmtpConfigurationDN> smtpConfig, string emailAddress, string displayName)
+        {
+
+            //if (!Database.Query<SystemEmailDN>().Where(e => e.FullClassName == typeof(ResetPasswordRequestMail).FullName).Any())
+            //    new SystemEmailDN { FullClassName = typeof(ResetPasswordRequestMail).FullName }.Save();
+
+
+
+            var etResetPasswordRequest = new EmailTemplateDN
+            {
+                SystemEmail = Database.Query<SystemEmailDN>().Where(e => e.FullClassName == typeof(ResetPasswordRequestMail).FullName).SingleEx(),
+                Query = Database.Query<QueryDN>().Where(q => q.Name == "ResetPasswordRequest").SingleEx(),
+                SmtpConfiguration = smtpConfig,
+                Active = true,
+                Name = "ResetPasswordRequest",
+                From = new EmailTemplateContactDN
+                {
+                    DisplayName = displayName,
+                    EmailAddress = emailAddress,
+                },
+                Messages = CultureInfoLogic.ForEachCulture(culture => new EmailTemplateMessageDN(culture)
+                {
+                    Text = "<p>{0}</p>".Formato(AuthEmailMessage.YouRecentlyRequestedANewPassword.NiceToString()) +
+                        "<p>{0} @[User.UserName]</p>".Formato(AuthEmailMessage.YourUsernameIs.NiceToString()) +
+                        "<p>{0}</p>".Formato(AuthEmailMessage.YouCanResetYourPasswordByFollowingTheLinkBelow.NiceToString()) +
+                        "<p><a href=\"@model[Url]\">@model[Url]</a></p>",
+                    Subject = AuthEmailMessage.ResetPasswordRequestSubject.NiceToString()
+                }).ToMList()
+            }.Execute(EmailTemplateOperation.Save);
+
+           
+        }
+
 
         public static ResetPasswordRequestDN ResetPasswordRequest(UserDN user)
         {
@@ -61,7 +104,7 @@ namespace Signum.Engine.Authorization
                 using (Transaction tr = Transaction.ForceNew())
                 {
                     Database.Query<ResetPasswordRequestDN>()
-                   .Where(r => r.User.Is(user) && r.RequestDate < TimeZoneManager.Now.AddMonths(1))
+                   .Where(r => r.User.Is(user) || r.RequestDate < TimeZoneManager.Now.AddHours(3))
                    .UnsafeUpdate()
                    .Set(e => e.Lapsed, e => true)
                    .Execute();

@@ -210,7 +210,14 @@ namespace Signum.Engine.Mailing
                 {
                     AllowsNew = true,
                     Lite = false,
-                    Execute = (t, _) => { }
+                    Execute = (t, _) => {
+                        foreach (var r in t.Recipients)                        
+                        {
+                            var queryName = QueryLogic.ToQueryName(t.Query.Key);
+                            t.ParseData(DynamicQueryManager.Current.QueryDescription(queryName));
+	                    } 
+                    
+                    }
                 }.Register();
 
                 new Execute(EmailTemplateOperation.Enable) 

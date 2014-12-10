@@ -6,7 +6,7 @@
     xmlns:dq="clr-namespace:Signum.Entities.Excel;assembly=Signum.Entities.Extensions"
     m:Common.TypeContext="{x:Type dq:ExcelReportDN}" MinWidth="300">
     <StackPanel>
-        <m:EntityLine m:Common.Route="Query"  m:Common.IsReadOnly="true" />
+        <m:EntityLine m:Common.Route="Query" Create="False" />
         <m:ValueLine m:Common.Route="DisplayName" />
 		<m2:FileLine m:Common.Route="File" />
 	</StackPanel>

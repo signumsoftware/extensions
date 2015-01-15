@@ -692,6 +692,7 @@
   </Type>
   <Type Name="FilePathDN" Description="Ruta archivo">
     <Member Name="BinaryFile" Description="Archivo binario" />
+    <Member Name="CreationDate" Description="Fecha de creación" />
     <Member Name="FileLength" Description="Longitud" />
     <Member Name="FileLengthString" Description="Tamaño" />
     <Member Name="FileName" Description="Nombre de archivo" />
@@ -700,6 +701,9 @@
     <Member Name="FullWebPath" Description="URL" />
     <Member Name="Repository" Description="Repositorio" />
     <Member Name="Sufix" Description="Sufijo" />
+  </Type>
+  <Type Name="FilePathOperation">
+    <Member Name="Save" Description="Guardar" />
   </Type>
   <Type Name="FileRepositoryDN" Description="Repositorio de archivos">
     <Member Name="Active" Description="Activo" />
@@ -727,7 +731,7 @@
     <Member Name="RelateOtherEntities" Description="relacionar a otras entidades" />
     <Member Name="StoreInformationOnItsOwn" Description="almacenar información en su misma" />
     <Member Name="StoreInformationSharedByOtherEntities" Description="almacenar información compartida por otras entidades" />
-    <Member Name="StorePartOfTheInformationOfOtherEntity" Description="alacenar parte de la información de otra entidad" />
+    <Member Name="StorePartOfTheInformationOfAnotherEntity" Description="Almacena parte de la información de otra entidad" />
     <Member Name="StorePartsOfInformationSharedByDifferentEntities" Description="alamacenar una parte de información compartida por las distintas entidades" />
   </Type>
   <Type Name="HelpMessage">
@@ -753,7 +757,6 @@
     <Member Name="Help" Description="Ayuda" />
     <Member Name="HelpNotLoaded" Description="Ayuda no cargada" />
     <Member Name="In0" Description="(en {0})" />
-    <Member Name="Index" Description="Índice" />
     <Member Name="Integer" Description="entero" />
     <Member Name="Key0NotFound" Description="Clave {0} no encontrada" />
     <Member Name="OfThe0" Description="del {0}" />
@@ -962,8 +965,12 @@
     <Member Name="None" Description="Ninguno" />
   </Type>
   <Type Name="OperationHelpDN" Description="Ayuda operación">
+    <Member Name="Culture" Description="Cultura" />
     <Member Name="Description" Description="Descripción" />
     <Member Name="Operation" Description="Operación" />
+  </Type>
+  <Type Name="OperationHelpOperation">
+    <Member Name="Save" Description="Guardar" />
   </Type>
   <Type Name="OperationRulePack" Description="Paquete de reglas de operación" />
   <Type Name="PackageDN" Description="Paquete">
@@ -1364,7 +1371,6 @@
     <Member Name="DefaultFrom" Description="Desde por defecto" />
     <Member Name="EnableSSL" Description="Habilitar SSL" />
     <Member Name="Host" Description="Host" />
-    <Member Name="IsDefault" Description="Por defecto" />
     <Member Name="Name" Description="Nombre" />
     <Member Name="Password" Description="Contraseña" />
     <Member Name="Port" Description="Puerto" />

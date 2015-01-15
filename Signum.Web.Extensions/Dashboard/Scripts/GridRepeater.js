@@ -124,6 +124,8 @@ define(["require", "exports", "Framework/Signum.Web/Signum/Scripts/Lines"], func
             });
 
             container.on("dragend", ".panel-heading", function (e) {
+                var de = e.originalEvent;
+                de.preventDefault();
                 container.removeClass("sf-dragging");
             });
 
@@ -214,6 +216,11 @@ define(["require", "exports", "Framework/Signum.Web/Signum/Scripts/Lines"], func
                 de.dataTransfer.dropEffect = "move";
 
                 $(e.currentTarget).removeClass("sf-over");
+            });
+
+            container.on("drop", ".items-row", function (e) {
+                var de = e.originalEvent;
+                de.preventDefault();
             });
 
             container.on("drop", ".separator-row", function (e) {

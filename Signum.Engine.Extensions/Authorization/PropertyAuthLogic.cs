@@ -127,7 +127,9 @@ namespace Signum.Engine.Authorization
 
         public static void SetPropertyRules(PropertyRulePack rules)
         {
-            cache.SetRules(rules, r => r.RootType == rules.Type); 
+            TypeAuthLogic.VerifyAuthSetRule(typeof(RulePropertyDN));
+           
+            cache.SetRules(rules, r => r.RootType == rules.Type);
         }
 
 

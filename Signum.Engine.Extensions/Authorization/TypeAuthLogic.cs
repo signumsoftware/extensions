@@ -190,7 +190,15 @@ namespace Signum.Engine.Authorization
 
         public static void SetTypeRules(TypeRulePack rules)
         {
+            VerifyAuthSetRule(typeof(RoleDN));
             cache.SetRules(rules);
+        }
+
+
+        public static void VerifyAuthSetRule(Type type)
+        {
+            if (TypeAuthLogic.GetAllowed(type).MaxUI() < TypeAllowedBasic.Modify)
+                throw new ApplicationException(AuthMessage.NotAuthorizedToSave0.NiceToString().Formato(type.NicePluralName()));
         }
 
         public static TypeAllowedAndConditions GetAllowed(Type type)

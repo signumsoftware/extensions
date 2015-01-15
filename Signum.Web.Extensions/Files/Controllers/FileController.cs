@@ -30,6 +30,8 @@ namespace Signum.Web.Files
 {
     public class FileController : Controller
     {
+        public static string DefauldExtesion = ".dat";     
+
         public ActionResult Upload()
         {
             string fileName = Request.Files.Cast<string>().Single();

@@ -10,13 +10,13 @@ function _prefix(repeaterItem: Element) {
         return (<HTMLElement>repeaterItem).id.parent("sfRepeaterItem")
 }
 
-function _get(repeaterItem: Element, field: string) : string {
+function _get(repeaterItem: Element, field: string): string {
     var prefix = _prefix(repeaterItem);
 
     return prefix.child(field).get(repeaterItem).val();
 }
 
-function _set(repeaterItem: Element, field: string, value: string) : void {
+function _set(repeaterItem: Element, field: string, value: string): void {
     var prefix = _prefix(repeaterItem);
 
     prefix.child(field).get(repeaterItem).val(value);
@@ -56,7 +56,7 @@ export class GridRepeater extends Lines.EntityRepeater {
 
     dragMode: string;
 
-    setupResizer(){
+    setupResizer() {
         var container = this.prefix.child(Lines.EntityRepeater.key_itemsContainer).get();
 
         var currentElement: JQuery;
@@ -66,14 +66,14 @@ export class GridRepeater extends Lines.EntityRepeater {
         container.on("dragstart", ".sf-rightHandle, .sf-leftHandle", e => {
             var de = <DragEvent><Event>e.originalEvent;
 
-            var handler = $(e.currentTarget); 
+            var handler = $(e.currentTarget);
             currentElement = handler.closest(".sf-grid-element");
             currentRow = currentElement.closest(".items-row");
             currentClass = handler.attr("class");
             de.dataTransfer.effectAllowed = "move";
             de.dataTransfer.setData("Text", "Text");
             this.dragMode = "resize";
-        }); 
+        });
 
         container.on("dragover", ".items-row", e=> {
             var de = <DragEvent><Event>e.originalEvent;
@@ -82,12 +82,12 @@ export class GridRepeater extends Lines.EntityRepeater {
                 de.dataTransfer.dropEffect = "none";
                 return;
             }
-         
+
             de.dataTransfer.dropEffect = "move";
 
             var row = $(e.currentTarget);
 
-            var isRight = currentClass == "sf-rightHandle"; 
+            var isRight = currentClass == "sf-rightHandle";
 
             var offsetX = (de.pageX + (isRight ? 15 : -15)) - row.offset().left;
             var col = Math.round((offsetX / row.width()) * 12);
@@ -107,7 +107,7 @@ export class GridRepeater extends Lines.EntityRepeater {
             }
 
             this.redrawColumns(currentRow)
-        }); 
+        });
     }
 
     setupMover() {
@@ -115,7 +115,7 @@ export class GridRepeater extends Lines.EntityRepeater {
 
         var currentElement: JQuery;
         var currentRow: JQuery;
-        var dx : number;
+        var dx: number;
 
         container.on("dragstart", ".panel-heading", e => {
             var de = <DragEvent><Event>e.originalEvent;
@@ -133,6 +133,8 @@ export class GridRepeater extends Lines.EntityRepeater {
         });
 
         container.on("dragend", ".panel-heading", e => {
+            var de = <DragEvent><Event>e.originalEvent;
+            de.preventDefault();
             container.removeClass("sf-dragging");
         });
 
@@ -155,7 +157,7 @@ export class GridRepeater extends Lines.EntityRepeater {
             var newPart = {
                 startColumn: startCol,
                 columns: cols,
-            }; 
+            };
 
             if (newPart.startColumn < 0 || 12 < newPart.columns + newPart.startColumn)
                 return;
@@ -168,7 +170,7 @@ export class GridRepeater extends Lines.EntityRepeater {
                 }));
 
             if (current.some(a=> _overlaps(a, newPart)))
-                return; 
+                return;
 
             _set(currentElement[0], "StartColumn", startCol.toString());
 
@@ -196,7 +198,7 @@ export class GridRepeater extends Lines.EntityRepeater {
             de.dataTransfer.dropEffect = "move";
 
             $(e.currentTarget).addClass("sf-over");
-        }); 
+        });
 
         container.on("dragover", ".separator-row", e=> {
             var de = <DragEvent><Event>e.originalEvent;
@@ -207,7 +209,7 @@ export class GridRepeater extends Lines.EntityRepeater {
             }
 
             de.dataTransfer.dropEffect = "move";
-        }); 
+        });
 
         container.on("dragleave", ".separator-row", e=> {
             var de = <DragEvent><Event>e.originalEvent;
@@ -220,7 +222,12 @@ export class GridRepeater extends Lines.EntityRepeater {
             de.dataTransfer.dropEffect = "move";
 
             $(e.currentTarget).removeClass("sf-over");
-        }); 
+        });
+
+        container.on("drop", ".items-row", e=> {
+            var de = <DragEvent><Event>e.originalEvent;
+            de.preventDefault();
+        });
 
         container.on("drop", ".separator-row", e=> {
             var de = <DragEvent><Event>e.originalEvent;
@@ -244,13 +251,13 @@ export class GridRepeater extends Lines.EntityRepeater {
             _set(currentElement[0], "StartColumn", "0");
 
             this.saveRows();
-        }); 
+        });
     }
 
     setupRemove() {
         this.prefix.child(Lines.EntityRepeater.key_itemsContainer).get().on("click", ".sf-grid-element  > .panel > .panel-heading > .sf-remove", e => {
             this.removeItem_click((<HTMLElement>e.currentTarget).id.parent("btnRemove"));
-        }); 
+        });
     }
 
     removeEntitySpecific(itemPrefix: string) {
@@ -260,17 +267,17 @@ export class GridRepeater extends Lines.EntityRepeater {
         this.saveRows();
     }
 
-  
 
 
 
-    maxLimit(element : JQuery) {
+
+    maxLimit(element: JQuery) {
         var next = element.next();
 
         if (next.length)
             return parseInt(_get(next[0], "StartColumn"));
 
-        return 12; 
+        return 12;
     }
 
     minLimit(element: JQuery) {
@@ -299,9 +306,9 @@ export class GridRepeater extends Lines.EntityRepeater {
             elements = elements.orderBy(a=> parseInt(_get(a, "StartColumn")));
         }
 
-        var prevEndColumn = 0; 
+        var prevEndColumn = 0;
         elements.forEach((elem) => {
-            var cols = parseInt(_get(elem, "Columns")); 
+            var cols = parseInt(_get(elem, "Columns"));
             var startCol = parseInt(_get(elem, "StartColumn"));
 
             var newClass = "col-sm-" + cols + " col-sm-offset-" + (startCol - prevEndColumn);
@@ -311,7 +318,7 @@ export class GridRepeater extends Lines.EntityRepeater {
                 $elem.removeClass(GridRepeater.gridClasses).addClass(newClass);
 
             prevEndColumn = cols + startCol
-        }); 
+        });
 
         if (actual.join(",") != ordered.join(","))
             row.append(elements);
@@ -319,7 +326,7 @@ export class GridRepeater extends Lines.EntityRepeater {
 
     //The DOM rules over the hiddens to simplify row re-indexing
     saveRows() {
-        this.prefix.child(Lines.EntityRepeater.key_itemsContainer).get().children(".items-row").each((i, e)=> {
+        this.prefix.child(Lines.EntityRepeater.key_itemsContainer).get().children(".items-row").each((i, e) => {
             var row = $(e);
 
             if (row.children().length)
@@ -332,8 +339,8 @@ export class GridRepeater extends Lines.EntityRepeater {
         this.prefix.child(Lines.EntityRepeater.key_itemsContainer).get().children(".items-row").each((index, row) => {
             $("." + GridRepeater.key_gridRepeaterItemClass, row).each((_, elem) => {
                 _set(elem, "Row", index.toString())
-            }); 
-        }); 
+            });
+        });
     }
 
     addEntitySpecific(entityValue: Entities.EntityValue, itemPrefix: string) {

@@ -15,11 +15,12 @@ using System.Net.Mail;
 using System.Linq.Expressions;
 using Signum.Entities.Files;
 using System.Security.Cryptography;
+using Signum.Entities.Scheduler;
 
 namespace Signum.Entities.Mailing
 {
     [Serializable, EntityKind(EntityKind.Main, EntityData.Transactional)]
-    public class EmailMessageDN : Entity
+    public class EmailMessageDN : Entity, IProcessLineDataDN
     {   
         public EmailMessageDN()
         {
@@ -163,6 +164,20 @@ namespace Signum.Entities.Mailing
         {
             get { return package; }
             set { Set(ref package, value); }
+        }
+
+        Guid? recruitingGuid;
+        public Guid? RecruitingGuid
+        {
+            get { return recruitingGuid; }
+            set { Set(ref recruitingGuid, value); }
+        }
+
+        int sendRetries;
+        public int SendRetries
+        {
+            get { return sendRetries; }
+            set { Set(ref sendRetries, value); }
         }
 
         [NotNullable]
@@ -461,7 +476,11 @@ namespace Signum.Entities.Mailing
 
     public enum EmailMessageState
     {
+        [Ignore]
         Created,
+        Draft,
+        ReadyToSend,
+        RecruitedForSending,
         Sent,
         SentException,
         ReceptionNotified,
@@ -507,8 +526,15 @@ namespace Signum.Entities.Mailing
         public static readonly ProcessAlgorithmSymbol SendEmails = new ProcessAlgorithmSymbol();
     }
 
+    public static class ScheduledEmailTask
+    {
+        public static readonly SimpleTaskSymbol SendEmails = new SimpleTaskSymbol();
+    }
+
     public static class EmailMessageOperation
     {
+        public static readonly ExecuteSymbol<EmailMessageDN> Save = OperationSymbol.Execute<EmailMessageDN>();
+        public static readonly ExecuteSymbol<EmailMessageDN> ReadyToSend = OperationSymbol.Execute<EmailMessageDN>();
         public static readonly ExecuteSymbol<EmailMessageDN> Send = OperationSymbol.Execute<EmailMessageDN>();
         public static readonly ConstructSymbol<EmailMessageDN>.From<EmailMessageDN> ReSend = OperationSymbol.Construct<EmailMessageDN>.From<EmailMessageDN>();
         public static readonly ConstructSymbol<ProcessDN>.FromMany<EmailMessageDN> ReSendEmails = OperationSymbol.Construct<ProcessDN>.FromMany<EmailMessageDN>();

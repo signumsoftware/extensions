@@ -156,7 +156,7 @@ namespace Signum.Engine.Mailing
                     {
                         try
                         {
-                            if (m.SendRetries <= EmailLogic.Configuration.MaxEmailSendRetries)
+                            if (m.SendRetries < EmailLogic.Configuration.MaxEmailSendRetries)
                             {
                                 using (Transaction tr = Transaction.ForceNew())
                                 {

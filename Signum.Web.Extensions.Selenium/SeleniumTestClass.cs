@@ -33,7 +33,7 @@ namespace Signum.Web.Selenium
             try
             {
                 seleniumServerProcess = SeleniumExtensions.LaunchSeleniumProcess();
-                Thread.Sleep(4000);
+                Thread.Sleep(6000);
                 selenium = SeleniumExtensions.InitializeSelenium();
             }
             catch (Exception)

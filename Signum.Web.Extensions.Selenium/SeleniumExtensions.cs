@@ -43,7 +43,7 @@ namespace Signum.Web.Selenium
         {
             ISelenium selenium = new DefaultSelenium("localhost",
                 4444,
-                Explorer == WebExplorer.Firefox ? "*chrome" : Explorer == WebExplorer.IE ? "*iexplore" : "*googlechrome",
+                Explorer == WebExplorer.Firefox ? "*firefox" : Explorer == WebExplorer.IE ? "*iexplore" : "*googlechrome",
                 "http://localhost/");
 
             StartSelenium(selenium);

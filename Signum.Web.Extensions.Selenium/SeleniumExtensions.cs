@@ -43,7 +43,7 @@ namespace Signum.Web.Selenium
         {
             ISelenium selenium = new DefaultSelenium("localhost",
                 4444,
-                Explorer == WebExplorer.Firefox ? "*firefox" : Explorer == WebExplorer.IE ? "*iexplore" : "*googlechrome",
+                Explorer == WebExplorer.Firefox ? "*chrome" : Explorer == WebExplorer.IE ? "*iexplore" : "*googlechrome",
                 "http://localhost/");
 
             StartSelenium(selenium);
@@ -106,7 +106,7 @@ namespace Signum.Web.Selenium
         }
 
         public static string PageLoadTimeout = "20000";
-        public static int AjaxTimeout = 20000;
+        public static int AjaxTimeout = 30000;
         public static int AjaxWait = 200;
 
         public static void WaitForPageToLoad(this ISelenium selenium)

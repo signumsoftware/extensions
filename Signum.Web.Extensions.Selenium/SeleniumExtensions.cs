@@ -89,12 +89,12 @@ namespace Signum.Web.Selenium
                     selenium.Start();
                     return;
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     attempts += 1;
                     System.Threading.Thread.Sleep(3000);
                     if (attempts > 8)
-                        throw new ApplicationException("Could not start selenium");
+                        throw new ApplicationException("Could not start selenium: {0}".Formato(ex.Message));
                 }
             }
         }

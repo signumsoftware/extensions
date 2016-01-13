@@ -33,7 +33,8 @@ namespace Signum.Web.Selenium
 
             this.SearchControl.Results.SelectRow(lite);
 
-            this.OkWaitClosed();
+            if (!AvoidClose)
+                this.OkWaitClosed();
 
             this.Dispose();
         }
@@ -44,7 +45,8 @@ namespace Signum.Web.Selenium
 
             this.SearchControl.Results.SelectRow(rowIndex);
 
-            this.OkWaitClosed();
+            if (!AvoidClose)
+                this.OkWaitClosed();
 
             this.Dispose();
         }

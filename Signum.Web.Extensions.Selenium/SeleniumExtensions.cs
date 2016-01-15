@@ -50,7 +50,9 @@ namespace Signum.Web.Selenium
 
             selenium.SetTimeout(DefaultTimeout); //timeout in ms => 3mins
             //selenium.SetSpeed("200");
-            
+
+            selenium.GetEval("window.resizeTo(1920, 1080); window.moveTo(0,0);");
+
             selenium.AddLocationStrategy("jq",
             "var loc = locator; " +
             "var attr = null; " +

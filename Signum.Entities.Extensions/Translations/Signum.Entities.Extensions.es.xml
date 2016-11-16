@@ -460,7 +460,10 @@
     <Member Name="LinkedResource" Description="Recursos vinculados" />
   </Type>
   <Type Name="EmailConfigurationDN" Description="Configuración de email">
+    <Member Name="ChunkSizeToProcessEmails" Description="Tamaño para procesar mensajes de correo electrónico" />
+    <Member Name="CreationDateHoursLimitToSendEmails" Description="Creación fecha horas límite para enviar los correos" />
     <Member Name="DefaultCulture" Description="Cultura predeterminada" />
+    <Member Name="MaxEmailSendRetries" Description="Correo electrónico Max enviar reintentos" />
     <Member Name="OverrideEmailAddress" Description="Reemplazar dirección email" />
     <Member Name="ReciveEmails" Description="Recibir e-mails" />
     <Member Name="SendEmails" Description="Enviar emails" />
@@ -494,6 +497,8 @@
     <Member Name="Package" Description="Paquete" />
     <Member Name="ReceptionNotified" Description="Recepción notificada" />
     <Member Name="Recipients" Description="Destinatarios" />
+    <Member Name="RecruitingGuid" Description="Guid de reclutamiento" />
+    <Member Name="SendRetries" Description="Enviar reintentos" />
     <Member Name="Sent" Description="Enviado" />
     <Member Name="SmtpConfiguration" Description="Configuración SMTP" />
     <Member Name="State" Description="Estado" />
@@ -517,8 +522,10 @@
     <Member Name="CreateMail" Description="Crear email" />
     <Member Name="CreateMailFromTemplate" Description="Crear email desde plantilla" />
     <Member Name="Delete" Description="Eliminar" />
+    <Member Name="ReadyToSend" Description="Listo para enviar" />
     <Member Name="ReSend" Description="Re enviar" />
     <Member Name="ReSendEmails" Description="Re enviar correos electrónicos" />
+    <Member Name="Save" Description="Guardar" />
     <Member Name="Send" Description="Enviar" />
   </Type>
   <Type Name="EmailMessageProcess">
@@ -526,8 +533,11 @@
   </Type>
   <Type Name="EmailMessageState" Description="Estado del email">
     <Member Name="Created" Description="Creado" />
+    <Member Name="Draft" Description=",Borrador" />
+    <Member Name="ReadyToSend" Description="Listo para enviar" />
     <Member Name="Received" Description="Recibido" />
     <Member Name="ReceptionNotified" Description="Recepción notificada" />
+    <Member Name="RecruitedForSending" Description="Contratado para el envío de" />
     <Member Name="Sent" Description="Enviado" />
     <Member Name="SentException" Description="Excepción envío" />
   </Type>
@@ -1185,6 +1195,9 @@
   </Type>
   <Type Name="RuleTypeDN" Description="Regla de tipo">
     <Member Name="Conditions" Description="Condiciones" />
+  </Type>
+  <Type Name="ScheduledEmailTask">
+    <Member Name="SendEmails" Description="Enviar mensajes de correo electrónico" />
   </Type>
   <Type Name="ScheduledTaskDN" Description="Tarea programada">
     <Member Name="ApplicationName" Description="Nombre de la aplicación" />

@@ -31,7 +31,20 @@ namespace Signum.Web.Translation
             return TranslateInstances(translator, type, targetCulture, instances);
         }
 
+        public static TypeInstancesChanges GetSingleInstanceChangesTranslated(ITranslator translator, Lite<Entity> instance, CultureInfo targetCulture, out int totalInstances)
+        {
+            var cultures = TranslationLogic.CurrentCultureInfos(TranslatedInstanceLogic.DefaultCulture);
 
+            cultures.Remove(targetCulture);
+
+            var instances = TranslatedInstanceLogic.GetSingleInstanceChanges(instance, targetCulture, cultures);
+
+            totalInstances = instances.Count;
+            if (instances.Sum(a => a.TotalOriginalLength()) > MaxTotalSyncCharacters)
+                instances = instances.GroupsOf(a => a.TotalOriginalLength(), MaxTotalSyncCharacters).First().ToList();
+
+            return TranslateInstances(translator, instance.EntityType, targetCulture, instances);
+        }
 
         private static TypeInstancesChanges TranslateInstances(ITranslator translator, Type type, CultureInfo targetCulture, List<InstanceChanges> instances)
         {

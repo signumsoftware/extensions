@@ -9,7 +9,9 @@
 @{
     CultureInfo culture = ViewBag.Culture;
 
-    ViewBag.Title = TranslationMessage.Synchronize0In1.NiceToString().Formato(Model.Type.NiceName(), culture.DisplayName);
+    Lite<Entity> instance = ViewBag.Instance;
+    
+    ViewBag.Title = TranslationMessage.Synchronize0In1.NiceToString().Formato(instance != null ? instance.ToString() : Model.Type.NiceName(), culture.DisplayName);
 
     int totalInstances = ViewBag.TotalInstances;
 
@@ -17,8 +19,6 @@
     {
         ViewBag.Title = ViewBag.Title + " [{0}/{1}]".Formato(Model.Instances.Count, totalInstances);
     }
-
-
 }
 
 @Html.ScriptsJs("~/Translation/resources/" + CultureInfo.CurrentCulture.Name + ".js")
@@ -26,27 +26,28 @@
 
 @if (Model.Instances.IsEmpty())
 {
-    <h2>@TranslationMessage._0AlreadySynchronized.NiceToString().Formato(@Model.Type.NiceName())</h2>   
+    <h2>@TranslationMessage._0AlreadySynchronized.NiceToString().Formato(instance != null ? instance.ToString() : Model.Type.NiceName())</h2>   
 }
 else
 {
     <h2>@ViewBag.Title</h2>
 
-    using (Html.BeginForm((TranslatedInstanceController c) => c.SaveSync(Signum.Engine.Basics.TypeLogic.GetCleanName(Model.Type), culture.Name)))
+    using (instance != null ? Html.BeginForm((TranslatedInstanceController c) => c.SaveSyncEntity(instance, culture.Name)) :
+        Html.BeginForm((TranslatedInstanceController c) => c.SaveSync(Signum.Engine.Basics.TypeLogic.GetCleanName(Model.Type), culture.Name)))
     {
     <table id="results" style="width: 100%; margin: 0px" class="st"        
         data-feedback="@Url.Action("Feedback", "Translation")" 
         data-culture="@culture.Name">
-        @foreach (InstanceChanges instance in Model.Instances)
+        @foreach (InstanceChanges instanceChange in Model.Instances)
         {
             <thead>
                 <tr>
                     <th class="leftCell">@TranslationMessage.Instance.NiceToString()</th>
-                    <th class="titleCell">@Html.Href(Navigator.NavigateRoute(instance.Instance), instance.Instance.ToString())</th>
+                    <th class="titleCell">@Html.Href(Navigator.NavigateRoute(instanceChange.Instance), instanceChange.Instance.ToString())</th>
                 </tr>
             </thead>
            
-            foreach (var route in instance.RouteConflicts.OrderBy(a=>a.Key.ToString()))
+            foreach (var route in instanceChange.RouteConflicts.OrderBy(a => a.Key.ToString()))
             {
                 var propertyString = route.Key.ToString();
             <tr>
@@ -61,7 +62,7 @@ else
                 <td class="monospaceCell">
                     @if (mc.Key.Equals(TranslatedInstanceLogic.DefaultCulture))
                     {
-                        string originalName = TranslatedInstanceLogic.DefaultCulture.Name + "#" + instance.Instance.Key() + "#" + propertyString;
+                        string originalName = TranslatedInstanceLogic.DefaultCulture.Name + "#" + instanceChange.Instance.Key() + "#" + propertyString;
                         <textarea name="@originalName" style="display:none" >@mc.Value.Original</textarea>
                     }
 
@@ -89,7 +90,7 @@ else
                     .Concat(route.Value.Select(kvp => new SelectListItem { Text = "from " + kvp.Key + " - " + kvp.Value.AutomaticTranslation, Value = kvp.Value.AutomaticTranslation }))
                     .ToList();
 
-                string elementName = culture.Name + "#" + instance.Instance.Key() + "#" + propertyString;
+                string elementName = culture.Name + "#" + instanceChange.Instance.Key() + "#" + propertyString;
                 if (translations.Count() == 1)
                 {       
                         <textarea name="@(elementName)_original" style="display:none" disabled="disabled">@translations.First().Value</textarea>

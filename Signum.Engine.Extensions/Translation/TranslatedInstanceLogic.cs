@@ -127,10 +127,21 @@ namespace Signum.Engine.Translation
                         CultureInfo = ci,
                         State = ci.IsNeutralCulture && ci.Name != DefaultCulture.Name ? GetState(type, ci) : null,
                     }).ToList();
-
         }
 
+        public static List<TranslatedTypeSummary> TranslationSingleInstanceStatus(Lite<Entity> instance)
+        {
+            var cultures = TranslationLogic.CurrentCultureInfos(DefaultCulture);
 
+            return (from ci in cultures
+                    select new TranslatedTypeSummary
+                    {
+                        Instance = instance,
+                        CultureInfo = ci,
+                        State = ci.IsNeutralCulture && ci.Name != DefaultCulture.Name ? GetStateSingleEntity(instance, ci) : null,
+                    }).ToList();
+        }
+        
         public static Dictionary<LocalizedInstanceKey, string> FromEntities(Type type)
         {
             Dictionary<LocalizedInstanceKey, string> result = null;
@@ -150,6 +161,35 @@ namespace Signum.Engine.Translation
             }
 
             return result;
+        }
+
+        public static Dictionary<LocalizedInstanceKey, string> FromEntity(Lite<Entity> instance)
+        {
+            var type = instance.EntityType;
+
+            Dictionary<LocalizedInstanceKey, string> result = null;
+            
+            var typeTraducibleRoutes = TraducibleRoutes.TryGetC(type);
+            if (typeTraducibleRoutes != null)
+            {
+                foreach (var pr in typeTraducibleRoutes.Keys)
+                {
+                    var mlist = pr.GetMListItemsRoute();
+
+                    var dic = mlist == null ?
+                        giFromRoute.GetInvoker(type)(pr) :
+                        giFromRouteMList.GetInvoker(type, mlist.Type)(pr);
+
+                    dic = dic.Where(kvp => kvp.Key.Instance.Is(instance)).ToDictionary();
+
+                    if (result == null)
+                        result = dic;
+                    else
+                        result.AddRange(dic);
+                }
+            }
+
+            return result;            
         }
 
         static GenericInvoker<Func<PropertyRoute, Dictionary<LocalizedInstanceKey, string>>> giFromRoute =
@@ -180,6 +220,13 @@ namespace Signum.Engine.Translation
                 kvp => kvp.Value.Where(a => a.Key.Route.RootType == type).ToDictionary());
         }
 
+        public static Dictionary<CultureInfo, Dictionary<LocalizedInstanceKey, TranslatedInstanceDN>> TranslationsForEntity(Lite<Entity> instance, CultureInfo culture)
+        {
+            return LocalizationCache.Value.Where(c => culture == null || c.Key.Equals(culture)).ToDictionary(
+                kvp => kvp.Key,
+                kvp => kvp.Value.Where(a => a.Key.Instance.Is(instance)).ToDictionary());
+        }
+
         static TranslatedSummaryState? GetState(Type type, CultureInfo ci)
         {
             using (HeavyProfiler.LogNoStackTrace("GetState", () => type.Name + " " + ci.Name))
@@ -194,6 +241,22 @@ namespace Signum.Engine.Translation
             }
         }
 
+        static TranslatedSummaryState? GetStateSingleEntity(Lite<Entity> instance, CultureInfo ci)
+        {
+            using (HeavyProfiler.LogNoStackTrace("GetState", () => instance.ToString() + " (" + instance.EntityType.NiceName() + ") " + ci.Name))
+            {
+                var type = instance.EntityType;
+
+                if (!TraducibleRoutes.GetOrThrow(type).Keys.Any(pr => AnyNoTranslatedSingleEntity(pr, ci, instance)))
+                    return TranslatedSummaryState.Completed;
+
+                if (Database.Query<TranslatedInstanceDN>().Count(ti => ti.Instance.Is(instance) && ti.Culture == ci.ToCultureInfoDN()) == 0)
+                    return TranslatedSummaryState.None;
+
+                return TranslatedSummaryState.Pending;
+            }
+        }
+
         public static bool AnyNoTranslated(PropertyRoute pr, CultureInfo ci)
         {
             var mlist = pr.GetMListItemsRoute();
@@ -202,6 +265,16 @@ namespace Signum.Engine.Translation
                 return giAnyNoTranslated.GetInvoker(pr.RootType)(pr, ci);
 
             return giAnyNoTranslatedMList.GetInvoker(pr.RootType, mlist.Type)(pr, ci); 
+        }
+
+        public static bool AnyNoTranslatedSingleEntity(PropertyRoute pr, CultureInfo ci, Lite<Entity> instance)
+        {
+            var mlist = pr.GetMListItemsRoute();
+
+            if (mlist == null)
+                return giAnyNoTranslatedSingleEntity.GetInvoker(pr.RootType)(pr, ci, instance);
+
+            return giAnyNoTranslatedMListSingleEntity.GetInvoker(pr.RootType, mlist.Type)(pr, ci, instance);
         }
 
         static GenericInvoker<Func<PropertyRoute, CultureInfo, bool>> giAnyNoTranslated =
@@ -221,6 +294,24 @@ namespace Signum.Engine.Translation
                     select e).Any();
         }
 
+        static GenericInvoker<Func<PropertyRoute, CultureInfo, Lite<Entity>, bool>> giAnyNoTranslatedSingleEntity =
+            new GenericInvoker<Func<PropertyRoute, CultureInfo, Lite<Entity>, bool>>((pr, ci, instance) => AnyNoTranslatedSingleEntity<Entity>(pr, ci, instance));
+        static bool AnyNoTranslatedSingleEntity<T>(PropertyRoute pr, CultureInfo ci, Lite<Entity> instance) where T : Entity
+        {
+            var exp = pr.GetLambdaExpression<T, string>();
+
+            return (from e in Database.Query<T>()
+                    where instance.RefersTo(e)
+                    let str = exp.Evaluate(e)
+                    where str != null &&
+                    !Database.Query<TranslatedInstanceDN>().Any(ti =>
+                        ti.Instance.RefersTo(e) &
+                        ti.PropertyRoute.IsPropertyRoute(pr) &&
+                        ti.Culture == ci.ToCultureInfoDN() &&
+                        ti.OriginalText == str)
+                    select e).Any();
+        }
+
         static GenericInvoker<Func<PropertyRoute, CultureInfo, bool>> giAnyNoTranslatedMList =
            new GenericInvoker<Func<PropertyRoute, CultureInfo, bool>>((pr, ci) => AnyNoTranslatedMList<Entity, string>(pr, ci));
         static bool AnyNoTranslatedMList<T, M>(PropertyRoute pr, CultureInfo ci) where T : Entity
@@ -230,6 +321,27 @@ namespace Signum.Engine.Translation
             var exp = pr.GetLambdaExpression<M, string>();
 
             return (from mle in Database.MListQuery(mListProperty)
+                    let str = exp.Evaluate(mle.Element)
+                    where str != null &&
+                    !Database.Query<TranslatedInstanceDN>().Any(ti =>
+                        ti.Instance.RefersTo(mle.Parent) &&
+                        ti.PropertyRoute.IsPropertyRoute(pr) &&
+                        ti.RowId == mle.RowId.ToString() &&
+                        ti.Culture == ci.ToCultureInfoDN() &&
+                        ti.OriginalText == str)
+                    select mle).Any();
+        }
+
+        static GenericInvoker<Func<PropertyRoute, CultureInfo, Lite<Entity>, bool>> giAnyNoTranslatedMListSingleEntity =
+           new GenericInvoker<Func<PropertyRoute, CultureInfo, Lite<Entity>, bool>>((pr, ci, instance) => AnyNoTranslatedMListSingleEntity<Entity, string>(pr, ci, instance));
+        static bool AnyNoTranslatedMListSingleEntity<T, M>(PropertyRoute pr, CultureInfo ci, Lite<Entity> instance) where T : Entity
+        {
+            var mListProperty = pr.GetMListItemsRoute().Parent.GetLambdaExpression<T, MList<M>>();
+
+            var exp = pr.GetLambdaExpression<M, string>();
+
+            return (from mle in Database.MListQuery(mListProperty)
+                    where instance.RefersTo(mle.Parent)
                     let str = exp.Evaluate(mle.Element)
                     where str != null &&
                     !Database.Query<TranslatedInstanceDN>().Any(ti =>
@@ -492,7 +604,101 @@ namespace Signum.Engine.Translation
             return instances;
         }
 
+        public static List<InstanceChanges> GetSingleInstanceChanges(Lite<Entity> instance, CultureInfo targetCulture, List<CultureInfo> cultures)
+        {
+            Dictionary<CultureInfo, Dictionary<LocalizedInstanceKey, TranslatedInstanceDN>> support = TranslatedInstanceLogic.TranslationsForEntity(instance, culture: null);
 
+            Dictionary<LocalizedInstanceKey, TranslatedInstanceDN> target = support.TryGetC(targetCulture);
+
+            var instances = TranslatedInstanceLogic.FromEntity(instance).GroupBy(a => a.Key.Instance).Select(gr =>
+            {
+                Dictionary<LocalizedInstanceKey, string> routeConflicts =
+                    (from kvp in gr
+                     let t = target.TryGetC(kvp.Key)
+                     where kvp.Value.HasText() && (t == null || t.OriginalText.Replace("\r", "").Replace("\n", "") != kvp.Value.Replace("\r", "").Replace("\n", ""))
+                     select KVP.Create(kvp.Key, kvp.Value)).ToDictionary();
+
+                if (routeConflicts.IsEmpty())
+                    return null;
+
+                var result = (from rc in routeConflicts
+                              from c in cultures
+                              let str = c.Equals(TranslatedInstanceLogic.DefaultCulture) ? rc.Value : support.TryGetC(c).TryGetC(rc.Key).Try(a => a.OriginalText == rc.Value ? a.TranslatedText : null)
+                              where str.HasText()
+                              let old = c.Equals(TranslatedInstanceLogic.DefaultCulture) ? target.TryGetC(rc.Key) : null
+                              select new
+                              {
+                                  rc.Key.Route,
+                                  rc.Key.RowId,
+                                  Culture = c,
+                                  Conflict = new PropertyRouteConflict
+                                  {
+                                      OldOriginal = old.Try(o => o.OriginalText),
+                                      OldTranslation = old.Try(o => o.TranslatedText),
+
+                                      Original = str,
+                                      AutomaticTranslation = null
+                                  }
+                              }).AgGroupToDictionary(a => new IndexedPropertyRoute(a.Route, a.RowId), g => g.ToDictionary(a => a.Culture, a => a.Conflict));
+
+                return new InstanceChanges
+                {
+                    Instance = gr.Key,
+                    RouteConflicts = result
+                };
+
+            }).NotNull().OrderByDescending(ic => ic.RouteConflicts.Values.Any(dic => dic.Values.Any(rc => rc.OldOriginal != null))).ToList();
+            return instances;
+        }
+
+        public static void SaveEntityRecords(List<TranslationRecord> records, Lite<Entity> instance, CultureInfo c)
+        { 
+            Dictionary<Tuple<CultureInfo, LocalizedInstanceKey>, TranslationRecord> should = records.Where(a => a.TranslatedText.HasText())
+                .ToDictionary(a => Tuple.Create(a.Culture, a.Key));
+
+            Dictionary<Tuple<CultureInfo, LocalizedInstanceKey>, TranslatedInstanceDN> current =
+                (from ci in TranslatedInstanceLogic.TranslationsForEntity(instance, c)
+                 from key in ci.Value
+                 select KVP.Create(Tuple.Create(ci.Key, key.Key), key.Value)).ToDictionary();
+
+            using (Transaction tr = new Transaction())
+            {
+                Dictionary<PropertyRoute, PropertyRouteDN> routes = should.Keys.Select(a => a.Item2.Route).Distinct().ToDictionary(a => a, a => a.ToPropertyRouteDN());
+
+                Synchronizer.Synchronize(
+                    should,
+                    current,
+                    (k, n) => new TranslatedInstanceDN
+                    {
+                        Culture = n.Culture.ToCultureInfoDN(),
+                        PropertyRoute = routes.GetOrThrow(n.Key.Route),
+                        Instance = n.Key.Instance,
+                        RowId = n.Key.RowId.TryToString(),
+                        OriginalText = n.OriginalText,
+                        TranslatedText = n.TranslatedText,
+                    }.Save(),
+                    (k, o) => { },
+                    (k, n, o) =>
+                    {
+                        if (!n.TranslatedText.HasText())
+                        {
+                            o.Delete();
+                        }
+                        else if (o.TranslatedText != n.TranslatedText || o.OriginalText != n.OriginalText)
+                        {
+                            var r = o.ToLite().Retrieve();
+                            r.OriginalText = n.OriginalText;
+                            r.TranslatedText = n.TranslatedText;
+                            r.Save();
+                        }
+                    });
+
+                tr.Commit();
+            }
+
+            var t = instance.EntityType;
+            CleanTranslations(t);
+        }
 
         public static void SaveRecords(List<TranslationRecord> records, Type t, CultureInfo c)
         {
@@ -705,6 +911,7 @@ namespace Signum.Engine.Translation
     public class TranslatedTypeSummary
     {
         public Type Type;
+        public Lite<Entity> Instance;
         public CultureInfo CultureInfo;
         public TranslatedSummaryState? State;
     }

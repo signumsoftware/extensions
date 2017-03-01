@@ -8,8 +8,9 @@
 @{
     CultureInfo culture = ViewBag.Culture;
     Type type = ViewBag.Type;
+    Lite<Entity> instance = ViewBag.Instance;
 
-    ViewBag.Title = TranslationMessage.View0In1.NiceToString().Formato(type.NiceName(), culture == null ? TranslationMessage.AllLanguages.NiceToString() : culture.DisplayName);
+    ViewBag.Title = TranslationMessage.View0In1.NiceToString().Formato(type != null ? type.NiceName() : instance.ToString(), culture == null ? TranslationMessage.AllLanguages.NiceToString() : culture.DisplayName);
 
     Dictionary<LocalizedInstanceKey, string> master = ViewBag.Master;
 
@@ -35,9 +36,16 @@
 <h2>@ViewBag.Title</h2>
 
 <div>
-    @using (Html.BeginForm("View", "TranslatedInstance", FormMethod.Get))
+    @using (Html.BeginForm(type != null ? "View" : "ViewEntity", "TranslatedInstance", FormMethod.Get))
     {
-        @Html.Hidden("type")
+        if (type != null)
+        { 
+            @Html.Hidden("type")
+        }
+        else
+        {
+            @Html.Hidden("instance", instance.Key());
+        }
         @Html.Hidden("culture")
         @Html.TextBox("filter", filter);
         
@@ -56,19 +64,31 @@ else if (Model.IsEmpty())
 }
 else
 {
-    using (Html.BeginForm((TranslatedInstanceController c) => c.SaveView(Signum.Engine.Basics.TypeLogic.GetCleanName(type), culture == null ? null : culture.Name, filter)))
+    using (type != null ? Html.BeginForm<TranslatedInstanceController>(c => c.SaveView(Signum.Engine.Basics.TypeLogic.GetCleanName(type), culture == null ? null : culture.Name, filter)) :
+        Html.BeginForm<TranslatedInstanceController>(c => c.SaveViewEntity(instance, culture == null ? null : culture.Name, filter)))
     {
     <table id="results" style="width: 100%; margin: 0px" class="st">
-        @foreach (var instance in master.Keys.Where(li => master.GetOrThrow(li).HasText()).Where(filtered).GroupBy(a => a.Instance).OrderBy(a => a.Key.Id))
+        @{
+            var masterKeys = master.Keys.Where(li => master.GetOrThrow(li).HasText()).ToList();
+            var filteredMasterKeys = masterKeys.Where(filtered).ToList();
+        }
+        @foreach (var locInstance in filteredMasterKeys.GroupBy(a => a.Instance).OrderBy(a => a.Key.Id))
         { 
             <thead>
+                @if (type == null)
+                {
+                    <tr>
+                        <th class="leftCell">@TranslationMessage.Type.NiceToString()</th>
+                        <th class="titleCell">@locInstance.Key.EntityType.NiceName()</th>
+                    </tr>
+                }
                 <tr>
                     <th class="leftCell">@TranslationMessage.Instance.NiceToString()</th>
-                    <th class="titleCell">@Html.Href(Navigator.NavigateRoute(instance.Key), instance.Key.ToString())</th>
+                    <th class="titleCell">@Html.Href(Navigator.NavigateRoute(locInstance.Key), locInstance.Key.ToString())</th>
                 </tr>
             </thead>
 
-            foreach (LocalizedInstanceKey key in instance.OrderBy(a => a.Route.ToString()))
+            foreach (LocalizedInstanceKey key in locInstance.OrderBy(a => a.Route.ToString()))
             {
                 var propertyString = key.Route.PropertyString().Replace("/", "[" + key.RowId + "].");
             <tr>

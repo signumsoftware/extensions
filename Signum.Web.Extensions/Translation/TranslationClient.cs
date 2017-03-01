@@ -32,7 +32,7 @@ namespace Signum.Web.Translation
 
 
         /// <param name="copyTranslationsToRootFolder">avoids Web Application restart when translations change</param>
-        public static void Start(ITranslator translator, bool translatorUser, bool translationReplacement, bool instanceTranslator, bool copyNewTranslationsToRootFolder = true)
+        public static void Start(ITranslator translator, bool translatorUser, bool translationReplacement, bool instanceTranslator, bool instanceTranslationsQuickLink, bool copyNewTranslationsToRootFolder = true)
         {
             if (Navigator.Manager.NotDefined(MethodInfo.GetCurrentMethod()))
             {
@@ -70,6 +70,20 @@ namespace Signum.Web.Translation
                     SpecialOmniboxProvider.Register(new SpecialOmniboxAction("TranslateInstances",
                         () => TranslationPermission.TranslateInstances.IsAuthorized(),
                         uh => uh.Action((TranslatedInstanceController tic) => tic.Index())));
+
+                    if (instanceTranslationsQuickLink)
+                    {
+                        LinksClient.RegisterEntityLinks((Lite<Entity> e, QuickLinkContext ctx) =>
+                        {
+                            if (!TranslatedInstanceLogic.TraducibleRoutes.Keys.Any(t => t == e.EntityType))
+                                return null;
+
+                            return new QuickLink[]
+                            {
+                                new QuickLinkAction(TranslationMessage.InstanceTranslations, RouteHelper.New().Action<TranslatedInstanceController>(tic => tic.EntityStatus(e)))
+                            };
+                        });
+                    }
                 }
 
                 if (copyNewTranslationsToRootFolder)

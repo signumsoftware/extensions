@@ -28,7 +28,7 @@
     <IISExpressUseClassicPipelineMode />
     <MvcProjectUpgradeChecked>true</MvcProjectUpgradeChecked>
     <TargetFrameworkProfile />
-	<TypeScriptToolsVersion>1.0</TypeScriptToolsVersion>
+    <TypeScriptToolsVersion>1.0</TypeScriptToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -875,6 +875,11 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>SMSUpdatePackage.cshtml</DependentUpon>
+    </Compile>
+    <Compile Include="Translation\Views\IndexSingleInstance.generated.cs">
+      <DependentUpon>IndexSingleInstance.cshtml</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Translation\Views\TranslationReplacement.generated.cs">
       <DependentUpon>TranslationReplacement.cshtml</DependentUpon>
@@ -1753,6 +1758,10 @@
     <Content Include="UserAssets\Views\ImportUserAsset.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>ImportUserAsset.generated.cs</LastGenOutput>
+    </Content>
+    <Content Include="Translation\Views\IndexSingleInstance.cshtml">
+      <Generator>RazorGenerator</Generator>
+      <LastGenOutput>IndexSingleInstance.generated.cs</LastGenOutput>
     </Content>
     <None Include="UserQueries\Views\QueryColumn.cshtml">
       <Generator>RazorGenerator</Generator>

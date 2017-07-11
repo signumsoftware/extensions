@@ -31,6 +31,9 @@ namespace Signum.Engine.Mailing.Pop3
 {
     public static class Pop3ConfigurationLogic
     {
+
+        public static bool GettingCancel = false; 
+
         static Expression<Func<Pop3ConfigurationEntity, IQueryable<Pop3ReceptionEntity>>> ReceptionsExpression =
             c => Database.Query<Pop3ReceptionEntity>().Where(r => r.Pop3Configuration.RefersTo(c));
         [ExpressionField]
@@ -213,6 +216,8 @@ namespace Signum.Engine.Mailing.Pop3
 
                         foreach (var mi in messagesToSave)
                         {
+                            if (GettingCancel)
+                                break;
 
                             var sent = SaveEmail(config, reception, client, mi);
 
@@ -302,6 +307,9 @@ namespace Signum.Engine.Mailing.Pop3
 
                         foreach (var mi in messageInfos)
                         {
+                            if (GettingCancel)
+                                break;
+
                             var sent = already.TryGetS(mi.Uid);
 
                             if (sent == null)

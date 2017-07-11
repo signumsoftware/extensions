@@ -14,11 +14,28 @@ using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using Signum.Web.Operations;
+using Signum.Engine.Mailing.Pop3;
 
 namespace Signum.Web.Mailing
 {
     public class MailingController : Controller
     {
+
+
+        [HttpGet]
+        public bool GettingCancelGet()
+        {
+            return Pop3ConfigurationLogic.GettingCancel;
+            //return new JsonResult{ Data = new { GettingCancel = Pop3ConfigurationLogic.GettingCancel } };
+        }
+
+        [HttpGet]
+        public void GettingCancelSet(bool cancel)
+        {
+             Pop3ConfigurationLogic.GettingCancel=cancel;
+        }
+
+
         [HttpPost]
         public ContentResult NewSubTokensCombo(string webQueryName, string tokenName, string prefix, int options)
         {

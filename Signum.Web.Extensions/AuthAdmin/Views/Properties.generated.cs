@@ -38,6 +38,12 @@ namespace ASP
     using Signum.Web;
     using Signum.Web.Auth;
     
+    #line 3 "..\..\AuthAdmin\Views\Properties.cshtml"
+    using Signum.Web.AuthAdmin;
+    
+    #line default
+    #line hidden
+    
     [System.CodeDom.Compiler.GeneratedCodeAttribute("RazorGenerator", "2.0.0.0")]
     [System.Web.WebPages.PageVirtualPathAttribute("~/AuthAdmin/Views/Properties.cshtml")]
     public partial class _AuthAdmin_Views_Properties_cshtml : System.Web.Mvc.WebViewPage<dynamic>
@@ -57,7 +63,7 @@ Write(Html.ScriptCss("~/authAdmin/Content/AuthAdmin.css"));
 WriteLiteral("\r\n");
 
             
-            #line 3 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 4 "..\..\AuthAdmin\Views\Properties.cshtml"
  using (var tc = Html.TypeContext<PropertyRulePack>())
 {
 
@@ -73,7 +79,7 @@ WriteLiteral(">\r\n");
 WriteLiteral("        ");
 
             
-            #line 6 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 7 "..\..\AuthAdmin\Views\Properties.cshtml"
    Write(Html.EntityLine(tc, f => f.Role));
 
             
@@ -84,7 +90,7 @@ WriteLiteral("\r\n");
 WriteLiteral("        ");
 
             
-            #line 7 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 8 "..\..\AuthAdmin\Views\Properties.cshtml"
    Write(Html.ValueLine(tc, f => f.Strategy));
 
             
@@ -95,7 +101,7 @@ WriteLiteral("\r\n");
 WriteLiteral("        ");
 
             
-            #line 8 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 9 "..\..\AuthAdmin\Views\Properties.cshtml"
    Write(Html.EntityLine(tc, f => f.Type));
 
             
@@ -114,7 +120,7 @@ WriteLiteral(">\r\n        <thead>\r\n            <tr>\r\n                <th>\r
 WriteLiteral("                    ");
 
             
-            #line 14 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 15 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(typeof(Signum.Entities.Basics.PropertyRouteEntity).NiceName());
 
             
@@ -125,7 +131,7 @@ WriteLiteral("\r\n                </th>\r\n                <th>\r\n");
 WriteLiteral("                    ");
 
             
-            #line 17 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 18 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(PropertyAllowed.Modify.NiceToString());
 
             
@@ -136,7 +142,7 @@ WriteLiteral("\r\n                </th>\r\n                <th>\r\n");
 WriteLiteral("                    ");
 
             
-            #line 20 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 21 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(PropertyAllowed.Read.NiceToString());
 
             
@@ -147,7 +153,7 @@ WriteLiteral("\r\n                </th>\r\n                <th>\r\n");
 WriteLiteral("                    ");
 
             
-            #line 23 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 24 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(PropertyAllowed.None.NiceToString());
 
             
@@ -158,22 +164,52 @@ WriteLiteral("\r\n                </th>\r\n                <th>\r\n");
 WriteLiteral("                    ");
 
             
-            #line 26 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 27 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(AuthAdminMessage.Overriden.NiceToString());
 
             
             #line default
             #line hidden
-WriteLiteral("\r\n                </th>\r\n            </tr>\r\n        </thead>\r\n");
+WriteLiteral("\r\n                </th>\r\n            </tr>\r\n        </thead>\r\n        <tr>\r\n     " +
+"       <td>\r\n");
+
+WriteLiteral("                ");
 
             
-            #line 30 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 33 "..\..\AuthAdmin\Views\Properties.cshtml"
+           Write(AuthAdminMessage.SetAll.NiceToString());
+
+            
+            #line default
+            #line hidden
+WriteLiteral("\r\n            </td>\r\n            <td>\r\n                <a");
+
+WriteLiteral(" id=\"sf-auth-chooser-all-modifiy\"");
+
+WriteLiteral(" class=\"sf-auth-chooser sf-auth-modify sf-auth-chooser-all\"");
+
+WriteLiteral(" />\r\n            </td>\r\n            <td>\r\n                <a");
+
+WriteLiteral(" id=\"sf-auth-chooser-all-read\"");
+
+WriteLiteral(" class=\"sf-auth-chooser sf-auth-read sf-auth-chooser-all\"");
+
+WriteLiteral(" />\r\n            </td>\r\n            <td>\r\n                <a");
+
+WriteLiteral(" id=\"sf-auth-chooser-all-none\"");
+
+WriteLiteral(" class=\"sf-auth-chooser sf-auth-none sf-auth-chooser-all\"");
+
+WriteLiteral(" />\r\n            </td>\r\n            <td></td>\r\n        </tr>\r\n");
+
+            
+            #line 46 "..\..\AuthAdmin\Views\Properties.cshtml"
         
             
             #line default
             #line hidden
             
-            #line 30 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 46 "..\..\AuthAdmin\Views\Properties.cshtml"
          foreach (var item in tc.TypeElementContext(p => p.Rules))
         {
 
@@ -185,7 +221,7 @@ WriteLiteral("            <tr>\r\n                <td>\r\n");
 WriteLiteral("                    ");
 
             
-            #line 34 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 50 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(Html.Span(null, item.Value.Resource.Path));
 
             
@@ -196,7 +232,7 @@ WriteLiteral("\r\n");
 WriteLiteral("                    ");
 
             
-            #line 35 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 51 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(Html.Hidden(item.Compose("Resource_Path"), item.Value.Resource.Path));
 
             
@@ -207,7 +243,7 @@ WriteLiteral("\r\n");
 WriteLiteral("                    ");
 
             
-            #line 36 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 52 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(Html.Hidden(item.Compose("AllowedBase"), item.Value.AllowedBase));
 
             
@@ -216,13 +252,13 @@ WriteLiteral("                    ");
 WriteLiteral("\r\n                </td>\r\n                <td>\r\n");
 
             
-            #line 39 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 55 "..\..\AuthAdmin\Views\Properties.cshtml"
                     
             
             #line default
             #line hidden
             
-            #line 39 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 55 "..\..\AuthAdmin\Views\Properties.cshtml"
                      if (!item.Value.CoercedValues.Contains(PropertyAllowed.Modify))
                     {
 
@@ -238,88 +274,8 @@ WriteLiteral(">\r\n");
 WriteLiteral("                            ");
 
             
-            #line 42 "..\..\AuthAdmin\Views\Properties.cshtml"
-                       Write(Html.RadioButton(item.Compose("Allowed"), "Modify", item.Value.Allowed == PropertyAllowed.Modify));
-
-            
-            #line default
-            #line hidden
-WriteLiteral("\r\n                        </a>\r\n");
-
-            
-            #line 44 "..\..\AuthAdmin\Views\Properties.cshtml"
-                    }
-
-            
-            #line default
-            #line hidden
-WriteLiteral("                </td>\r\n                <td>\r\n");
-
-            
-            #line 47 "..\..\AuthAdmin\Views\Properties.cshtml"
-                    
-            
-            #line default
-            #line hidden
-            
-            #line 47 "..\..\AuthAdmin\Views\Properties.cshtml"
-                     if (!item.Value.CoercedValues.Contains(PropertyAllowed.Read))
-                    {
-
-            
-            #line default
-            #line hidden
-WriteLiteral("                        <a");
-
-WriteLiteral(" class=\"sf-auth-chooser sf-auth-read\"");
-
-WriteLiteral(">\r\n");
-
-WriteLiteral("                            ");
-
-            
-            #line 50 "..\..\AuthAdmin\Views\Properties.cshtml"
-                       Write(Html.RadioButton(item.Compose("Allowed"), "Read", item.Value.Allowed == PropertyAllowed.Read));
-
-            
-            #line default
-            #line hidden
-WriteLiteral("\r\n                        </a>\r\n");
-
-            
-            #line 52 "..\..\AuthAdmin\Views\Properties.cshtml"
-                    }
-
-            
-            #line default
-            #line hidden
-WriteLiteral("                </td>\r\n                <td>\r\n");
-
-            
-            #line 55 "..\..\AuthAdmin\Views\Properties.cshtml"
-                    
-            
-            #line default
-            #line hidden
-            
-            #line 55 "..\..\AuthAdmin\Views\Properties.cshtml"
-                     if (!item.Value.CoercedValues.Contains(PropertyAllowed.None))
-                    {
-
-            
-            #line default
-            #line hidden
-WriteLiteral("                        <a");
-
-WriteLiteral(" class=\"sf-auth-chooser sf-auth-none\"");
-
-WriteLiteral(">\r\n");
-
-WriteLiteral("                            ");
-
-            
             #line 58 "..\..\AuthAdmin\Views\Properties.cshtml"
-                       Write(Html.RadioButton(item.Compose("Allowed"), "None", item.Value.Allowed == PropertyAllowed.None));
+                       Write(Html.RadioButton(item.Compose("Allowed"), "Modify", item.Value.Allowed == PropertyAllowed.Modify));
 
             
             #line default
@@ -335,10 +291,90 @@ WriteLiteral("\r\n                        </a>\r\n");
             #line hidden
 WriteLiteral("                </td>\r\n                <td>\r\n");
 
+            
+            #line 63 "..\..\AuthAdmin\Views\Properties.cshtml"
+                    
+            
+            #line default
+            #line hidden
+            
+            #line 63 "..\..\AuthAdmin\Views\Properties.cshtml"
+                     if (!item.Value.CoercedValues.Contains(PropertyAllowed.Read))
+                    {
+
+            
+            #line default
+            #line hidden
+WriteLiteral("                        <a");
+
+WriteLiteral(" class=\"sf-auth-chooser sf-auth-read\"");
+
+WriteLiteral(">\r\n");
+
+WriteLiteral("                            ");
+
+            
+            #line 66 "..\..\AuthAdmin\Views\Properties.cshtml"
+                       Write(Html.RadioButton(item.Compose("Allowed"), "Read", item.Value.Allowed == PropertyAllowed.Read));
+
+            
+            #line default
+            #line hidden
+WriteLiteral("\r\n                        </a>\r\n");
+
+            
+            #line 68 "..\..\AuthAdmin\Views\Properties.cshtml"
+                    }
+
+            
+            #line default
+            #line hidden
+WriteLiteral("                </td>\r\n                <td>\r\n");
+
+            
+            #line 71 "..\..\AuthAdmin\Views\Properties.cshtml"
+                    
+            
+            #line default
+            #line hidden
+            
+            #line 71 "..\..\AuthAdmin\Views\Properties.cshtml"
+                     if (!item.Value.CoercedValues.Contains(PropertyAllowed.None))
+                    {
+
+            
+            #line default
+            #line hidden
+WriteLiteral("                        <a");
+
+WriteLiteral(" class=\"sf-auth-chooser sf-auth-none\"");
+
+WriteLiteral(">\r\n");
+
+WriteLiteral("                            ");
+
+            
+            #line 74 "..\..\AuthAdmin\Views\Properties.cshtml"
+                       Write(Html.RadioButton(item.Compose("Allowed"), "None", item.Value.Allowed == PropertyAllowed.None));
+
+            
+            #line default
+            #line hidden
+WriteLiteral("\r\n                        </a>\r\n");
+
+            
+            #line 76 "..\..\AuthAdmin\Views\Properties.cshtml"
+                    }
+
+            
+            #line default
+            #line hidden
+WriteLiteral("                </td>\r\n                <td>\r\n");
+
 WriteLiteral("                    ");
 
             
-            #line 63 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 79 "..\..\AuthAdmin\Views\Properties.cshtml"
                Write(Html.CheckBox(item.Compose("Overriden"), item.Value.Overriden, new { disabled = "disabled", @class = "sf-auth-overriden" }));
 
             
@@ -347,7 +383,7 @@ WriteLiteral("                    ");
 WriteLiteral("\r\n                </td>\r\n            </tr>\r\n");
 
             
-            #line 66 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 82 "..\..\AuthAdmin\Views\Properties.cshtml"
         }
 
             
@@ -355,8 +391,25 @@ WriteLiteral("\r\n                </td>\r\n            </tr>\r\n");
             #line hidden
 WriteLiteral("    </table>\r\n");
 
+WriteLiteral("    <script");
+
+WriteLiteral(" type=\"text/javascript\"");
+
+WriteLiteral(">\r\n        $(function () {\r\n");
+
+WriteLiteral("            ");
+
             
-            #line 68 "..\..\AuthAdmin\Views\Properties.cshtml"
+            #line 86 "..\..\AuthAdmin\Views\Properties.cshtml"
+        Write(AuthAdminClient.Module["initPropertyRulePack"]());
+
+            
+            #line default
+            #line hidden
+WriteLiteral("\r\n        });\r\n    </script>\r\n");
+
+            
+            #line 89 "..\..\AuthAdmin\Views\Properties.cshtml"
 }
             
             #line default

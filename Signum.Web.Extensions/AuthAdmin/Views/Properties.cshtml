@@ -1,5 +1,6 @@
 ﻿@Html.ScriptCss("~/authAdmin/Content/AuthAdmin.css")
 @using Signum.Engine.Authorization
+@using Signum.Web.AuthAdmin
 @using (var tc = Html.TypeContext<PropertyRulePack>())
 {
     <div class="form-compact">
@@ -27,6 +28,21 @@
                 </th>
             </tr>
         </thead>
+        <tr>
+            <td>
+                @AuthAdminMessage.SetAll.NiceToString()
+            </td>
+            <td>
+                <a id="sf-auth-chooser-all-modifiy" class="sf-auth-chooser sf-auth-modify sf-auth-chooser-all" />
+            </td>
+            <td>
+                <a id="sf-auth-chooser-all-read" class="sf-auth-chooser sf-auth-read sf-auth-chooser-all" />
+            </td>
+            <td>
+                <a id="sf-auth-chooser-all-none" class="sf-auth-chooser sf-auth-none sf-auth-chooser-all" />
+            </td>
+            <td></td>
+        </tr>
         @foreach (var item in tc.TypeElementContext(p => p.Rules))
         {
             <tr>
@@ -65,4 +81,9 @@
             </tr>
         }
     </table>
+    <script type="text/javascript">
+        $(function () {
+            @(AuthAdminClient.Module["initPropertyRulePack"]())
+        });
+    </script>
 } 

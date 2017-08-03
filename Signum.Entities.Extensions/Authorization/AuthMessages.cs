@@ -165,5 +165,6 @@ namespace Signum.Entities.Authorization
         PleaseSaveChangesFirst,
         ResetChanges,
         SwitchTo,
+        SetAll
     }
 }

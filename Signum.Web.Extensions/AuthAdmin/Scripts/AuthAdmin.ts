@@ -4,6 +4,27 @@ import Entities = require("Framework/Signum.Web/Signum/Scripts/Entities")
 import Validator = require("Framework/Signum.Web/Signum/Scripts/Validator")
 import Navigator = require("Framework/Signum.Web/Signum/Scripts/Navigator")
 
+
+export function initPropertyRulePack() {
+    $(document).on("click", "#sf-auth-chooser-all-modifiy", allModify);
+    $(document).on("click", "#sf-auth-chooser-all-read", allRead);
+    $(document).on("click", "#sf-auth-chooser-all-none", allNone);
+}
+
+function allModify() {
+    $(document).find("#properties .sf-auth-modify :not(.sf-auth-chooser-all)").click();
+}
+
+function allRead() {
+    $(document).find("#properties .sf-auth-read :not(.sf-auth-chooser-all)").click();
+}
+
+function allNone() {
+    $(document).find("#properties .sf-auth-none :not(.sf-auth-chooser-all)").click();
+}
+
+
+
 function updateColoredBackground() {
     var $this = $(this);
     $this.toggleClass("sf-auth-chooser-disabled", !$this.find(":radio").prop("checked"));

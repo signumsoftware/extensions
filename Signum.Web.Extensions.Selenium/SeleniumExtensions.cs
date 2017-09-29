@@ -138,7 +138,9 @@ namespace Signum.Web.Selenium
             if (element.Selected == isChecked)
                 return;
 
-            element.Click();
+            element.SafeClick();
+
+            //element.Click();
 
             if (element.Selected != isChecked)
                 throw new InvalidOperationException();

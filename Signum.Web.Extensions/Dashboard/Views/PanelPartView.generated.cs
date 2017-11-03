@@ -201,7 +201,17 @@ WriteLiteral(">\r\n");
             #line hidden
             
             #line 30 "..\..\Dashboard\Views\PanelPartView.cshtml"
-           Html.RenderPartial(config.FrontEndView, TypeContextUtilities.UntypedNew(Model.Content, prefix)); 
+           
+            try
+            {
+                Html.RenderPartial(config.FrontEndView, TypeContextUtilities.UntypedNew(Model.Content, prefix));
+            }
+            catch (Exception e)
+            {
+                Html.Label(e.Message);
+                
+            }
+            
             
             #line default
             #line hidden

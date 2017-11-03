@@ -27,7 +27,17 @@
     </div>
 
     <div class="panel-body">
-        @{ Html.RenderPartial(config.FrontEndView, TypeContextUtilities.UntypedNew(Model.Content, prefix)); }
+        @{ 
+            try
+            {
+                Html.RenderPartial(config.FrontEndView, TypeContextUtilities.UntypedNew(Model.Content, prefix));
+            }
+            catch (Exception e)
+            {
+                Html.Label(e.Message);
+                
+            }
+            }
     </div>
 
 </div>

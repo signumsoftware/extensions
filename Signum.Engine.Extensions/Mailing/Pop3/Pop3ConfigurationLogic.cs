@@ -205,7 +205,7 @@ namespace Signum.Engine.Mailing.Pop3
                             var maxId = messageMachings.Select(e => e.Value.v1.Value.Number).Max();
                             messagesToSave = !messageMachings.Any()? 
                                 messageInfos.ToList():
-                                messageInfos.Where(m => m.Number > maxId).OrderBy(m=>m.Number).Take(20).ToList();// max 20 message per time
+                                messageInfos.Where(m => m.Number > maxId).OrderBy(m=>m.Number).Take(15).ToList();// max 20 message per time
                         }
                         else
                         {

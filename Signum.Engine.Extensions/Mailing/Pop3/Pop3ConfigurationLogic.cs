@@ -202,10 +202,19 @@ namespace Signum.Engine.Mailing.Pop3
                         {
                             var messageJoinDict = messageInfos.ToDictionary(e => e.Uid).OuterJoinDictionarySC(lastsEmails, (key, v1, v2) => new { key, v1, v2 });
                             var messageMachings = messageJoinDict.Where(e => e.Value.v1 != null && e.Value.v2 != null).ToList();
-                            messagesToSave = !messageMachings.Any()? messageInfos.ToList(): messageInfos.Where(m => m.Number > messageMachings.Select(e => e.Value.v1.Value.Number).Max()).ToList();
+                            var maxId = messageMachings.Select(e => e.Value.v1.Value.Number).Max();
+                            messagesToSave = !messageMachings.Any()? 
+                                messageInfos.ToList():
+                                messageInfos.Where(m => m.Number > maxId).OrderBy(m=>m.Number).Take(20).ToList();// max 20 message per time
                         }
                         else
-                            messagesToSave = messageInfos.ToList();
+                        {
+
+                            // the first time only get the last 10 messages
+                            messagesToSave = messageInfos.OrderByDescending(m => m.Number).Take(10).ToList();
+
+                        }
+                           
 
                         using (Transaction tr = Transaction.ForceNew())
                         {

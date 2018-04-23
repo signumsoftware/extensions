@@ -47,6 +47,7 @@ namespace Signum.Entities.Rest
         [NotNullable, SqlDbType(Size = 100)]
         public string Action { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         [SqlDbType(Size = MaxValue)]

@@ -50,6 +50,7 @@ namespace Signum.Entities.Disconnected
 
         public DisconnectedExportState State { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         public double Ratio(DisconnectedExportEntity estimation)

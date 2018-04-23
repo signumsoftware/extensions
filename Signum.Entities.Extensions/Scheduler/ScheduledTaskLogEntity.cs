@@ -46,6 +46,7 @@ namespace Signum.Entities.Scheduler
         [ImplementedByAll]
         public Lite<IEntity> ProductEntity { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         [StringLengthValidator(AllowNulls = true, MultiLine = true)]
@@ -75,7 +76,7 @@ namespace Signum.Entities.Scheduler
 
         public Lite<ScheduledTaskLogEntity> SchedulerTaskLog { get; set; }
 
-        [NotNullValidator]
+        [NotNullValidator, AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
     }
 }

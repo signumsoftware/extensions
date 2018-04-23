@@ -40,6 +40,7 @@ namespace Signum.Entities.MachineLearning
 
         public PredictorPublicationSymbol Publication { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> TrainingException { get; set; }
 
         [ImplementedBy(typeof(UserEntity))]

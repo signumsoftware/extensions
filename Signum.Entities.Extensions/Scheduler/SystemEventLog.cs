@@ -20,7 +20,8 @@ namespace Signum.Entities.Scheduler
 
         [StringLengthValidator(AllowNulls = false, Min = 3, Max = 100)]
         public string EventType { get; set; }
-        
+
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
     }
 }

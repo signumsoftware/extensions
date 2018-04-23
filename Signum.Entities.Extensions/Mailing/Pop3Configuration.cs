@@ -82,6 +82,7 @@ namespace Signum.Entities.Mailing
 
         public int NewEmails { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
     }
 
@@ -93,7 +94,7 @@ namespace Signum.Entities.Mailing
         public Lite<Pop3ReceptionEntity> Reception { get; set; }
 
         [UniqueIndex]
-        [NotNullValidator]
+        [NotNullValidator, AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
     }
 }

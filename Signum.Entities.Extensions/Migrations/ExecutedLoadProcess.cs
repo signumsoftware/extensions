@@ -34,6 +34,7 @@ namespace Signum.Entities.Migrations
             get { return End == null ? null : DurationExpression.Evaluate(this); }
         }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception{ get; set; }
 
         static Expression<Func<LoadMethodLogEntity, string>> ToStringExpression = e => e.MethodName;

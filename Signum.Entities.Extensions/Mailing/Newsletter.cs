@@ -114,6 +114,14 @@ namespace Signum.Entities.Mailing
     [Serializable, EntityKind(EntityKind.System, EntityData.Transactional)]
     public class NewsletterDeliveryDN : Entity, IProcessLineDataDN
     {
+
+        bool cancel;
+        public bool Cancel
+        {
+            get { return cancel; }
+            set { Set(ref cancel, value); }
+        }
+
         bool sent;
         public bool Sent
         {
@@ -152,6 +160,7 @@ namespace Signum.Entities.Mailing
     public static class NewsletterOperation
     {
         public static readonly ExecuteSymbol<NewsletterDN> Save = OperationSymbol.Execute<NewsletterDN>();
+        public static readonly ExecuteSymbol<NewsletterDN> CancelDuplicateEmails = OperationSymbol.Execute<NewsletterDN>();
         public static readonly ConstructSymbol<ProcessDN>.From<NewsletterDN> Send = OperationSymbol.Construct<ProcessDN>.From<NewsletterDN>();
         public static readonly ExecuteSymbol<NewsletterDN> AddRecipients = OperationSymbol.Execute<NewsletterDN>();
         public static readonly ExecuteSymbol<NewsletterDN> RemoveRecipients = OperationSymbol.Execute<NewsletterDN>();

@@ -164,6 +164,34 @@ namespace Signum.Engine.Mailing
                 Execute = (n, _) => n.State = NewsletterState.Saved
             }.Register();
 
+
+            new Execute(NewsletterOperation.CancelDuplicateEmails)
+            {
+                AllowsNew = false,
+                Lite = true,
+                FromStates = {  NewsletterState.Saved },
+                ToState = NewsletterState.Saved,
+                Execute = (n, _) =>{
+
+
+                   var datas= n.Deliveries().Select(d => new { d, d.Recipient.Entity.EmailOwnerData.Email }).ToList();
+                   var duplicates= datas.GroupBy(e => e.Email).Where(g => g.Count() > 1).ToList();
+
+                    var toSend = duplicates.Select(g => g.First()).ToList();
+                    var toCancel = duplicates.SelectMany(g => g).Where(e => !toSend.Contains(e)).Select(e=>e.d).ToList();
+
+
+                    foreach (var item in toCancel.GroupsOf(100))
+                    {
+                        Database.Query<NewsletterDeliveryDN>().Where(d => item.Contains(d))
+                        .UnsafeUpdate().Set(e => e.Cancel, e => true).Execute();
+                    }
+
+                }
+                
+               
+            }.Register();
+
             new Execute(NewsletterOperation.AddRecipients)
             {
                 FromStates = { NewsletterState.Saved },
@@ -269,6 +297,7 @@ namespace Signum.Engine.Mailing
                 { 
                     new Filter(QueryUtils.Parse("Entity.NewsletterDeliveries.Element.Newsletter", qd, SubTokensOptions.CanElement),  FilterOperation.EqualTo, newsletter.ToLite()),
                     new Filter(QueryUtils.Parse("Entity.NewsletterDeliveries.Element.Sent", qd, SubTokensOptions.CanElement), FilterOperation.EqualTo, false),
+                    new Filter(QueryUtils.Parse("Entity.NewsletterDeliveries.Element.Cancel", qd, SubTokensOptions.CanElement), FilterOperation.EqualTo, false),
                 },
                 Orders = new List<Order>(),
                 Columns = columns,

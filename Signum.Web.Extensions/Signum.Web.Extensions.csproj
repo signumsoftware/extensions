@@ -31,6 +31,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <TypeScriptToolsVersion>2.3</TypeScriptToolsVersion>
+    <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -1063,6 +1064,7 @@
     <EmbeddedResource Include="Mailing\Scripts\AsyncEmailSender.js">
       <DependentUpon>AsyncEmailSender.ts</DependentUpon>
     </EmbeddedResource>
+    <Content Include="gulpfile.js" />
     <Content Include="Maps\Content\operationMap.css" />
     <Content Include="Maps\Content\schemaMap.css" />
     <EmbeddedResource Include="Maps\Scripts\OperationMap.js">
@@ -1590,6 +1592,7 @@
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>DashboardNavbarPartView.generated.cs</LastGenOutput>
     </Content>
+    <Content Include="package.json" />
     <None Include="Profiler\Views\Times.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>Times.generated.cs</LastGenOutput>

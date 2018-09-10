@@ -1,9 +1,13 @@
 ﻿
 @media (min-width: 1200px)
 {
-    .sf-chart-type
+    body:not(.rtl) .sf-chart-type
     {
         margin-right: -25px;
+    }
+
+    body.rtl .sf-chart-type {
+        margin-left: -25px;
     }
 }
 
@@ -12,9 +16,9 @@
     margin-bottom: 4px;
 }
 
-.sf-chart-type > .panel-body
+.sf-chart-type > .card-body
 {
-    padding: 14px;
+    padding: 10px;
 }
 
 .sf-chart-tokens
@@ -22,7 +26,7 @@
     margin-bottom: 6px;
 }
 
-.sf-chart-tokens > .panel-body
+.sf-chart-tokens > .card-body
 {
     padding: 0px
 }
@@ -92,16 +96,27 @@
 }
 .sf-chart-token-config-trigger
 {
-    float: right;
     cursor: pointer;    
 }
-.sf-chart-tokens .sf-field
-{
-    min-width: inherit;    
+
+body:not(.rtl) .sf-chart-token-config-trigger {
+    float: right;
 }
-.sf-chart-token .sf-query-token
-{
-    float: left;    
+
+body.rtl .sf-chart-token-config-trigger {
+    float: left;
+}
+
+.sf-chart-tokens .sf-field {
+    min-width: inherit;
+}
+
+body:not(.rtl) .sf-chart-token .sf-query-token {
+    float: left;
+}
+
+body.rtl .sf-chart-token .sf-query-token {
+    float: right;
 }
 
 .sf-chart-container

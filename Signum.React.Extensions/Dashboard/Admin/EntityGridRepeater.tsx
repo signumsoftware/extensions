@@ -1,18 +1,18 @@
 ﻿import * as React from 'react'
-import { Tab, Tabs } from 'react-bootstrap'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Constructor from '../../../../Framework/Signum.React/Scripts/Constructor'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { FindOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { TypeContext, StyleContext, StyleOptions, FormGroupStyle, mlistItemContext, EntityFrame } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { PropertyRoute, PropertyRouteType, MemberInfo, getTypeInfo, getTypeInfos, TypeInfo, IsByAll, ReadonlyBinding, LambdaMemberType } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { LineBase, LineBaseProps, FormGroup, FormControlStatic, runTasks, } from '../../../../Framework/Signum.React/Scripts/Lines/LineBase'
-import { ModifiableEntity, Lite, Entity, MList, MListElement, EntityControlMessage, JavascriptMessage, toLite, is, liteKey, getToString } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import Typeahead from '../../../../Framework/Signum.React/Scripts/Lines/Typeahead'
-import { EntityListBase, EntityListBaseProps } from '../../../../Framework/Signum.React/Scripts/Lines/EntityListBase'
-import { RenderEntity } from '../../../../Framework/Signum.React/Scripts/Lines/RenderEntity'
-import { isModifiableEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { classes } from '@framework/Globals'
+import * as Navigator from '@framework/Navigator'
+import * as Constructor from '@framework/Constructor'
+import * as Finder from '@framework/Finder'
+import { FindOptions } from '@framework/FindOptions'
+import { TypeContext, StyleContext, StyleOptions, FormGroupStyle, mlistItemContext, EntityFrame } from '@framework/TypeContext'
+import { PropertyRoute, PropertyRouteType, MemberInfo, getTypeInfo, getTypeInfos, TypeInfo, IsByAll, ReadonlyBinding, MemberType } from '@framework/Reflection'
+import { LineBase, LineBaseProps } from '@framework/Lines/LineBase'
+import { ModifiableEntity, Lite, Entity, MList, MListElement, EntityControlMessage, JavascriptMessage, toLite, is, liteKey, getToString } from '@framework/Signum.Entities'
+import { EntityListBase, EntityListBaseProps } from '@framework/Lines/EntityListBase'
+import { RenderEntity } from '@framework/Lines/RenderEntity'
+import { isModifiableEntity } from '@framework/Signum.Entities';
+import { PanelStyle } from '../Signum.Entities.Dashboard';
 
 interface IGridEntity {
     row: number;
@@ -27,9 +27,8 @@ export interface EntityGridRepeaterProps extends EntityListBaseProps {
     resize?: boolean;
 }
 
-
 export interface EntityGridRepaterState extends EntityGridRepeaterProps {
-    dragMode?: string;
+    dragMode?: "move" | "left" | "right";
     initialPageX?: number;
     originalStartColumn?: number;
     currentItem?: TypeContext<ModifiableEntity & IGridEntity>;
@@ -49,22 +48,22 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
     renderInternal() {
         const s = this.state;
         return (
-            <fieldset className={classes("SF-grid-repeater-field SF-control-container", this.state.ctx.errorClass) }>
+            <fieldset className={classes("SF-grid-repeater-field SF-control-container", this.state.ctx.errorClass)}>
                 <legend>
                     <div>
                         <span>{this.state.labelText}</span>
-                        <span className="pull-right">
-                            {this.renderCreateButton(false) }
-                            {this.renderFindButton(false) }
+                        <span className="float-right">
+                            {this.renderCreateButton(false)}
+                            {this.renderFindButton(false)}
                         </span>
                     </div>
                 </legend>
                 <div className="row rule">
-                    { Array.range(0, 12).map(i =>
+                    {Array.range(0, 12).map(i =>
                         <div className="col-sm-1" key={i}>
-                            <div className="ruleItem"/>
+                            <div className="ruleItem" />
                         </div>
-                    ) }
+                    )}
                 </div>
                 <div className={s.dragMode == "move" ? "sf-dragging" : undefined} onDrop={this.handleOnDrop}>
                     {
@@ -77,13 +76,14 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
                             .orderBy(gr => parseInt(gr.key))
                             .flatMap((gr, i, groups) => [
                                 this.renderSeparator(parseInt(gr.key)),
-                                <div className="row items-row" key={"row" + gr.key} onDragOver={e => this.handleItemsRowDragOver(e, parseInt(gr.key)) }>
+                                <div className="row items-row" key={"row" + gr.key} onDragOver={e => this.handleItemsRowDragOver(e, parseInt(gr.key))}>
                                     {gr.elements.orderBy(a => a.ctx.value.startColumn).map((p, j, list) => {
                                         let item = this.props.getComponent!(p.ctx);
                                         const s = this.state;
                                         item = React.cloneElement(item, {
                                             onResizerDragStart: p.ctx.readOnly || !s.resize ? undefined : (resizer, e) => this.handleResizeDragStart(resizer, e, p.ctx),
                                             onTitleDragStart: p.ctx.readOnly || !s.move ? undefined : (e) => this.handleMoveDragStart(e, p.ctx),
+                                            onTitleDragEnd: p.ctx.readOnly || !s.move ? undefined : (e) => this.handleMoveDragEnd(e, p.ctx),
                                             onRemove: p.ctx.readOnly || !s.remove ? undefined : (e) => this.handleRemoveElementClick(e, p.index),
                                         } as EntityGridItemProps);
 
@@ -92,12 +92,12 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
                                         const offset = p.ctx.value.startColumn - (last ? (last.startColumn + last.columns) : 0);
 
                                         return (
-                                            <div key={j} className={`sf-grid-element col-sm-${p.ctx.value.columns} col-sm-offset-${offset}`}>
+                                            <div key={j} className={`sf-grid-element col-sm-${p.ctx.value.columns} offset-sm-${offset}`}>
                                                 {item}
                                                 {/*StartColumn: {p.ctx.value.startColumn} | Columns: {p.ctx.value.columns} | Row: {p.ctx.value.row}*/}
                                             </div>
                                         );
-                                    }) }
+                                    })}
                                 </div>,
                                 i == groups.length - 1 && this.renderSeparator(parseInt(gr.key) + 1)
                             ])
@@ -110,11 +110,11 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
 
     renderSeparator(rowIndex: number) {
         return (
-            <div className={classes("row separator-row", this.state.currentRow == rowIndex ? "sf-over" : undefined) } key={"sep" + rowIndex}
-                onDragOver = {e => this.handleRowDragOver(e, rowIndex) }
-                onDragEnter = {e => this.handleRowDragOver(e, rowIndex) }
-                onDragLeave = {() => this.handleRowDragLeave() }
-                onDrop = {e => this.handleRowDrop(e, rowIndex) } />
+            <div className={classes("row separator-row", this.state.currentRow == rowIndex ? "sf-over" : undefined)} key={"sep" + rowIndex}
+                onDragOver={e => this.handleRowDragOver(e, rowIndex)}
+                onDragEnter={e => this.handleRowDragOver(e, rowIndex)}
+                onDragLeave={() => this.handleRowDragLeave()}
+                onDrop={e => this.handleRowDrop(e, rowIndex)} />
         );
     }
 
@@ -170,10 +170,10 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
 
                 if (!e)
                     return;
-                
+
                 if (!isModifiableEntity(e))
                     throw new Error("Should be an entity");
-                
+
                 let ge = e as ModifiableEntity & IGridEntity;
 
                 const list = this.props.ctx.value!;
@@ -202,7 +202,6 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
     }
 
 
-
     handleResizeDragStart = (resizer: "left" | "right", e: React.DragEvent<any>, mlec: TypeContext<ModifiableEntity & IGridEntity>) => {
         e.dataTransfer.effectAllowed = "move";
         const de = e.nativeEvent as DragEvent;
@@ -229,6 +228,19 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
         this.forceUpdate();
     }
 
+    handleMoveDragEnd = (e: React.DragEvent<any>, mlec: TypeContext<ModifiableEntity & IGridEntity>) => {
+        e.dataTransfer.effectAllowed = "move";
+        const de = e.nativeEvent as DragEvent;
+
+        const s = this.state;
+        s.dragMode = undefined;
+        s.initialPageX = undefined;
+        s.originalStartColumn = undefined;
+        s.currentItem = undefined;
+        s.currentRow = undefined;
+        this.forceUpdate();
+    }
+
     handleItemsRowDragOver = (e: React.DragEvent<any>, row: number) => {
         e.preventDefault();
         e.dataTransfer.dropEffect = "move";
@@ -237,8 +249,6 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
         const list = s.ctx.value!.map(a => a.element as ModifiableEntity & IGridEntity);
         const c = s.currentItem!.value;
         const rect = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
-
-
 
         if (s.dragMode == "move") {
             const offset = de.pageX - s.initialPageX!;
@@ -302,11 +312,12 @@ export class EntityGridRepeater extends EntityListBase<EntityGridRepeaterProps, 
 
 export interface EntityGridItemProps {
     title?: React.ReactElement<any>;
-    bsStyle?: string;
+    bsStyle?: PanelStyle;
     children?: React.ReactNode;
 
     onResizerDragStart?: (resizer: "left" | "right", e: React.DragEvent<any>) => void;
     onTitleDragStart?: (e: React.DragEvent<any>) => void;
+    onTitleDragEnd?: (e: React.DragEvent<any>) => void;
     onRemove?: (e: React.MouseEvent<any>) => void;
 }
 
@@ -315,29 +326,35 @@ export class EntityGridItem extends React.Component<EntityGridItemProps>{
 
     render() {
 
+        var style = this.props.bsStyle == undefined || this.props.bsStyle == "Default" ? undefined : this.props.bsStyle.toLowerCase();
+
         return (
-            <div className={"panel panel-" + (this.props.bsStyle ? this.props.bsStyle.toLowerCase() : "default") }>
-                <div className="panel-heading" draggable={!!this.props.onTitleDragStart}
-                    onDragStart={this.props.onTitleDragStart} >
+            <div className={classes("card", style && ("border-" + style))}>
+                <div className={classes("card-header",
+                    style && style != "light" && "text-white",
+                    style && ("bg-" + style)
+                )} draggable={!!this.props.onTitleDragStart}
+                    onDragStart={this.props.onTitleDragStart}
+                    onDragEnd={this.props.onTitleDragEnd} >
                     {this.props.onRemove &&
-                        <a className="sf-line-button sf-remove pull-right" onClick={this.props.onRemove}
-                            title={EntityControlMessage.Remove.niceToString() }>
-                            <span className="glyphicon glyphicon-remove"></span>
+                        <a href="#" className="sf-line-button sf-remove float-right" onClick={this.props.onRemove}
+                            title={EntityControlMessage.Remove.niceToString()}>
+                            <FontAwesomeIcon icon="times" />
                         </a>
                     }
                     {this.props.title}
                 </div>
-                <div className="panel-body">
-                    { this.props.children  }
+                <div className="card-body">
+                    {this.props.children}
                 </div>
                 {this.props.onResizerDragStart &&
                     <div className="sf-leftHandle" draggable={true}
-                        onDragStart={e => this.props.onResizerDragStart!("left", e) }>
+                        onDragStart={e => this.props.onResizerDragStart!("left", e)}>
                     </div>
                 }
                 {this.props.onResizerDragStart &&
                     <div className="sf-rightHandle" draggable={true}
-                        onDragStart={e => this.props.onResizerDragStart!("right", e) }>
+                        onDragStart={e => this.props.onResizerDragStart!("right", e)}>
                     </div>
                 }
             </div>

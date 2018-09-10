@@ -1,14 +1,10 @@
-﻿
+
 import * as React from 'react'
-import { Modal, ModalProps, ModalClass, ButtonToolbar } from 'react-bootstrap'
-import { Dic } from '../../../../Framework/Signum.React/Scripts/Globals';
-import { openModal, IModalProps } from '../../../../Framework/Signum.React/Scripts/Modals';
-import { SelectorMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { TypeInfo } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { TypeContext, StyleContext } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { DynamicViewMessage } from '../Signum.Entities.Dynamic'
+import { Dic } from '@framework/Globals';
+import { openModal, IModalProps } from '@framework/Modals';
 import * as NodeUtils from './NodeUtils'
 import { BaseNode } from './Nodes'
+import { Modal } from '@framework/Components';
 
 
 interface ShowCodeModalProps extends React.Props<ShowCodeModal>, IModalProps {
@@ -35,18 +31,18 @@ export default class ShowCodeModal extends React.Component<ShowCodeModalProps, {
     render() {
         
         return (
-            <Modal bsSize="lg" onHide={this.handleCancelClicked} show={this.state.show} onExited={this.handleOnExited} className="sf-selector-modal">
-                <Modal.Header closeButton={true}>
-                    <h4 className="modal-title">
-                        {this.props.typeName + "Component code"}
-                    </h4>
-                </Modal.Header>
-
-                <Modal.Body>
+            <Modal size="lg" onHide={this.handleCancelClicked} show={this.state.show} onExited={this.handleOnExited} className="sf-selector-modal">
+                <div className="modal-header">
+                    <h5 className="modal-title">{this.props.typeName + "Component code"}</h5>
+                    <button type="button" className="close" data-dismiss="modal" aria-label="Close" onClick={this.handleCancelClicked}>
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div className="modal-body">
                     <pre>
                         {renderFile(this.props.typeName, this.props.node)}
                     </pre>
-                </Modal.Body>
+                </div>
             </Modal>
         );
     }
@@ -59,23 +55,19 @@ export default class ShowCodeModal extends React.Component<ShowCodeModalProps, {
 
 function renderFile(typeName: string, node: BaseNode): string {
 
-    var cc = new NodeUtils.CodeContext();
-    cc.usedNames = [];
-    cc.imports = [];
-    cc.assignments = {};
-    cc.ctxName = "ctx";
+    var cc = new NodeUtils.CodeContext("ctx", [], {}, []);
 
     var text = NodeUtils.renderCode(node, cc).indent(12);
 
     return (
         `
 import * as React from 'react'
-import { Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { getMixin } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { Dic } from '@framework/Globals'
+import { getMixin } from '@framework/Signum.Entities'
 import { ${typeName}Entity } from '../[your namespace]'
 import { ValueLine, EntityLine, RenderEntity, EntityCombo, EntityList, EntityDetail, EntityStrip, 
-         EntityRepeater, EntityCheckboxList, EntityTabRepeater, TypeContext, EntityTable } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl, ValueSearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
+         EntityRepeater, EntityCheckboxList, EntityTabRepeater, TypeContext, EntityTable } from '@framework/Lines'
+import { SearchControl, ValueSearchControl } from '@framework/Search'
 ${Dic.getValues(cc.imports.toObjectDistinct(a => a)).join("\n")}
 
 export default class ${typeName}Component extends React.Component<{ ctx: TypeContext<${typeName}Entity> }> {

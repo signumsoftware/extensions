@@ -1,34 +1,35 @@
 import * as React from 'react'
 import { Route } from 'react-router'
 import * as QueryString from 'query-string'
-import { ajaxPost, ajaxGet, ValidationError } from '../../../Framework/Signum.React/Scripts/Services';
-import { EntitySettings, ViewPromise } from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { EntityOperationSettings, EntityOperationContext, ContextualOperationContext } from '../../../Framework/Signum.React/Scripts/Operations'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
-import * as EntityOperations from '../../../Framework/Signum.React/Scripts/Operations/EntityOperations'
+import { ajaxPost, ajaxGet, ValidationError } from '@framework/Services';
+import { EntitySettings, ViewPromise } from '@framework/Navigator'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { EntityOperationSettings, EntityOperationContext, ContextualOperationContext } from '@framework/Operations'
+import * as Operations from '@framework/Operations'
+import * as EntityOperations from '@framework/Operations/EntityOperations'
 
-import { Type } from '../../../Framework/Signum.React/Scripts/Reflection'
-import { getMixin, Lite, isLite } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { Type } from '@framework/Reflection'
+import { getMixin, Lite, isLite } from '@framework/Signum.Entities'
 import { UserEntity } from '../Authorization/Signum.Entities.Authorization'
 
-import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater } from '../../../Framework/Signum.React/Scripts/Lines'
-import { SearchMessage, JavascriptMessage, ExecuteSymbol, ConstructSymbol_From, ConstructSymbol_Simple, DeleteSymbol } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater } from '@framework/Lines'
+import { SearchMessage, JavascriptMessage, ExecuteSymbol, ConstructSymbol_From, ConstructSymbol_Simple, DeleteSymbol } from '@framework/Signum.Entities'
 import { TreeEntity, TreeOperation, MoveTreeModel, TreeMessage } from './Signum.Entities.Tree'
 import TreeModal from './TreeModal'
-import { FilterRequest, FilterOption, FilterOptionParsed } from "../../../Framework/Signum.React/Scripts/FindOptions";
-import { ImportRoute } from "../../../Framework/Signum.React/Scripts/AsyncImport";
-import { getAllTypes, getTypeInfo } from "../../../Framework/Signum.React/Scripts/Reflection";
-import { TypeInfo } from "../../../Framework/Signum.React/Scripts/Reflection";
+import { FilterRequest, FilterOption, FilterOptionParsed } from "@framework/FindOptions";
+import { ImportRoute } from "@framework/AsyncImport";
+import { getAllTypes, getTypeInfo } from "@framework/Reflection";
+import { TypeInfo } from "@framework/Reflection";
 import * as AuthClient from '../Authorization/AuthClient'
 import TreeButton from './TreeButton'
-import { toLite } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
-import { SearchControlLoaded } from "../../../Framework/Signum.React/Scripts/Search";
-import { MessageKey } from "../../../Framework/Signum.React/Scripts/Reflection";
-import { ifError } from "../../../Framework/Signum.React/Scripts/Globals";
+import { toLite } from "@framework/Signum.Entities";
+import { SearchControlLoaded } from "@framework/Search";
+import { MessageKey } from "@framework/Reflection";
+import { ifError } from "@framework/Globals";
 import { DisabledMixin } from "../Basics/Signum.Entities.Basics";
-import { tryGetMixin } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
+import { tryGetMixin } from "@framework/Signum.Entities";
+import { is } from '@framework/Signum.Entities';
 
 export function start(options: { routes: JSX.Element[] }) {
     options.routes.push(<ImportRoute path="~/tree/:typeName" onImportModule={() => import("./TreePage")} />);
@@ -79,7 +80,7 @@ function moveModal(lite: Lite<TreeEntity>) {
     else
         return Navigator.view(MoveTreeModel.New({ insertPlace: "LastNode" }), {
             title: TreeMessage.Move0.niceToString(lite.toStr),
-            modalSize: "medium",
+            modalSize: "md",
             extraComponentProps: { lite },
         })
 }
@@ -91,7 +92,7 @@ function copyModal(lite: Lite<TreeEntity>) {
     else
         return Navigator.view(MoveTreeModel.New({ insertPlace: "LastNode" }), {
             title: TreeMessage.Copy0.niceToString(lite.toStr),
-            modalSize: "medium",
+            modalSize: "md",
             extraComponentProps: { lite },
         });
 }
@@ -136,7 +137,10 @@ export function overrideOnFind(ti: TypeInfo) {
     var qs = getQuerySetting(ti.name);
 
     if (!qs.onFind)
-      qs.onFind = (fo, mo) => openTree(ti.name, fo.filterOptions, { title: mo && mo.title });
+        qs.onFind = (fo, mo) => openTree(ti.name, fo.filterOptions, { title: mo && mo.title });
+
+    if (!qs.onFindMany)
+        qs.onFindMany = (fo, mo) => openTree(ti.name, fo.filterOptions, { title: mo && mo.title }).then(lite => lite && [lite]);
 }
 
 export function overrideDefaultOrder(ti: TypeInfo) {
@@ -198,24 +202,25 @@ export interface TreeNode {
     nodeState: TreeNodeState;
 }
 
-export function fixState(node: TreeNode) {
+export function fixState(node: TreeNode, expandedNodes?: Lite<TreeEntity>[]) {
 
     node.nodeState = node.childrenCount == 0 ? "Leaf" :
         node.loadedChildren.length == 0 ? "Collapsed" :
-            node.childrenCount == node.loadedChildren.length ? "Expanded" : "Filtered";
+            expandedNodes && !expandedNodes.some(a => is(a, node.lite)) ? "Collapsed" :
+                node.childrenCount == node.loadedChildren.length ? "Expanded" : "Filtered";
 
-    node.loadedChildren.forEach(n => fixState(n));
+    node.loadedChildren.forEach(n => fixState(n, expandedNodes));
 }
 
-function fixNodes(nodes: Array<TreeNode>) {
-    nodes.forEach(n => fixState(n));
+function fixNodes(nodes: Array<TreeNode>, expandedNodes: Lite<TreeEntity>[]) {
+    nodes.forEach(n => fixState(n, expandedNodes))
     return nodes;
 }
 
 
 export namespace API {
     export function findNodes(typeName: string, request: FindNodesRequest): Promise<Array<TreeNode>> {
-        return ajaxPost<Array<TreeNode>>({ url: `~/api/tree/findNodes/${typeName}` }, request).then(ns => fixNodes(ns));
+        return ajaxPost<Array<TreeNode>>({ url: `~/api/tree/findNodes/${typeName}` }, request).then(ns => fixNodes(ns, request.expandedNodes));
     }
 
     export interface FindNodesRequest {

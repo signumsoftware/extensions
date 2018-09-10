@@ -26,12 +26,12 @@ namespace Signum.Engine.Dynamic
     {
         public static ResetLazy<HashSet<Type>> AvailableEmbeddedEntities;
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 sb.Include<DynamicTypeEntity>()
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -69,7 +69,7 @@ namespace Signum.Engine.Dynamic
                     Construct = (e, _) => {
 
                         var def = e.GetDefinition();
-                        var result = new DynamicTypeEntity { TypeName = null };
+                        var result = new DynamicTypeEntity { TypeName = null, BaseType = e.BaseType };
                         result.SetDefinition(def);
                         return result;
                     },
@@ -77,27 +77,45 @@ namespace Signum.Engine.Dynamic
 
                 new Execute(DynamicTypeOperation.Save)
                 {
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (e, _) => {
 
                         if (!e.IsNew)
                         {
                             var old = e.ToLite().Retrieve();
                             if (e.TypeName != old.TypeName)
-                                DynamicSqlMigrationLogic.AddDynamicRename(Replacements.KeyTables, old.TypeName, e.TypeName);
+                                DynamicSqlMigrationLogic.AddDynamicRename(TypeNameKey, old.TypeName, e.TypeName);
 
                             var newDef = e.GetDefinition();
                             var oldDef = old.GetDefinition();
+                            var newName = GetTableName(e, newDef);
+                            var oldName = GetTableName(old, oldDef);
+
+                            if (newName != oldName)
+                                DynamicSqlMigrationLogic.AddDynamicRename(Replacements.KeyTables, oldName, newName);
 
                             var pairs = newDef.Properties
                                 .Join(oldDef.Properties, n => n.UID, o => o.UID, (n, o) => new { n, o })
                                 .Where(a => a.n.Type == a.o.Type);
 
-                            foreach (var a in pairs.Where(a => a.n.Name != a.o.Name))
                             {
-                                DynamicSqlMigrationLogic.AddDynamicRename(Replacements.KeyColumnsForTable(old.TypeName),
-                                    a.o.Name, a.n.Name);
+                                string ColName(DynamicProperty dp) => dp.ColumnName ?? dp.Name;
+
+                                string replacementKey = (e.BaseType != DynamicBaseType.Entity || old.BaseType != DynamicBaseType.Entity) ? UnknownColumnKey : Replacements.KeyColumnsForTable(oldName);
+                                foreach (var a in pairs.Where(a => ColName(a.n) != ColName(a.o)))
+                                {
+                                    DynamicSqlMigrationLogic.AddDynamicRename(replacementKey, ColName(a.o), ColName(a.n));
+                                }
+                            }
+
+                            {
+                                string replacementKey = (e.BaseType != DynamicBaseType.Entity || old.BaseType != DynamicBaseType.Entity) ? UnknownPropertyKey : PropertyRouteLogic.PropertiesFor.FormatWith(old.TypeName);
+                                foreach (var a in pairs.Where(a => a.n.Name != a.o.Name))
+                                {
+                                    DynamicSqlMigrationLogic.AddDynamicRename(replacementKey, a.o.Name, a.n.Name);
+                                }
+
                             }
                         }
                     },
@@ -112,6 +130,12 @@ namespace Signum.Engine.Dynamic
                 }.Register();
             }
         }
+
+        public const string UnknownPropertyKey = "UnknownProperty";
+        public const string UnknownColumnKey = "UnknownColumn";
+        public const string TypeNameKey = "TypeName";
+
+        public static Func<DynamicTypeEntity, DynamicTypeDefinition, string> GetTableName = (dt, def) => def.TableName ?? ("codegen." + dt.TypeName);
 
         public static string GetPropertyType(DynamicProperty property)
         {
@@ -140,7 +164,7 @@ namespace Signum.Engine.Dynamic
 
             var types = GetTypes();
             foreach (var item in types)
-                sb.AppendLine($"{item}Logic.Start(sb, dqm);".Indent(indent));
+                sb.AppendLine($"{item}Logic.Start(sb);".Indent(indent));
         }
 
         public static Func<Dictionary<string, Dictionary<string, string>>> GetAlreadyTranslatedExpressions;
@@ -429,7 +453,29 @@ namespace Signum.Engine.Dynamic
 
         private IEnumerable<string> GetPropertyAttributes(DynamicProperty property)
         {
-            return property.Validators.EmptyIfNull().Select(v => GetValidatorAttribute(v));
+            var atts = property.Validators.EmptyIfNull().Select(v => GetValidatorAttribute(v)).ToList();
+
+            if (property.Unit != null)
+                atts.Add($"Unit(\"{property.Unit}\")");
+
+            if (property.Format != null)
+                atts.Add($"Format(\"{property.Format}\")");
+
+            if (property.NotifyChanges == true)
+            {
+                if (property.IsMList != null)
+                {
+                    atts.Add("NotifyCollectionChanged");
+                    atts.Add("NotifyChildProperty");
+                }
+                else if (property.Type.EndsWith("Embedded"))
+                    atts.Add("NotifyChildProperty");
+            }
+
+            if (property.CustomPropertyAttributes.HasText())
+                atts.Add(property.CustomPropertyAttributes);
+
+            return atts;
         }
 
         private string GetValidatorAttribute(DynamicValidator v)
@@ -455,7 +501,7 @@ namespace Signum.Engine.Dynamic
         private List<string> GetFieldAttributes(DynamicProperty property)
         {
             List<string> atts = new List<string>();
-            if (property.IsNullable != IsNullable.Yes)
+            if (property.IsNullable != Entities.Dynamic.IsNullable.Yes)
                 atts.Add("NotNullable");
 
             if (property.Size != null || property.Scale != null || property.ColumnType.HasText())
@@ -497,8 +543,8 @@ namespace Signum.Engine.Dynamic
                     atts.Add($"BackReferenceColumnName({Literal(mlist.BackReferenceName)})");
             }
 
-            if (property.CustomAttributes.HasText())
-                atts.Add(property.CustomAttributes);
+            if (property.CustomFieldAttributes.HasText())
+                atts.Add(property.CustomFieldAttributes);
 
 
             return atts;
@@ -525,9 +571,9 @@ namespace Signum.Engine.Dynamic
 
             string result = SimplifyType(property.Type);
 
-            var t = TryResolveType(property.Type);
+         
             
-            if (property.IsNullable != IsNullable.No && t?.IsValueType == true)
+            if (property.IsNullable != Entities.Dynamic.IsNullable.No && IsValueType(property))
                 result = result + "?";
 
             if (property.IsLite)
@@ -537,6 +583,23 @@ namespace Signum.Engine.Dynamic
                 result = "MList<" + result + ">";
 
             return result;
+        }
+
+        private bool IsValueType(DynamicProperty property)
+        {
+            var t = TryResolveType(property.Type);
+            if (t != null)
+                return t.IsValueType;
+
+            var tn = property.Type;
+            if (tn.EndsWith("Embedded") || tn.EndsWith("Entity") || tn.EndsWith("Mixin") || tn.EndsWith("Symbol"))
+            {
+                return false;
+            }
+            else
+            {
+                return true; // Assume Enum
+            }
         }
 
         private string SimplifyType(string type)
@@ -580,7 +643,7 @@ namespace Signum.Engine.Dynamic
 
             var type = TypeLogic.TryGetType(typeName);
             if (type != null)
-                return type;
+                return EnumEntity.Extract(type) ?? type;
 
             return null;
         }
@@ -631,7 +694,7 @@ namespace Signum.Engine.Dynamic
 
             sb.AppendLine($"    public static class {this.TypeName}Logic");
             sb.AppendLine($"    {{");
-            sb.AppendLine($"        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)");
+            sb.AppendLine($"        public static void Start(SchemaBuilder sb)");
             sb.AppendLine($"        {{");
             sb.AppendLine($"            if (sb.NotDefined(MethodInfo.GetCurrentMethod()))");
             sb.AppendLine($"            {{");
@@ -690,7 +753,7 @@ namespace Signum.Engine.Dynamic
             {
                 var lines = new[] { "Entity = e" }.Concat(queryFields);
 
-                sb.AppendLine($@"    .WithQuery(dqm, () => e => new 
+                sb.AppendLine($@"    .WithQuery(() => e => new 
     {{ 
 { lines.ToString(",\r\n").Indent(8)}
     }})");
@@ -724,7 +787,7 @@ namespace Signum.Engine.Dynamic
 
             var lines = new[] { "Entity = e" }.Concat(this.Def.QueryFields);
 
-            sb.AppendLine($@"dqm.RegisterQuery(typeof({this.TypeName}Entity), () => DynamicQueryCore.Auto(
+            sb.AppendLine($@"QueryLogic.Queries.Register(typeof({this.TypeName}Entity), () => DynamicQueryCore.Auto(
     from e in Database.Query<{this.TypeName}Entity>()
     select new
     {{
@@ -780,8 +843,8 @@ namespace Signum.Engine.Dynamic
                 if (!string.IsNullOrWhiteSpace(operationCanExecute))
                     sb.AppendLine($"    CanExecute = e => {operationCanExecute},");
 
-                sb.AppendLine("    AllowsNew = true,");
-                sb.AppendLine("    Lite = false,");
+                sb.AppendLine("    CanBeNew = true,");
+                sb.AppendLine("    CanBeModified = true,");
                 sb.AppendLine("    Execute = (e, args) => {\r\n" + operationExecute?.Indent(8) + "\r\n}");
                 sb.AppendLine("}." + (this.IsTreeEntity ? "Register(replace: true)" : "Register()") + ";");
             }

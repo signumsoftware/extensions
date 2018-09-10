@@ -1,7 +1,7 @@
 ﻿import * as d3 from "d3"
 import * as React from "react"
-import { EntityData, EntityKind } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
+import { EntityData, EntityKind } from '@framework/Reflection'
+import * as Finder from '@framework/Finder'
 import { Point, Rectangle, calculatePoint, wrap, forceBoundingBox } from '../Utils'
 
 export interface TableInfo extends ITableInfo {
@@ -16,9 +16,12 @@ export interface MListTableInfo extends ITableInfo {
 export interface ITableInfo extends d3.SimulationNodeDatum, Rectangle {
     tableName: string;
     niceName: string;
-    rows: number | null;
     columns: number;
+    sql: number | null;
+    rows: number | null;
     total_size_kb: number | null;
+    rows_history: number | null;
+    total_size_kb_history: number | null;
     entityKind: EntityKind;
     entityData: EntityData;
     entityBaseType: EntityBaseType;
@@ -83,8 +86,8 @@ export interface ClientColorProvider {
 
 export class SchemaMapD3 {
 
-    nodes: ITableInfo[];
-    links: IRelationInfo[];
+    nodes!: ITableInfo[];
+    links!: IRelationInfo[];
     simulation: d3.Simulation<ITableInfo, IRelationInfo>;
     fanIn: { [key: string]: IRelationInfo[] };
 

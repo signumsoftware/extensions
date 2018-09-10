@@ -56,7 +56,7 @@ namespace Signum.Engine.Workflow
         }
 
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
@@ -65,7 +65,7 @@ namespace Signum.Engine.Workflow
 
                 sb.Include<WorkflowEventTaskEntity>()
                     .WithDelete(WorkflowEventTaskOperation.Delete)
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -76,8 +76,8 @@ namespace Signum.Engine.Workflow
 
                 new Graph<WorkflowEventTaskEntity>.Execute(WorkflowEventTaskOperation.Save)
                 {
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (e, _) => {
 
                         if (e.TriggeredOn == TriggeredOn.Always)
@@ -87,12 +87,16 @@ namespace Signum.Engine.Workflow
                     },
                 }.Register();
 
-                sb.Schema.EntityEvents<WorkflowEventTaskEntity>().PreUnsafeDelete += tasks => tasks.SelectMany(a => a.ConditionResults()).UnsafeDelete();
+                sb.Schema.EntityEvents<WorkflowEventTaskEntity>().PreUnsafeDelete += tasks =>
+                {
+                    tasks.SelectMany(a => a.ConditionResults()).UnsafeDelete();
+                    return null;
+                };
 
                 ExceptionLogic.DeleteLogs += ExceptionLogic_DeleteLogs;
 
                 sb.Include<WorkflowEventTaskConditionResultEntity>()
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -106,7 +110,7 @@ namespace Signum.Engine.Workflow
 
                 WorkflowEventTaskModel.GetModel = (@event) =>
                 {
-                    if (!@event.Type.IsTimerStart())
+                    if (!@event.Type.IsScheduledStart())
                         return null;
 
                     var schedule = @event.ScheduledTask();
@@ -127,7 +131,7 @@ namespace Signum.Engine.Workflow
                 {
                     var schedule = @event.IsNew ? null : @event.ScheduledTask();
 
-                    if (!@event.Type.IsTimerStart())
+                    if (!@event.Type.IsScheduledStart())
                     {
                         if (schedule != null)
                             DeleteWorkflowEventScheduledTask(schedule);
@@ -223,10 +227,13 @@ namespace Signum.Engine.Workflow
 
         public static void ExceptionLogic_DeleteLogs(DeleteLogParametersEmbedded parameters, StringBuilder sb, CancellationToken token)
         {
-            var dateLimit = parameters.GetDateLimit(typeof(WorkflowEventTaskConditionResultEntity).ToTypeEntity());
+            var dateLimit = parameters.GetDateLimitDelete(typeof(WorkflowEventTaskConditionResultEntity).ToTypeEntity());
+
+            if (dateLimit == null)
+                return;
 
             Database.Query<WorkflowEventTaskConditionResultEntity>()
-               .Where(a => a.CreationDate < dateLimit)
+               .Where(a => a.CreationDate < dateLimit.Value)
                .UnsafeDeleteChunksLog(parameters, sb, token);
         }
 

@@ -26,10 +26,7 @@ namespace Signum.React.RestLog
         }
 
         public bool AllowReplay { get; set; }
-
         
-
-
         public override void OnActionExecuting(HttpActionContext actionContext)
         {
             try
@@ -47,7 +44,10 @@ namespace Signum.React.RestLog
                     QueryString = queryParams,
                     User = UserHolder.Current?.ToLite(),
                     Controller = actionContext.ControllerContext.Controller.ToString(),
+                    ControllerName = actionContext.ControllerContext.Controller.ToString().AfterLast('.'),
                     Action = actionContext.ActionDescriptor.ActionName,
+                    MachineName = System.Environment.MachineName,
+                    ApplicationName = AppDomain.CurrentDomain.FriendlyName,
                     StartDate = TimeZoneManager.Now,
                     UserHostAddress = SignumExceptionFilterAttribute.GetClientIp(actionContext.Request),
                     UserHostName = SignumExceptionFilterAttribute.GetClientName(actionContext.Request),

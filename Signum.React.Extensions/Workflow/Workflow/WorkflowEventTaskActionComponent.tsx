@@ -1,9 +1,9 @@
 ﻿import * as React from 'react'
 import { WorkflowEventTaskActionEval } from '../Signum.Entities.Workflow'
-import { TypeContext, ValueLine, PropertyRoute, ValueLineType } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { TypeEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
+import { TypeContext, ValueLine, PropertyRoute, ValueLineType } from '@framework/Lines'
+import { TypeEntity } from '@framework/Signum.Entities.Basics'
 import TypeHelpComponent from '../../TypeHelp/TypeHelpComponent'
-import ValueLineModal from '../../../../Framework/Signum.React/Scripts/ValueLineModal'
+import ValueLineModal from '@framework/ValueLineModal'
 import CSharpCodeMirror from '../../Codemirror/CSharpCodeMirror';
 
 export interface WorkflowEventTaskActionComponentProps {
@@ -23,7 +23,7 @@ export default class WorkflowEventTaskActionComponent extends React.Component<Wo
                     <div className="col-sm-7">
                         <div className="code-container">
                             <div className="btn-group" style={{ marginBottom: "3px" }}>
-                                <input type="button" className="btn btn-success btn-xs sf-button" value="Create case" onClick={this.handleCreateCaseClick} />
+                                <input type="button" className="btn btn-success btn-sm sf-button" value="Create case" onClick={this.handleCreateCaseClick} />
                             </div>
                             <pre style={{ border: "0px", margin: "0px" }}>{"public void CustomAction() \n{"}</pre>
                             <CSharpCodeMirror script={ctx.value.script || ""} onChange={this.handleCodeChange} />

@@ -1,12 +1,12 @@
 ﻿import * as React from 'react'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { Lite } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
-import { StyleContext } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { Lite } from '@framework/Signum.Entities';
+import { StyleContext } from '@framework/TypeContext'
 import { WorkflowEntity, WorkflowActivityEntity, WorkflowActivityMessage } from '../Signum.Entities.Workflow';
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
+import * as Finder from '@framework/Finder'
 import * as WorkflowClient from '../WorkflowClient'
 import { TypeHelpMode } from '../../TypeHelp/TypeHelpClient'
-import ValueLineModal from '../../../../Framework/Signum.React/Scripts/ValueLineModal';
+import ValueLineModal from '@framework/ValueLineModal';
 
 interface WorkflowHelpComponentProps {
     typeName: string;
@@ -17,13 +17,11 @@ export default class WorkflowHelpComponent extends React.Component<WorkflowHelpC
 
     render() {
         return (
-            <div>
-                <input type="button"
-                    className="btn btn-success btn-xs sf-button"
-                    style={{ marginBottom: "3px" }}
-                    value={WorkflowActivityMessage.ActivityIs.niceToString()}
-                    onClick={() => this.handleActivityIsClick()} />
-            </div>
+            <input type="button"
+                className="btn btn-success btn-sm sf-button"
+                style={{ marginBottom: "3px" }}
+                value={WorkflowActivityMessage.ActivityIs.niceToString()}
+                onClick={() => this.handleActivityIsClick()} />
         );
     }
 
@@ -31,7 +29,7 @@ export default class WorkflowHelpComponent extends React.Component<WorkflowHelpC
 
         Finder.find<WorkflowEntity>({
             queryName: WorkflowEntity,
-            parentColumn: "Entity.MainEntityType.CleanName",
+            parentToken: "Entity.MainEntityType.CleanName",
             parentValue: this.props.typeName,
         }).then(w => {
 
@@ -40,7 +38,7 @@ export default class WorkflowHelpComponent extends React.Component<WorkflowHelpC
 
             Finder.findMany<WorkflowActivityEntity>({
                 queryName: WorkflowActivityEntity,
-                parentColumn: "Workflow",
+                parentToken: "Workflow",
                 parentValue: w
             }).then(acts => {
 

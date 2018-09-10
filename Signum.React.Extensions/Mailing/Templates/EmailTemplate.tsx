@@ -1,11 +1,10 @@
 ﻿import * as React from 'react'
-import { Tab, Tabs } from 'react-bootstrap'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityDetail, EntityList, EntityRepeater, EntityTabRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SubTokensOptions, QueryToken, QueryTokenType, hasAnyOrAll } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { SearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import { getToString, getMixin } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityDetail, EntityList, EntityRepeater, EntityTabRepeater } from '@framework/Lines'
+import { SubTokensOptions, QueryToken, QueryTokenType, hasAnyOrAll } from '@framework/FindOptions'
+import { SearchControl } from '@framework/Search'
+import { getToString, getMixin } from '@framework/Signum.Entities'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import { EmailTemplateEntity, EmailTemplateContactEmbedded, EmailTemplateRecipientEntity, EmailTemplateMessageEmbedded, EmailTemplateViewMessage, EmailTemplateMessage } from '../Signum.Entities.Mailing'
 import { TemplateTokenMessage, TemplateApplicableEval } from '../../Templating/Signum.Entities.Templating'
 import FileLine from '../../Files/FileLine'
@@ -13,7 +12,7 @@ import QueryTokenEntityBuilder from '../../UserAssets/Templates/QueryTokenEntity
 import TemplateControls from '../../Templating/TemplateControls'
 import HtmlCodemirror from '../../Codemirror/HtmlCodemirror'
 import IFrameRenderer from './IFrameRenderer'
-import ValueLineModal from '../../../../Framework/Signum.React/Scripts/ValueLineModal'
+import ValueLineModal from '@framework/ValueLineModal'
 import TemplateApplicable from '../../Templating/Templates/TemplateApplicable';
 
 
@@ -54,7 +53,7 @@ export default class EmailTemplate extends React.Component<{ ctx: TypeContext<Em
 
     renderQueryPart() {
         const ec = this.props.ctx.subCtx({ labelColumns: { sm: 2 } });
-        const ecXs = ec.subCtx({ formGroupSize: "ExtraSmall" });
+        const ecXs = ec.subCtx({ formSize: "ExtraSmall" });
         return (
             <div>
                 <EntityDetail ctx={ecXs.subCtx(e => e.from)} onChange={() => this.forceUpdate()} getComponent={this.renderContact} />
@@ -77,7 +76,7 @@ export default class EmailTemplate extends React.Component<{ ctx: TypeContext<Em
 
         return (
             <div>
-                <div className="row form-vertical">
+                <div className="row">
                     <div className="col-sm-2" >
                         <FormGroup labelText={EmailTemplateEntity.nicePropertyName(a => a.recipients![0].element.kind)} ctx={sc}>
                             <span className="form-control">{EmailTemplateEntity.nicePropertyName(a => a.from)} </span>
@@ -106,25 +105,31 @@ export default class EmailTemplate extends React.Component<{ ctx: TypeContext<Em
 
         return (
             <div>
-                <div className="row form-vertical">
+                <div className="row">
                     <div className="col-sm-2">
                         <label>
                             <ValueLine ctx={sc.subCtx(c => c.kind)} />
                         </label>
                     </div>
-                    <div className="col-sm-5">
-                        <ValueLine ctx={sc.subCtx(c => c.emailAddress)} />
-                    </div>
-                    <div className="col-sm-5">
-                        <ValueLine ctx={sc.subCtx(c => c.displayName)} />
+                    <div className="col-sm-10 ">
+                        {this.props.ctx.value.query && <QueryTokenEntityBuilder
+                            ctx={ec.subCtx(a => a.token)}
+                            queryKey={this.props.ctx.value.query.key}
+                            subTokenOptions={SubTokensOptions.CanElement} />
+                        }
                     </div>
                 </div>
-                {this.props.ctx.value.query &&
-                    <QueryTokenEntityBuilder
-                        ctx={ec.subCtx(a => a.token)}
-                        queryKey={this.props.ctx.value.query.key}
-                        subTokenOptions={SubTokensOptions.CanElement} />
-                }
+
+                <div className="row">
+                    <div className="col-sm-2">
+                    </div>
+                    <div className="col-sm-5 offset-sm-2">
+                        <ValueLine ctx={sc.subCtx(c => c.emailAddress)} helpText="Hardcoded E-Mail address" />
+                    </div>
+                    <div className="col-sm-5">
+                        <ValueLine ctx={sc.subCtx(c => c.displayName)} helpText="Hardcoded display name"  />
+                    </div>
+                </div>
             </div>
         );
     };
@@ -161,7 +166,7 @@ export class EmailTemplateMessageComponent extends React.Component<EmailTemplate
         return (
             <div className="sf-email-template-message">
                 <EntityCombo ctx={ec.subCtx(e => e.cultureInfo)} labelText={EmailTemplateViewMessage.Language.niceToString()} onChange={this.props.invalidate} />
-                <div className="form-vertical">
+                <div>
                     <TemplateControls queryKey={this.props.queryKey} onInsert={this.handleOnInsert} forHtml={true} />
                     <ValueLine ctx={ec.subCtx(e => e.subject)} formGroupStyle={"SrOnly"} placeholderLabels={true} labelHtmlAttributes={{ style: { width: "100px" } }} />
                     <div className="code-container">

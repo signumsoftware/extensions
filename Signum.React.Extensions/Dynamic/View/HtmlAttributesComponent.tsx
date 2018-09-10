@@ -1,16 +1,16 @@
 ﻿import * as React from 'react'
-import { Modal, ModalProps, ModalClass, ButtonToolbar, Button } from 'react-bootstrap'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { classes, Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { QueryDescription, SubTokensOptions, QueryToken, filterOperations, OrderType, ColumnOptionsMode } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, getTypeInfo, isTypeEntity, Binding } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import QueryTokenBuilder from '../../../../Framework/Signum.React/Scripts/SearchControl/QueryTokenBuilder'
-import { ModifiableEntity, JavascriptMessage, EntityControlMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { QueryEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
-import { FilterOperation, PaginationMode } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.DynamicQuery'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '@framework/Lines'
+import { classes, Dic } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { QueryDescription, SubTokensOptions, QueryToken, filterOperations, OrderType, ColumnOptionsMode } from '@framework/FindOptions'
+import { getQueryNiceName, getTypeInfo, isTypeEntity, Binding } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
+import QueryTokenBuilder from '@framework/SearchControl/QueryTokenBuilder'
+import { ModifiableEntity, JavascriptMessage, EntityControlMessage } from '@framework/Signum.Entities'
+import { QueryEntity } from '@framework/Signum.Entities.Basics'
+import { FilterOperation, PaginationMode } from '@framework/Signum.Entities.DynamicQuery'
 import { ExpressionOrValueComponent, FieldComponent, DesignerModal } from './Designer'
 import * as Nodes from './Nodes'
 import * as NodeUtils from './NodeUtils'
@@ -18,11 +18,11 @@ import { DesignerNode, Expression, ExpressionOrValue, isExpression } from './Nod
 import { FindOptionsComponent } from './FindOptionsComponent'
 import { BaseNode } from './Nodes'
 import { HtmlAttributesExpression } from './HtmlAttributesExpression'
-import { openModal, IModalProps } from '../../../../Framework/Signum.React/Scripts/Modals';
-import SelectorModal from '../../../../Framework/Signum.React/Scripts/SelectorModal';
+import { openModal, IModalProps } from '@framework/Modals';
+import SelectorModal from '@framework/SelectorModal';
 import { DynamicViewMessage, DynamicViewValidationMessage } from '../Signum.Entities.Dynamic'
 import * as DynamicViewClient from '../DynamicViewClient'
-import Typeahead from '../../../../Framework/Signum.React/Scripts/Lines/Typeahead'
+import { Typeahead } from '@framework/Components';
 
 interface HtmlAttributesLineProps {
     binding: Binding<HtmlAttributesExpression | undefined>;
@@ -38,12 +38,14 @@ export class HtmlAttributesLine extends React.Component<HtmlAttributesLineProps>
         </span>);
     }
 
-    handleRemove = () => {
+    handleRemove = (e: React.MouseEvent<any>) => {
+        e.preventDefault();
         this.props.binding.deleteValue();
         this.props.dn.context.refreshView();
     }
 
-    handleCreate = () => {
+    handleCreate = (e: React.MouseEvent<any>) => {
+        e.preventDefault();
         this.modifyExpression({} as HtmlAttributesExpression);
     }
 
@@ -77,25 +79,25 @@ export class HtmlAttributesLine extends React.Component<HtmlAttributesLineProps>
         const val = this.props.binding.getValue();
 
         return (
-            <div className="form-group">
-                <label className="control-label">
+            <div className="form-group form-group-xs">
+                <label className="control-label label-xs">
                     {this.renderMember(val)}
 
                     {val && " "}
-                    {val && <a className={classes("sf-line-button", "sf-remove")}
+                    {val && <a href="#" className={classes("sf-line-button", "sf-remove")}
                         onClick={this.handleRemove}
                         title={EntityControlMessage.Remove.niceToString()}>
-                        <span className="glyphicon glyphicon-remove" />
+                        <FontAwesomeIcon icon="times" />
                     </a>}
                 </label>
                 <div>
                     {val ?
-                        <a href="" onClick={this.handleView}><pre style={{ padding: "0px", border: "none" }}>{this.getDescription(val)}</pre></a>
+                        <a href="#" onClick={this.handleView}><pre style={{ padding: "0px", border: "none" }}>{this.getDescription(val)}</pre></a>
                         :
-                        <a title={EntityControlMessage.Create.niceToString()}
+                        <a href="#" title={EntityControlMessage.Create.niceToString()}
                             className="sf-line-button sf-create"
                             onClick={this.handleCreate}>
-                            <span className="glyphicon glyphicon-plus sf-create sf-create-label" />{EntityControlMessage.Create.niceToString()}
+                            <FontAwesomeIcon icon="plus" className="sf-create"/>&nbsp;{EntityControlMessage.Create.niceToString()}
                         </a>}
                 </div>
             </div>
@@ -199,7 +201,8 @@ export class ExpressionOrValueStrip extends React.Component<ExpressionOrValueStr
         );
     }
 
-    handleOnRemove = (key: string) => {
+    handleOnRemove = (e: React.MouseEvent<any>, key: string) => {
+        e.preventDefault();
         delete this.props.object[key];
         this.forceUpdate();
     }
@@ -210,10 +213,10 @@ export class ExpressionOrValueStrip extends React.Component<ExpressionOrValueStr
             <ul className="expression-list">
                 {
                     Dic.getKeys(this.props.object).filter(this.props.filterKey).map(key => <li key={key}>
-                        <a className="sf-line-button sf-remove"
-                            onClick={() => this.handleOnRemove(key)}
+                        <a href="#" className="sf-line-button sf-remove"
+                            onClick={e => this.handleOnRemove(e, key)}
                             title={EntityControlMessage.Remove.niceToString()}>
-                            <span className="glyphicon glyphicon-remove"></span>
+                            <FontAwesomeIcon icon="times" />
                         </a>
                         <ExpressionOrValueComponent dn={this.props.dn} refreshView={() => this.forceUpdate()}
                             binding={new Binding(this.props.object, key)} type="string" defaultValue={null} avoidDelete={true} />
@@ -233,8 +236,8 @@ export class ExpressionOrValueStrip extends React.Component<ExpressionOrValueStr
         return Promise.resolve(result);
     }
 
-    handleSelect = (item: string) => {
-        this.props.object[item] = undefined;
+    handleSelect = (item: unknown) => {
+        this.props.object[item as string] = undefined;
         this.forceUpdate();
         return "";
     }
@@ -243,7 +246,7 @@ export class ExpressionOrValueStrip extends React.Component<ExpressionOrValueStr
         return (
             <div style={{ position: "relative" }}>
                 <Typeahead
-                    inputAttrs={{ className: "form-control sf-entity-autocomplete" }}
+                    inputAttrs={{ className: "form-control form-control-xs sf-entity-autocomplete" }}
                     getItems={this.handleGetItems}
                     onSelect={this.handleSelect} />
             </div>

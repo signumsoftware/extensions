@@ -23,12 +23,12 @@ namespace Signum.Engine.Migrations
 {
     public static class MigrationLogic
     {
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 sb.Include<SqlMigrationEntity>()
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -36,7 +36,7 @@ namespace Signum.Engine.Migrations
                     });
 
                 sb.Include<CSharpMigrationEntity>()
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -45,7 +45,7 @@ namespace Signum.Engine.Migrations
                     });
 
                 sb.Include<LoadMethodLogEntity>()
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -74,7 +74,7 @@ namespace Signum.Engine.Migrations
 
                 foreach (var i in table.GeneratAllIndexes())
                 {
-                    SqlBuilder.CreateIndex(i).ExecuteLeaves();
+                    SqlBuilder.CreateIndex(i, checkUnique: null).ExecuteLeaves();
                 }
 
                 SafeConsole.WriteLineColor(ConsoleColor.White, "Table " + table.Name + " auto-generated...");
@@ -94,7 +94,7 @@ namespace Signum.Engine.Migrations
                 ClassName = action.Method.DeclaringType.FullName,
                 MethodName = action.Method.Name,
                 Description = description,
-            };
+            }.Save();
 
             try
             {
@@ -128,9 +128,15 @@ namespace Signum.Engine.Migrations
         }
     }
 
+   
     [Serializable]
     public class MigrationException : Exception
     {
         public MigrationException() { }
+        public MigrationException(string message) : base(message) { }
+        public MigrationException(string message, Exception inner) : base(message, inner) { }
+        protected MigrationException(
+          System.Runtime.Serialization.SerializationInfo info,
+          System.Runtime.Serialization.StreamingContext context) : base(info, context) { }
     }
 }

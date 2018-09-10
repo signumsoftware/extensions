@@ -1,5 +1,5 @@
-﻿using Signum.Utilities;
-using System;
+﻿using System;
+using Signum.Utilities;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
@@ -21,10 +21,13 @@ namespace Signum.Entities.Dynamic
         public static HashSet<string> Namespaces = new HashSet<string>
         {
             "System",
+            "System.IO",
             "System.Linq",
             "System.Reflection",
             "System.Collections.Generic",
             "System.Linq.Expressions",
+            "System.ComponentModel",
+            "System.Globalization",
             "Signum.Engine",
             "Signum.Entities",
             "Signum.Entities.Basics",
@@ -34,7 +37,10 @@ namespace Signum.Entities.Dynamic
             "Signum.Engine.Operations",
             "Signum.Engine.Workflow",
             "Signum.Utilities",
+            "Signum.Utilities.Reflection",
             "Signum.Engine.Authorization",
+            "Signum.Engine.Notes",
+            "Signum.Engine.Alerts",
             "Signum.Engine.Cache",
             "Signum.Engine.Chart",
             "Signum.Engine.Dashboard",
@@ -55,6 +61,8 @@ namespace Signum.Entities.Dynamic
             "Signum.Engine.Word",
             "Signum.Engine.Tree",
             "Signum.Entities.Authorization",
+            "Signum.Entities.Notes",
+            "Signum.Entities.Alerts",
             "Signum.Entities.Chart",
             "Signum.Entities.Dashboard",
             "Signum.Entities.Dynamic",
@@ -114,6 +122,8 @@ namespace Signum.Entities.Dynamic
         }
 
         public static Func<string, List<CompilerError>> GetCustomErrors;
+
+        public static Action OnInvalidated { get; internal set; }
 
         public static void AddFullAssembly(Assembly assembly)
         {

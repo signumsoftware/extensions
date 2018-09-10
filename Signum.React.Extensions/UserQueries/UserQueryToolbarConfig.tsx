@@ -1,24 +1,24 @@
 ﻿import * as React from 'react'
 import { Route } from 'react-router'
-import { Dic, classes } from '../../../Framework/Signum.React/Scripts/Globals';
-import { Button, OverlayTrigger, Tooltip, MenuItem, } from "react-bootstrap"
-import { ajaxPost, ajaxPostRaw, ajaxGet, saveFile } from '../../../Framework/Signum.React/Scripts/Services';
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { FindOptions, ValueSearchControl } from '../../../Framework/Signum.React/Scripts/Search'
-import { QueryEntity } from '../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
-import { Lite, Entity, EntityPack, liteKey } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { PseudoType, QueryKey, GraphExplorer, OperationType, Type, getTypeName } from '../../../Framework/Signum.React/Scripts/Reflection'
+import { Dic, classes } from '@framework/Globals';
+import { ajaxPost, ajaxPostRaw, ajaxGet, saveFile } from '@framework/Services';
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { FindOptions, ValueSearchControl } from '@framework/Search'
+import { QueryEntity } from '@framework/Signum.Entities.Basics'
+import { Lite, Entity, EntityPack, liteKey } from '@framework/Signum.Entities'
+import { PseudoType, QueryKey, GraphExplorer, OperationType, Type, getTypeName } from '@framework/Reflection'
 import { ToolbarEntity, ToolbarMenuEntity, ToolbarElementEmbedded, ToolbarElementType } from '../Toolbar/Signum.Entities.Toolbar'
 import { ToolbarConfig, ToolbarResponse } from '../Toolbar/ToolbarClient'
 import * as UserQueryClient from './UserQueryClient'
 import { UserQueryEntity } from './Signum.Entities.UserQueries'
+import { parseIcon } from '../Dashboard/Admin/Dashboard';
 
 export default class UserQueryToolbarConfig extends ToolbarConfig<UserQueryEntity> {
 
     constructor() {
-        super();
-        this.type = UserQueryEntity;
+        var type = UserQueryEntity;
+        super(type);
     }
 
     countIcon?: CountUserQueryIcon | null;
@@ -27,7 +27,7 @@ export default class UserQueryToolbarConfig extends ToolbarConfig<UserQueryEntit
         if (element.iconName == "count")
             return <CountUserQueryIcon ref={ci => this.countIcon = ci} userQuery={element.content!} color={element.iconColor || "red"} autoRefreshPeriod={element.autoRefreshPeriod} />;
 
-        return ToolbarConfig.coloredIcon(element.iconName || "glyphicon glyphicon-list-alt", element.iconColor || "dodgerblue");
+        return ToolbarConfig.coloredIcon(element.iconName ? parseIcon(element.iconName) : ["far", "list-alt"], element.iconColor || "dodgerblue");
     }
 
     handleNavigateClick(e: React.MouseEvent<any>, res: ToolbarResponse<any>) {

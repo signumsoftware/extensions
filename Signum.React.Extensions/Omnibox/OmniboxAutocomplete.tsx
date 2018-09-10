@@ -1,16 +1,15 @@
 ﻿
 import * as React from 'react'
 import { Route } from 'react-router'
-import { Dic } from '../../../Framework/Signum.React/Scripts/Globals';
-import { ajaxPost, ajaxGet, AbortableRequest } from '../../../Framework/Signum.React/Scripts/Services';
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import Typeahead from '../../../Framework/Signum.React/Scripts/Lines/Typeahead'
+import { Dic } from '@framework/Globals';
+import { ajaxPost, ajaxGet, AbortableRequest } from '@framework/Services';
+import * as Navigator from '@framework/Navigator'
+import { Typeahead } from '@framework/Components'
 import * as OmniboxClient from './OmniboxClient'
 import { OmniboxMessage } from './Signum.Entities.Omnibox'
-import '../../../Framework/Signum.React/Scripts/Frames/MenuIcons.css'
+import '@framework/Frames/MenuIcons.css'
 
 export interface OmniboxAutocompleteProps {
-    spanAttrs?: React.HTMLAttributes<HTMLSpanElement>;
     inputAttrs?: React.HTMLAttributes<HTMLInputElement>;
 }
 
@@ -41,7 +40,7 @@ export default class OmniboxAutocomplete extends React.Component<OmniboxAutocomp
 
     abortRequest = new AbortableRequest((ac, query: string) => OmniboxClient.API.getResults(query, ac));
 
-    typeahead: Typeahead;
+    typeahead!: Typeahead;
 
     render() {
 
@@ -49,9 +48,8 @@ export default class OmniboxAutocomplete extends React.Component<OmniboxAutocomp
         
         const result = (
             <Typeahead ref={ta => this.typeahead = ta!} getItems={str => this.abortRequest.getData(str)} 
-                renderItem={OmniboxClient.renderItem}
-                onSelect={this.handleOnSelect}
-                spanAttrs={this.props.spanAttrs}
+                renderItem={item => OmniboxClient.renderItem(item as OmniboxClient.OmniboxResult)}
+                onSelect={(item, e) => this.handleOnSelect(item as OmniboxClient.OmniboxResult, e)}
                 inputAttrs={inputAttr}
                 minLength={0}
                 ></Typeahead>  

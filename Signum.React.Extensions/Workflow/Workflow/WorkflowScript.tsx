@@ -1,11 +1,11 @@
 ﻿import * as React from 'react'
-import { ValueLine, EntityLine, EntityDetail, TypeContext, FormGroup, ValueLineType } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { PropertyRoute, Binding } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
+import { ValueLine, EntityLine, EntityDetail, TypeContext, FormGroup, ValueLineType } from '@framework/Lines'
+import { PropertyRoute, Binding } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
 import CSharpCodeMirror from '../../Codemirror/CSharpCodeMirror'
 import { WorkflowScriptEntity, WorkflowScriptPartEmbedded } from '../Signum.Entities.Workflow'
 import TypeHelpComponent from '../../TypeHelp/TypeHelpComponent'
-import ValueLineModal from '../../../../Framework/Signum.React/Scripts/ValueLineModal'
+import ValueLineModal from '@framework/ValueLineModal'
 import { API } from '../WorkflowClient'
 
 interface WorkflowScriptComponentProps {
@@ -47,10 +47,10 @@ export default class WorkflowScriptComponent extends React.Component<WorkflowScr
                         <div className="row">
                             <div className="col-sm-7">
                                 <div className="btn-group" style={{ marginBottom: "3px" }}>
-                                    <input type="button" className="btn btn-danger btn-xs sf-button" value="try-catch" onClick={this.handleTryCatchClick} />
-                                    <input type="button" className="btn btn-success btn-xs sf-button" value="REST" onClick={this.handleRestClick} />
-                                    <input type="button" className="btn btn-warning btn-xs sf-button" value="SOAP" onClick={this.handleSoapClick} />
-                                    <input type="button" className="btn btn-danger btn-xs sf-button" value="ctx" onClick={this.handleCtxClick} />
+                                    <input type="button" className="btn btn-danger btn-sm sf-button" value="try-catch" onClick={this.handleTryCatchClick} />
+                                    <input type="button" className="btn btn-success btn-sm sf-button" value="REST" onClick={this.handleRestClick} />
+                                    <input type="button" className="btn btn-warning btn-sm sf-button" value="SOAP" onClick={this.handleSoapClick} />
+                                    <input type="button" className="btn btn-danger btn-sm sf-button" value="ctx" onClick={this.handleCtxClick} />
                                 </div>
                                 <div className="code-container">
                                     <pre style={{ border: "0px", margin: "0px" }}>{`public static void ScriptCode(${ctx.value.mainEntityType.cleanName}Entity e, WorkflowScriptContext ctx)\n{`}</pre>

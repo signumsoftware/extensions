@@ -77,20 +77,20 @@ namespace Signum.Engine.Mailing
         }
 
 
-        public static Func<EmailTemplateEntity, SmtpConfigurationEntity> GetSmtpConfiguration;
+        public static Func<EmailTemplateEntity, Lite<Entity>, SmtpConfigurationEntity> GetSmtpConfiguration;
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm, Func<EmailTemplateEntity, SmtpConfigurationEntity> getSmtpConfiguration)
+        public static void Start(SchemaBuilder sb, Func<EmailTemplateEntity, Lite<Entity>, SmtpConfigurationEntity> getSmtpConfiguration)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 CultureInfoLogic.AssertStarted(sb);
-                TemplatingLogic.Start(sb, dqm);
+                TemplatingLogic.Start(sb);
 
 
                 GetSmtpConfiguration = getSmtpConfiguration;
 
                 sb.Include<EmailTemplateEntity>()
-                    .WithQuery(dqm, () => t => new
+                    .WithQuery(() => t => new
                     {
                         Entity = t,
                         t.Id,
@@ -104,11 +104,11 @@ namespace Signum.Engine.Mailing
                 
                 TemplatesByQueryName = sb.GlobalLazy(() =>
                 {
-                    return EmailTemplatesLazy.Value.Values.GroupToDictionary(a => a.Query.ToQueryName());
+                    return EmailTemplatesLazy.Value.Values.SelectCatch(et => KVP.Create(et.Query.ToQueryName(), et)).GroupToDictionary();
                 }, new InvalidateWith(typeof(EmailTemplateEntity)));
                 
-                SystemEmailLogic.Start(sb, dqm);
-                EmailMasterTemplateLogic.Start(sb, dqm);
+                SystemEmailLogic.Start(sb);
+                EmailMasterTemplateLogic.Start(sb);
                 
                 sb.Schema.EntityEvents<EmailTemplateEntity>().PreSaving += new PreSavingEventHandler<EmailTemplateEntity>(EmailTemplate_PreSaving);
                 sb.Schema.EntityEvents<EmailTemplateEntity>().Retrieved += EmailTemplateLogic_Retrieved;
@@ -125,8 +125,8 @@ namespace Signum.Engine.Mailing
                 GlobalValueProvider.RegisterGlobalVariable("Now", _ => TimeZoneManager.Now);
                 GlobalValueProvider.RegisterGlobalVariable("Today", _ => TimeZoneManager.Now.Date, "d");
 
-                sb.Schema.Synchronizing += Schema_Synchronize_Tokens;
-                sb.Schema.Synchronizing += Schema_Syncronize_DefaultTemplates;
+                sb.Schema.Synchronizing += Schema_Synchronizing_Tokens;
+                sb.Schema.Synchronizing += Schema_Synchronizing_DefaultTemplates;
 
                 sb.Schema.Table<SystemEmailEntity>().PreDeleteSqlSync += EmailTemplateLogic_PreDeleteSqlSync;
 
@@ -156,7 +156,7 @@ namespace Signum.Engine.Mailing
 
             emailTemplate.Query = QueryLogic.GetQueryEntity(emailTemplate.queryName);
 
-            QueryDescription description = DynamicQueryManager.Current.QueryDescription(emailTemplate.queryName);
+            QueryDescription description = QueryLogic.Queries.QueryDescription(emailTemplate.queryName);
 
             emailTemplate.ParseData(description);
 
@@ -168,7 +168,7 @@ namespace Signum.Engine.Mailing
             using (emailTemplate.DisableAuthorization ? ExecutionMode.Global() : null)
             {
                 object queryName = QueryLogic.ToQueryName(emailTemplate.Query.Key);
-                QueryDescription description = DynamicQueryManager.Current.QueryDescription(queryName);
+                QueryDescription description = QueryLogic.Queries.QueryDescription(queryName);
 
                 using (emailTemplate.DisableAuthorization ? ExecutionMode.Global() : null)
                     emailTemplate.ParseData(description);
@@ -216,19 +216,19 @@ namespace Signum.Engine.Mailing
             using (template.DisableAuthorization ? ExecutionMode.Global() : null)
             {
                 object queryName = QueryLogic.ToQueryName(template.Query.Key);
-                QueryDescription qd = DynamicQueryManager.Current.QueryDescription(queryName);
+                QueryDescription qd = QueryLogic.Queries.QueryDescription(queryName);
 
                 List<QueryToken> list = new List<QueryToken>();
                 return EmailTemplateParser.TryParse(text, qd, template.SystemEmail.ToType(), out errorMessage);
             }
         }
 
-        static void EmailTemplate_PreSaving(EmailTemplateEntity template, ref bool graphModified)
+        static void EmailTemplate_PreSaving(EmailTemplateEntity template, PreSavingContext ctx)
         {
             using (template.DisableAuthorization ? ExecutionMode.Global() : null)
             {
                 var queryName = QueryLogic.ToQueryName(template.Query.Key);
-                QueryDescription qd = DynamicQueryManager.Current.QueryDescription(queryName);
+                QueryDescription qd = QueryLogic.Queries.QueryDescription(queryName);
 
                 List<QueryToken> list = new List<QueryToken>();
 
@@ -278,21 +278,28 @@ namespace Signum.Engine.Mailing
 
                 new Execute(EmailTemplateOperation.Save)
                 {
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (t, _) => { }
                 }.Register();
 
                 new Delete(EmailTemplateOperation.Delete)
                 {
-                    Delete = (t, _) => t.Delete()
+                    Delete = (t, _) =>
+                    {
+                        var attachments = t.Attachments.Select(a => a.ToLite()).ToList();
+
+                        t.Delete();
+                        attachments.ForEach(at => at.Delete());
+
+                    }
                 }.Register();
 
                 registered = true;
             }
         }
 
-        static SqlPreCommand Schema_Synchronize_Tokens(Replacements replacements)
+        static SqlPreCommand Schema_Synchronizing_Tokens(Replacements replacements)
         {
             if (AvoidSynchronizeTokens)
                 return null;
@@ -308,7 +315,7 @@ namespace Signum.Engine.Mailing
             return cmd;
         }
 
-        static SqlPreCommand Schema_Syncronize_DefaultTemplates(Replacements replacements)
+        static SqlPreCommand Schema_Synchronizing_DefaultTemplates(Replacements replacements)
         {
             if (AvoidSynchronizeDefaultTemplates)
                 return null;

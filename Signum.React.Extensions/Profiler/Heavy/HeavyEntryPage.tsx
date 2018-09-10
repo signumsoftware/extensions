@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom'
 import * as d3 from 'd3'
 import * as numbro from 'numbro'
 import * as moment from 'moment'
-import { } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import EntityLink from '../../../../Framework/Signum.React/Scripts/SearchControl/EntityLink'
-import { ValueSearchControl, SearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, PropertyRoute, getTypeInfos } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { } from '@framework/Globals'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import EntityLink from '@framework/SearchControl/EntityLink'
+import { ValueSearchControl, SearchControl } from '@framework/Search'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { getQueryNiceName, PropertyRoute, getTypeInfos } from '@framework/Reflection'
+import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '@framework/Signum.Entities'
 import { API, HeavyProfilerEntry, StackTraceTS } from '../ProfilerClient'
 import { RouteComponentProps } from "react-router";
 
@@ -74,12 +74,12 @@ export default class HeavyEntry extends React.Component<HeavyEntryProps, { entri
         const index = this.props.match.params.selectedIndex;
         Navigator.setTitle("Heavy Profiler > Entry " + index);
         if (this.state.entries == undefined)
-            return <h3>Heavy Profiler > Entry {index} (loading...) </h3>;
+            return <h3 className="display-6">Heavy Profiler > Entry {index} (loading...) </h3>;
 
         let current = this.state.entries.filter(a => a.FullIndex == this.props.match.params.selectedIndex).single();
         return (
             <div>
-                <h2><Link to="~/profiler/heavy">Heavy Profiler</Link> > Entry {index}</h2>
+                <h2 className="display-6"><Link to="~/profiler/heavy">Heavy Profiler</Link> > Entry {index}</h2>
                 <label><input type="checkbox" checked={this.state.asyncDepth} onChange={a => this.setState({ asyncDepth: a.currentTarget.checked })} />Async Stack</label>
                 <br />
                 {this.state.entries && <HeavyProfilerDetailsD3 entries={this.state.entries} selected={current} asyncDepth={this.state.asyncDepth} />}
@@ -98,7 +98,7 @@ export default class HeavyEntry extends React.Component<HeavyEntryProps, { entri
                             <td colSpan={2}>
                                 <div className="btn-toolbar">
                                     <button onClick={this.handleDownload} className="btn btn-info">Download</button>
-                                    {!current.IsFinished && <button onClick={this.handleUpdate} className="btn btn-default">Update</button>}
+                                    {!current.IsFinished && <button onClick={this.handleUpdate} className="btn btn-light">Update</button>}
                                 </div>
                             </td>
                         </tr>
@@ -106,9 +106,7 @@ export default class HeavyEntry extends React.Component<HeavyEntryProps, { entri
                 </table>
                 <br />
                 <h3>Aditional Data</h3>
-                <div>
-                    <pre><code>{current.AdditionalData}</code></pre>
-                </div>
+                <pre style={{ maxWidth: "1000px", overflowY: "scroll" }}><code>{current.AdditionalData}</code></pre>
                 <br />
                 <h3>StackTrace</h3>
                 {
@@ -118,12 +116,6 @@ export default class HeavyEntry extends React.Component<HeavyEntryProps, { entri
             </div>
         );
     }
-
-
-
-    chartContainer: HTMLDivElement;
-
-
 }
 
 
@@ -134,7 +126,7 @@ export class StackFrameTable extends React.Component<{ stackTrace: StackTraceTS[
             return <span>No StackTrace</span>;
 
         return (
-            <table className="table table-condensed">
+            <table className="table table-sm">
                 <thead>
                     <tr>
                         <th>Namespace
@@ -212,7 +204,6 @@ export class HeavyProfilerDetailsD3 extends React.Component<HeavyProfilerDetails
             this.mountChart(newProps);
         }
         else if (newProps.selected != this.props.selected) {
-            this.resetZoom(newProps.selected);
             this.mountChart(newProps);
         }
     }
@@ -221,7 +212,7 @@ export class HeavyProfilerDetailsD3 extends React.Component<HeavyProfilerDetails
         this.updateChart!();
     }
 
-    chartContainer: HTMLDivElement;
+    chartContainer!: HTMLDivElement;
 
     handleWeel = (e: React.WheelEvent<any>) => {
 
@@ -332,7 +323,7 @@ export class HeavyProfilerDetailsD3 extends React.Component<HeavyProfilerDetails
             newGroups.on("click", e => {
 
                 if (e == this.props.selected) {
-                    this.resetZoom(e);
+
                 }
                 else {
                     let url = "~/profiler/heavy/entry/" + e.FullIndex;
@@ -344,6 +335,10 @@ export class HeavyProfilerDetailsD3 extends React.Component<HeavyProfilerDetails
                         Navigator.history.push(url);
                     }
                 }
+            });
+            
+            newGroups.on("dblclick", e => {
+                this.resetZoom(e);
             });
 
             chart.attr('width', width);

@@ -1,4 +1,5 @@
-﻿using Signum.Engine.DynamicQuery;
+﻿using Signum.Engine.Basics;
+using Signum.Engine.DynamicQuery;
 using Signum.Entities;
 using Signum.Entities.DynamicQuery;
 using Signum.Entities.Workflow;
@@ -18,11 +19,11 @@ namespace Signum.Engine.Workflow
             if (request.Columns.Any(c => !(c.Token is AggregateToken)))
                 throw new InvalidOperationException("Invalid columns");
 
-            var qd = DynamicQueryManager.Current.QueryDescription(typeof(CaseActivityEntity));
+            var qd = QueryLogic.Queries.QueryDescription(typeof(CaseActivityEntity));
 
             var filters = new List<Filter>
             {
-                new Filter(QueryUtils.Parse($"Entity.{nameof(CaseActivityEntity.Case)}.{nameof(CaseEntity.Workflow)}", qd, 0), FilterOperation.EqualTo, request.Workflow)
+                new FilterCondition(QueryUtils.Parse($"Entity.{nameof(CaseActivityEntity.Case)}.{nameof(CaseEntity.Workflow)}", qd, 0), FilterOperation.EqualTo, request.Workflow)
             };
             filters.AddRange(request.Filters);
             
@@ -34,7 +35,7 @@ namespace Signum.Engine.Workflow
             columns.AddRange(request.Columns);
 
 
-            var rt = DynamicQueryManager.Current.ExecuteQuery(new QueryRequest
+            var rt = QueryLogic.Queries.ExecuteQuery(new QueryRequest
             {
                 QueryName = typeof(CaseActivityEntity),
                 GroupResults = true,

@@ -83,7 +83,7 @@ namespace Signum.Engine.Scheduler
         public static ConcurrentDictionary<ScheduledTaskLogEntity, ScheduledTaskContext> RunningTasks = new ConcurrentDictionary<ScheduledTaskLogEntity, ScheduledTaskContext>();
 
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
@@ -100,9 +100,9 @@ namespace Signum.Engine.Scheduler
 
                 ExecuteTask.Register((ITaskEntity t, ScheduledTaskContext ctx) => { throw new NotImplementedException("SchedulerLogic.ExecuteTask not registered for {0}".FormatWith(t.GetType().Name)); });
 
-                SimpleTaskLogic.Start(sb, dqm);
+                SimpleTaskLogic.Start(sb);
                 sb.Include<ScheduledTaskEntity>()
-                    .WithQuery(dqm, () => st => new
+                    .WithQuery(() => st => new
                     {
                         Entity = st,
                         st.Id,
@@ -114,7 +114,7 @@ namespace Signum.Engine.Scheduler
                     });
 
                 sb.Include<ScheduledTaskLogEntity>()
-                    .WithQuery(dqm, () => cte => new
+                    .WithQuery(() => cte => new
                     {
                         Entity = cte,
                         cte.Id,
@@ -130,7 +130,7 @@ namespace Signum.Engine.Scheduler
                     });
 
                 sb.Include<SchedulerTaskExceptionLineEntity>()
-                    .WithQuery(dqm, () => cte => new
+                    .WithQuery(() => cte => new
                     {
                         Entity = cte,
                         cte.Id,
@@ -146,7 +146,7 @@ namespace Signum.Engine.Scheduler
                 }.Register();
 
                 sb.Include<HolidayCalendarEntity>()
-                    .WithQuery(dqm, () => st => new
+                    .WithQuery(() => st => new
                     {
                         Entity = st,
                         st.Id,
@@ -154,15 +154,15 @@ namespace Signum.Engine.Scheduler
                         Holidays = st.Holidays.Count,
                     });
 
-                dqm.RegisterExpression((ITaskEntity ct) => ct.Executions(), () => ITaskMessage.Executions.NiceToString());
-                dqm.RegisterExpression((ITaskEntity ct) => ct.LastExecution(), () => ITaskMessage.LastExecution.NiceToString());
-                dqm.RegisterExpression((ScheduledTaskEntity ct) => ct.Executions(), () => ITaskMessage.Executions.NiceToString());
-                dqm.RegisterExpression((ScheduledTaskLogEntity ct) => ct.ExceptionLines(), () => ITaskMessage.ExceptionLines.NiceToString());
+                QueryLogic.Expressions.Register((ITaskEntity ct) => ct.Executions(), () => ITaskMessage.Executions.NiceToString());
+                QueryLogic.Expressions.Register((ITaskEntity ct) => ct.LastExecution(), () => ITaskMessage.LastExecution.NiceToString());
+                QueryLogic.Expressions.Register((ScheduledTaskEntity ct) => ct.Executions(), () => ITaskMessage.Executions.NiceToString());
+                QueryLogic.Expressions.Register((ScheduledTaskLogEntity ct) => ct.ExceptionLines(), () => ITaskMessage.ExceptionLines.NiceToString());
 
                 new Graph<HolidayCalendarEntity>.Execute(HolidayCalendarOperation.Save)
                 {
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (c, _) => { },
                 }.Register();
 
@@ -173,8 +173,8 @@ namespace Signum.Engine.Scheduler
 
                 new Graph<ScheduledTaskEntity>.Execute(ScheduledTaskOperation.Save)
                 {
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (st, _) => { },
                 }.Register();
 
@@ -205,7 +205,11 @@ namespace Signum.Engine.Scheduler
 
                 ScheduledTasksLazy.OnReset += ScheduledTasksLazy_OnReset;
 
-                sb.Schema.EntityEvents<ScheduledTaskLogEntity>().PreUnsafeDelete += query => query.SelectMany(e => e.ExceptionLines()).UnsafeDelete();
+                sb.Schema.EntityEvents<ScheduledTaskLogEntity>().PreUnsafeDelete += query =>
+                {
+                    query.SelectMany(e => e.ExceptionLines()).UnsafeDelete();
+                    return null;
+                };
 
                 ExceptionLogic.DeleteLogs += ExceptionLogic_DeleteLogs;
             }
@@ -213,9 +217,12 @@ namespace Signum.Engine.Scheduler
 
         public static void ExceptionLogic_DeleteLogs(DeleteLogParametersEmbedded parameters, StringBuilder sb, CancellationToken token)
         {
-            var dateLimit = parameters.GetDateLimit(typeof(ScheduledTaskLogEntity).ToTypeEntity());
+            var dateLimit = parameters.GetDateLimitDelete(typeof(ScheduledTaskLogEntity).ToTypeEntity());
 
-            Database.Query<ScheduledTaskLogEntity>().Where(a => a.StartTime < dateLimit).UnsafeDeleteChunksLog(parameters, sb, token);
+            if (dateLimit == null)
+                return;
+
+            Database.Query<ScheduledTaskLogEntity>().Where(a => a.StartTime < dateLimit.Value).UnsafeDeleteChunksLog(parameters, sb, token);
         }
 
         static void ScheduledTasksLazy_OnReset(object sender, EventArgs e)
@@ -571,6 +578,9 @@ namespace Signum.Engine.Scheduler
                     }
                     catch (Exception e)
                     {
+                        SafeConsole.WriteLineColor(ConsoleColor.Red, "{0:u} Error in {1}: {2}", DateTime.Now, elementID(item), e.Message);
+                        SafeConsole.WriteLineColor(ConsoleColor.DarkRed, e.StackTrace.Indent(4));
+
                         var ex = e.LogException();
                         using (ExecutionMode.Global())
                         using (Transaction tr = Transaction.ForceNew())

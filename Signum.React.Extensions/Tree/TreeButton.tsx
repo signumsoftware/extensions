@@ -1,16 +1,16 @@
-﻿
-import * as React from 'react'
-import { Button, MenuItem, } from 'react-bootstrap'
-import { Dic, classes } from '../../../Framework/Signum.React/Scripts/Globals'
-import { getQueryKey } from '../../../Framework/Signum.React/Scripts/Reflection'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { Lite, toLite } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { ResultTable, FindOptions, FilterOption, QueryDescription } from '../../../Framework/Signum.React/Scripts/FindOptions'
-import { SearchMessage, JavascriptMessage, parseLite, is } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import { default as SearchControlLoaded } from '../../../Framework/Signum.React/Scripts/SearchControl/SearchControlLoaded'
+﻿import * as React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Dic, classes } from '@framework/Globals'
+import { getQueryKey } from '@framework/Reflection'
+import * as Finder from '@framework/Finder'
+import { Lite, toLite } from '@framework/Signum.Entities'
+import { ResultTable, FindOptions, FilterOption, QueryDescription } from '@framework/FindOptions'
+import { SearchMessage, JavascriptMessage, parseLite, is } from '@framework/Signum.Entities'
+import * as Navigator from '@framework/Navigator'
+import { default as SearchControlLoaded } from '@framework/SearchControl/SearchControlLoaded'
 import { TreeMessage } from './Signum.Entities.Tree'
 import * as TreeClient from './TreeClient'
+import { Button } from '@framework/Components';
 
 export interface TreeButtonProps {
     searchControl: SearchControlLoaded;
@@ -33,7 +33,7 @@ export default class TreeButton extends React.Component<TreeButtonProps> {
     render() {
         var label = this.props.searchControl.props.largeToolbarButtons == true ? " " + TreeMessage.Tree.niceToString() : undefined;
         return (
-            <Button onClick={this.handleClick}><i className="fa fa-sitemap"></i>&nbsp;{label}</Button>
+            <Button onClick={this.handleClick} color="light"><FontAwesomeIcon icon="sitemap" />&nbsp;{label}</Button>
         );
     }
 }

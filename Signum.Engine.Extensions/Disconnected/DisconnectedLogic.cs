@@ -1,4 +1,5 @@
-﻿using Signum.Engine.DynamicQuery;
+﻿using Signum.Engine.Basics;
+using Signum.Engine.DynamicQuery;
 using Signum.Engine.Maps;
 using Signum.Engine.Operations;
 using Signum.Entities;
@@ -46,14 +47,14 @@ namespace Signum.Engine.Disconnected
 
         public static long ServerSeed;
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm, long serverSeed = 1000000000)
+        public static void Start(SchemaBuilder sb, long serverSeed = 1000000000)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 ServerSeed = serverSeed;
 
                 sb.Include<DisconnectedMachineEntity>()
-                    .WithQuery(dqm, () => dm => new
+                    .WithQuery(() => dm => new
                     {
                         Entity = dm,
                         dm.MachineName,
@@ -63,7 +64,7 @@ namespace Signum.Engine.Disconnected
                     });
 
                 sb.Include<DisconnectedExportEntity>()
-                    .WithQuery(dqm, () => dm => new
+                    .WithQuery(() => dm => new
                     {
                         Entity = dm,
                         dm.CreationDate,
@@ -74,7 +75,7 @@ namespace Signum.Engine.Disconnected
                     });
 
                 sb.Include<DisconnectedImportEntity>()
-                    .WithQuery(dqm, () => dm => new
+                    .WithQuery(() => dm => new
                     {
                         Entity = dm,
                         dm.CreationDate,
@@ -84,8 +85,8 @@ namespace Signum.Engine.Disconnected
                         dm.Exception,
                     });
                 
-                dqm.RegisterExpression((DisconnectedMachineEntity dm) => dm.Imports(), () => DisconnectedMessage.Imports.NiceToString());
-                dqm.RegisterExpression((DisconnectedMachineEntity dm) => dm.Exports(), () => DisconnectedMessage.Exports.NiceToString());
+                QueryLogic.Expressions.Register((DisconnectedMachineEntity dm) => dm.Imports(), () => DisconnectedMessage.Imports.NiceToString());
+                QueryLogic.Expressions.Register((DisconnectedMachineEntity dm) => dm.Exports(), () => DisconnectedMessage.Exports.NiceToString());
 
                 MachineGraph.Register();
 
@@ -161,8 +162,8 @@ namespace Signum.Engine.Disconnected
                 {
                     FromStates = { DisconnectedMachineState.Connected },
                     ToStates = { DisconnectedMachineState.Connected },
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (dm, _) =>
                     {
 
@@ -195,13 +196,11 @@ namespace Signum.Engine.Disconnected
         {
             TypeEntity type = (TypeEntity)arg;
 
-            var ce = Administrator.UnsafeDeletePreCommand((DisconnectedExportEntity de) => de.Copies, Database.MListQuery((DisconnectedExportEntity de) => de.Copies).Where(mle => mle.Element.Type.RefersTo(type)));
-            var ci = Administrator.UnsafeDeletePreCommand((DisconnectedImportEntity di) => di.Copies, Database.MListQuery((DisconnectedImportEntity di) => di.Copies).Where(mle => mle.Element.Type.RefersTo(type)));
+            var ce = Administrator.UnsafeDeletePreCommandMList((DisconnectedExportEntity de) => de.Copies, Database.MListQuery((DisconnectedExportEntity de) => de.Copies).Where(mle => mle.Element.Type.RefersTo(type)));
+            var ci = Administrator.UnsafeDeletePreCommandMList((DisconnectedImportEntity di) => di.Copies, Database.MListQuery((DisconnectedImportEntity di) => di.Copies).Where(mle => mle.Element.Type.RefersTo(type)));
 
             return SqlPreCommand.Combine(Spacing.Simple, ce, ci);
-        }
-
-
+        } 
 
         static void EntityEventsGlobal_Saving(Entity ident)
         {

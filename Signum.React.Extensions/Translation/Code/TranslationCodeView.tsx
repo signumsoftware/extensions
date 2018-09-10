@@ -1,14 +1,13 @@
 ﻿import * as React from 'react'
-import * as numbro from 'numbro'
-import * as moment from 'moment'
-import { Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { notifySuccess } from '../../../../Framework/Signum.React/Scripts/Operations/EntityOperations'
-import { ValueSearchControl, SearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import EntityLink from '../../../../Framework/Signum.React/Scripts/SearchControl/EntityLink'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, PropertyRoute, getTypeInfos } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { ModifiableEntity, EntityControlMessage, Entity, Lite, parseLite, getToString, JavascriptMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Dic } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { notifySuccess } from '@framework/Operations/EntityOperations'
+import { ValueSearchControl, SearchControl } from '@framework/Search'
+import EntityLink from '@framework/SearchControl/EntityLink'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { getQueryNiceName, PropertyRoute, getTypeInfos } from '@framework/Reflection'
+import { ModifiableEntity, EntityControlMessage, Entity, Lite, parseLite, getToString, JavascriptMessage } from '@framework/Signum.Entities'
 import * as CultureClient from '../CultureClient'
 import { API, AssemblyResult, LocalizedType, LocalizableType, LocalizedMember } from '../TranslationClient'
 import { CultureInfoEntity } from '../../Basics/Signum.Entities.Basics'
@@ -107,9 +106,9 @@ export class TranslateSearchBox extends React.Component<{ search: (newValue: str
             <form onSubmit={this.handleSearch} className="input-group">
                 <input type="text" className="form-control"
                     placeholder={ TranslationMessage.Search.niceToString() }  value={ this.state.filter} onChange={this.handleChange}/>
-                <div className="input-group-btn">
-                    <button className="btn btn-default" type="submit" title={ TranslationMessage.Search.niceToString() }>
-                        <i className="glyphicon glyphicon-search"></i>
+                <div className="input-group-append">
+                    <button className="btn btn-light" type="submit" title={ TranslationMessage.Search.niceToString() }>
+                        <FontAwesomeIcon icon="search" />
                     </button>
                 </div>
             </form>

@@ -1,15 +1,15 @@
 ﻿import * as React from 'react'
-import { Tab, Tabs } from 'react-bootstrap'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityDetail, EntityList, EntityRepeater, EntityTabRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SubTokensOptions, QueryToken, QueryTokenType, hasAnyOrAll } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { SearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import { getToString, getMixin, Lite } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityDetail, EntityList, EntityRepeater, EntityTabRepeater } from '@framework/Lines'
+import { SubTokensOptions, QueryToken, QueryTokenType, hasAnyOrAll } from '@framework/FindOptions'
+import { SearchControl } from '@framework/Search'
+import { getToString, getMixin, Lite } from '@framework/Signum.Entities'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import { MoveTreeModel, TreeEntity } from '../Signum.Entities.Tree'
+import * as Finder from "@framework/Finder";
 import * as TreeClient from '../TreeClient'
-import { TypeReference } from "../../../../Framework/Signum.React/Scripts/Reflection";
-import { is } from "../../../../Framework/Signum.React/Scripts/Signum.Entities";
+import { TypeReference } from "@framework/Reflection";
+import { is } from "@framework/Signum.Entities";
 
 export interface MoveTreeModelComponentProps {
     ctx: TypeContext<MoveTreeModel>;
@@ -24,23 +24,32 @@ export default class MoveTreeModelComponent extends React.Component<MoveTreeMode
         const type = { name: typeName, isLite: true } as TypeReference; 
         return (
             <div>
-                <EntityLine ctx={ctx.subCtx(a => a.newParent)} type={type} onChange={() => this.forceUpdate()}
+                <EntityLine ctx={ctx.subCtx(a => a.newParent)} type={type} onChange={this.handleNewParentChange}
                     findOptions={{
                         queryName: typeName,
-                        filterOptions: [{ columnName: "Entity", operation: "DistinctTo", value: this.props.lite, frozen: true }]
+                        filterOptions: [{ token: "Entity", operation: "DistinctTo", value: this.props.lite, frozen: true }]
                     }}
-                    onFind={() => TreeClient.openTree(typeName, [{ columnName: "Entity", operation: "DistinctTo", value: this.props.lite, frozen: true }])} />
+                    onFind={() => TreeClient.openTree(typeName, [{ token: "Entity", operation: "DistinctTo", value: this.props.lite, frozen: true }])} />
 
                 <ValueLine ctx={ctx.subCtx(a => a.insertPlace)} onChange={() => this.forceUpdate()} />
 
                 {(ctx.value.insertPlace == "Before" || ctx.value.insertPlace == "After") &&
                     <EntityLine ctx={ctx.subCtx(a => a.sibling)} type={type}
-                        findOptions={{ queryName: typeName, parentColumn: "Entity.Parent", parentValue: ctx.value.newParent }}
-                        onFind={() => TreeClient.openTree(typeName, [{ columnName: "Entity.Parent", value: ctx.value.newParent }])} />}
+                        findOptions={{ queryName: typeName, parentToken: "Entity.Parent", parentValue: ctx.value.newParent }}
+                        onFind={() => Finder.find({
+                            queryName: typeName,
+                            filterOptions: [{ token: "Entity.Parent", value: ctx.value.newParent, frozen: true }]
+                        }, { useDefaultBehaviour: true, searchControlProps: { create: false } })}
+                    />}
             </div>
         );
     }
 
-    
+    handleNewParentChange = () => {
+        var ctx = this.props.ctx;
+        ctx.value.sibling = null;
+        ctx.value.modified = true;
+        this.forceUpdate();
+    }
 }
                 

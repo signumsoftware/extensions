@@ -1,6 +1,7 @@
 ﻿using Signum.Engine;
 using Signum.Engine.Authorization;
 using Signum.Engine.Operations;
+using Signum.Entities;
 using Signum.Entities.Authorization;
 using Signum.Entities.Basics;
 using Signum.Services;
@@ -28,15 +29,16 @@ namespace Signum.React.Authorization
             UserEntity user = null;
             try
             {
-                user = AuthLogic.Login(data.userName, Security.EncodePassword(data.password));
+                if (AuthLogic.Authorizer == null)
+                    user = AuthLogic.Login(data.userName, Security.EncodePassword(data.password));
+                else
+                    user = AuthLogic.Authorizer.Login(data.userName, data.password);
             }
             catch (Exception e) when (e is IncorrectUsernameException || e is IncorrectPasswordException)
             {
                 if (AuthServer.MergeInvalidUsernameAndPasswordMessages)
                 {
-                    ModelState.AddModelError("userName", AuthMessage.InvalidUsernameOrPassword.NiceToString());
-                    ModelState.AddModelError("password", AuthMessage.InvalidUsernameOrPassword.NiceToString());
-                    throw new HttpResponseException(Request.CreateErrorResponse(HttpStatusCode.BadRequest, this.ModelState));
+                    throw ModelException("login", AuthMessage.InvalidUsernameOrPassword.NiceToString());
                 }
                 else if (e is IncorrectUsernameException)
                 {
@@ -47,11 +49,9 @@ namespace Signum.React.Authorization
                     throw ModelException("password", AuthMessage.InvalidPassword.NiceToString());
                 }
             }
-            catch (IncorrectPasswordException)
+            catch (Exception e)
             {
-                throw ModelException("password", AuthServer.MergeInvalidUsernameAndPasswordMessages ?
-                    AuthMessage.InvalidUsernameOrPassword.NiceToString() :
-                    AuthMessage.InvalidPassword.NiceToString());
+                throw ModelException("login", e.Message);
             }
 
             using (UserHolder.UserSession(user))
@@ -61,7 +61,9 @@ namespace Signum.React.Authorization
                     UserTicketServer.SaveCookie();
                 }
 
-                AuthServer.AddUserSession(user);
+                AuthServer.OnUserPreLogin(this, user);
+
+                AuthServer.AddUserSession(this, user);
 
                 string message = AuthLogic.OnLoginMessage();
 
@@ -86,7 +88,7 @@ namespace Signum.React.Authorization
         {
             using (ScopeSessionFactory.OverrideSession())
             {
-                if (!UserTicketServer.LoginFromCookie())
+                if (!UserTicketServer.LoginFromCookie(this))
                     return null;
 
                 string message = AuthLogic.OnLoginMessage();
@@ -100,7 +102,8 @@ namespace Signum.React.Authorization
         [Route("api/auth/currentUser")]
         public UserEntity GetCurrentUser()
         {
-            return UserEntity.Current;
+            var result = UserEntity.Current;
+            return result.Is(AuthLogic.AnonymousUser) ? null : result;
         }
 
         [Route("api/auth/logout"), HttpPost]
@@ -122,7 +125,7 @@ namespace Signum.React.Authorization
        
 
         [Route("api/auth/ChangePassword"), HttpPost]
-        public UserEntity ChangePassword(ChangePasswordRequest request)
+        public LoginResponse ChangePassword(ChangePasswordRequest request)
         {
             if (string.IsNullOrEmpty(request.oldPassword))
                 throw ModelException("oldPassword", AuthMessage.PasswordMustHaveAValue.NiceToString());
@@ -139,7 +142,7 @@ namespace Signum.React.Authorization
             using (AuthLogic.Disable())
                 user.Execute(UserOperation.Save);
 
-            return user;
+            return new LoginResponse { userEntity = user, token = AuthTokenServer.CreateToken(UserEntity.Current) };
         }
 
         private HttpResponseException ModelException(string field, string error)

@@ -40,13 +40,13 @@ namespace Signum.Engine.Isolation
 
         internal static Dictionary<Type, IsolationStrategy> strategies = new Dictionary<Type, IsolationStrategy>();
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 sb.Include<IsolationEntity>()
                     .WithSave(IsolationOperation.Save)
-                    .WithQuery(dqm, () => iso => new
+                    .WithQuery(() => iso => new
                     {
                         Entity = iso,
                         iso.Id,
@@ -89,14 +89,14 @@ namespace Signum.Engine.Isolation
             return IsolationEntity.Override(entity?.TryIsolation() ?? args.TryGetArgC<Lite<IsolationEntity>>());
         }
 
-        static void EntityEventsGlobal_PreSaving(Entity ident, ref bool graphModified)
+        static void EntityEventsGlobal_PreSaving(Entity ident, PreSavingContext ctx)
         {
             if (strategies.TryGet(ident.GetType(), IsolationStrategy.None) != IsolationStrategy.None && IsolationEntity.Current != null)
             {
                 if (ident.Mixin<IsolationMixin>().Isolation == null)
                 {
                     ident.Mixin<IsolationMixin>().Isolation = IsolationEntity.Current;
-                    graphModified = true;
+                    ctx.InvalidateGraph();
                 }
                 else if (!ident.Mixin<IsolationMixin>().Isolation.Is(IsolationEntity.Current))
                     throw new ApplicationException(IsolationMessage.Entity0HasIsolation1ButCurrentIsolationIs2.NiceToString(ident, ident.Mixin<IsolationMixin>().Isolation, IsolationEntity.Current));

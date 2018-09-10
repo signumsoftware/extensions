@@ -1,12 +1,12 @@
 ﻿import * as React from 'react'
-import { ajaxGet, ajaxPost, ServiceError } from '../../../../Framework/Signum.React/Scripts/Services'
+import { ajaxGet, ajaxPost, ServiceError } from '@framework/Services'
 import { QueryTokenEmbedded } from '../Signum.Entities.UserAssets'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { TypeContext } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { QueryDescription, QueryToken, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import QueryTokenBuilder from '../../../../Framework/Signum.React/Scripts/SearchControl/QueryTokenBuilder'
-import { getQueryNiceName } from '../../../../Framework/Signum.React/Scripts/Reflection'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '@framework/Lines'
+import * as Finder from '@framework/Finder'
+import { TypeContext } from '@framework/TypeContext'
+import { QueryDescription, QueryToken, SubTokensOptions } from '@framework/FindOptions'
+import QueryTokenBuilder from '@framework/SearchControl/QueryTokenBuilder'
+import { getQueryNiceName } from '@framework/Reflection'
 
 
 const CurrentEntityKey = "[CurrentEntity]";
@@ -16,7 +16,7 @@ interface QueryTokenEntityBuilderProps {
     queryKey: string;
     subTokenOptions: SubTokensOptions;
     onTokenChanged?: (newToken: QueryToken | undefined) => void;
-    helpBlock?: React.ReactChild;
+    helpText?: React.ReactChild;
 }
 
 export default class QueryTokenEntityBuilder extends React.Component<QueryTokenEntityBuilderProps> {
@@ -41,12 +41,16 @@ export default class QueryTokenEntityBuilder extends React.Component<QueryTokenE
 
         const qte = this.props.ctx.value;
 
-        const tokenBuilder = <QueryTokenBuilder queryToken={qte && qte.token}
-            onTokenChange={this.handleTokenChanged} queryKey={this.props.queryKey} subTokenOptions={this.props.subTokenOptions}
-            readOnly={this.props.ctx.readOnly} />
+        const tokenBuilder = (
+            <div className={this.props.ctx.rwWidgetClass}>
+                <QueryTokenBuilder queryToken={qte && qte.token}
+                    onTokenChange={this.handleTokenChanged} queryKey={this.props.queryKey} subTokenOptions={this.props.subTokenOptions}
+                    readOnly={this.props.ctx.readOnly} />
+            </div>
+        );
 
         return (
-            <FormGroup ctx={this.props.ctx} helpBlock={this.props.helpBlock}>
+            <FormGroup ctx={this.props.ctx} helpText={this.props.helpText}>
                 {
                     !qte || !qte.parseException ? tokenBuilder :
                         <div>

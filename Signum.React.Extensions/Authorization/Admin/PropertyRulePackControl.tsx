@@ -1,22 +1,21 @@
 ﻿import * as React from 'react'
-import { Button } from 'react-bootstrap'
-import * as numbro from 'numbro'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { PropertyRouteEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics';
-import { notifySuccess } from '../../../../Framework/Signum.React/Scripts/Operations/EntityOperations'
-import EntityLink from '../../../../Framework/Signum.React/Scripts/SearchControl/EntityLink'
-import { TypeContext, ButtonsContext, IRenderButtons } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { EntityLine, ValueLine } from '../../../../Framework/Signum.React/Scripts/Lines'
+import { classes } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { PropertyRouteEntity } from '@framework/Signum.Entities.Basics';
+import { notifySuccess } from '@framework/Operations/EntityOperations'
+import EntityLink from '@framework/SearchControl/EntityLink'
+import { TypeContext, ButtonsContext, IRenderButtons } from '@framework/TypeContext'
+import { EntityLine, ValueLine } from '@framework/Lines'
 
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, PropertyRoute, getTypeInfos } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { getQueryNiceName, PropertyRoute, getTypeInfos } from '@framework/Reflection'
+import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '@framework/Signum.Entities'
 import { API } from '../AuthClient'
 import { PropertyRulePack, PropertyAllowedRule, PropertyAllowed, AuthAdminMessage, PermissionSymbol, AuthMessage } from '../Signum.Entities.Authorization'
 import { ColorRadio, GrayCheckbox } from './ColoredRadios'
 
 import "./AuthAdmin.css"
+import { Button } from '@framework/Components';
 
 
 export default class PropertyRulesPackControl extends React.Component<{ ctx: TypeContext<PropertyRulePack> }> implements IRenderButtons {
@@ -35,7 +34,7 @@ export default class PropertyRulesPackControl extends React.Component<{ ctx: Typ
 
     renderButtons(bc: ButtonsContext) {
         return [
-            <Button bsStyle="primary" onClick={() => this.handleSaveClick(bc)}>{AuthMessage.Save.niceToString()}</Button>
+            <Button color="primary" onClick={() => this.handleSaveClick(bc)}>{AuthMessage.Save.niceToString()}</Button>
         ];
     }
 
@@ -62,7 +61,7 @@ export default class PropertyRulesPackControl extends React.Component<{ ctx: Typ
                     <ValueLine ctx={ctx.subCtx(f => f.strategy)} />
                     <EntityLine ctx={ctx.subCtx(f => f.type)} />
                 </div>
-                <table className="table table-condensed sf-auth-rules">
+                <table className="table table-sm sf-auth-rules">
                     <thead>
                         <tr>
                             <th>

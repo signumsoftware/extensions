@@ -19,7 +19,6 @@ export interface FileEmbedded extends IFile { }
 
 export interface IFilePath extends IFile
 {
-   fullPhysicalPath?: string | null;
    fileType?: FileTypeSymbol | null; 
    suffix?: string | null;
 }
@@ -55,7 +54,10 @@ export module FileMessage {
     export const ViewFile = new MessageKey("FileMessage", "ViewFile");
     export const ViewingHasNotDefaultImplementationFor0 = new MessageKey("FileMessage", "ViewingHasNotDefaultImplementationFor0");
     export const OnlyOneFileIsSupported = new MessageKey("FileMessage", "OnlyOneFileIsSupported");
-    export const DragAndDropHere = new MessageKey("FileMessage", "DragAndDropHere");
+    export const OrDragAFileHere = new MessageKey("FileMessage", "OrDragAFileHere");
+    export const TheFile0IsNotA1 = new MessageKey("FileMessage", "TheFile0IsNotA1");
+    export const File0IsTooBigTheMaximumSizeIs1 = new MessageKey("FileMessage", "File0IsTooBigTheMaximumSizeIs1");
+    export const TheNameOfTheFileMustNotContainPercentSymbol = new MessageKey("FileMessage", "TheNameOfTheFileMustNotContainPercentSymbol");
 }
 
 export const FilePathEmbedded = new Type<FilePathEmbedded>("FilePathEmbedded");

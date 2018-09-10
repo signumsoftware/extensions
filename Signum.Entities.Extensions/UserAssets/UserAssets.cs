@@ -7,6 +7,8 @@ using Signum.Entities.Authorization;
 using Signum.Entities.Basics;
 using Signum.Entities.Chart;
 using Signum.Entities.Dashboard;
+using Signum.Entities.Mailing;
+using Signum.Utilities;
 
 namespace Signum.Entities.UserAssets
 {
@@ -53,6 +55,8 @@ namespace Signum.Entities.UserAssets
         SelectTheXmlFileWithTheUserAssetsThatYouWantToImport,
         SelectTheEntitiesToOverride,
         SucessfullyImported,
+        SwitchToValue,
+        SwitchToExpression,
     }
 
     [AutoInit]
@@ -75,6 +79,7 @@ namespace Signum.Entities.UserAssets
     public interface IFromXmlContext
     {
         QueryEntity TryGetQuery(string queryKey);
+        QueryEntity GetQuery(string queryKey);
 
         PermissionSymbol TryPermission(string permissionKey);
 
@@ -87,6 +92,9 @@ namespace Signum.Entities.UserAssets
         IPartEntity GetPart(IPartEntity old, XElement element);
 
         DynamicQuery.QueryDescription GetQueryDescription(QueryEntity Query);
+
+        SystemEmailEntity GetSystemEmail(string fullClassName);
+        CultureInfoEntity GetCultureInfoEntity(string cultureName);
     }
 
     public interface IUserAssetEntity : IEntity
@@ -105,7 +113,7 @@ namespace Signum.Entities.UserAssets
         {
             if (xElements == null)
                 xElements = new List<XElement>();
-            
+
             for (int i = 0; i < xElements.Count; i++)
             {
                 T entity;
@@ -122,9 +130,8 @@ namespace Signum.Entities.UserAssets
 
             if (entities.Count > xElements.Count)
             {
-                entities.RemoveRange(entities.Count - 1, entities.Count - xElements.Count);
+                entities.RemoveRange(xElements.Count, entities.Count - xElements.Count);
             }
         }
-    }
-
+    }     
 }

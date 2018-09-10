@@ -1,13 +1,12 @@
 ﻿import * as React from 'react'
-import { Button } from 'react-bootstrap'
-import { Dic, classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Constructor from '../../../../Framework/Signum.React/Scripts/Constructor'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
+import { Dic, classes } from '@framework/Globals'
+import * as Constructor from '@framework/Constructor'
+import * as Finder from '@framework/Finder'
+import * as Navigator from '@framework/Navigator'
 import { DynamicTypeEntity, DynamicTypeMessage, DynamicMixinConnectionEntity } from '../Signum.Entities.Dynamic'
-import { ValueLine, EntityLine, TypeContext } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { ModifiableEntity, Entity, Lite, JavascriptMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { getTypeInfo, Binding, PropertyRoute, symbolNiceName } from '../../../../Framework/Signum.React/Scripts/Reflection'
+import { ValueLine, EntityLine, TypeContext } from '@framework/Lines'
+import { ModifiableEntity, Entity, Lite, JavascriptMessage } from '@framework/Signum.Entities'
+import { getTypeInfo, Binding, PropertyRoute, symbolNiceName } from '@framework/Reflection'
 import * as DynamicTypeClient from '../DynamicTypeClient'
 
 interface DynamicMixinConnectionComponentProps {
@@ -25,7 +24,7 @@ export default class DynamicMixinConnectionComponent extends React.Component<Dyn
                     findOptions={{
                         queryName: DynamicTypeEntity,
                         filterOptions: [
-                            { columnName: "Entity.BaseType", operation: "EqualTo", value: "MixinEntity" },
+                            { token: "Entity.BaseType", operation: "EqualTo", value: "MixinEntity" },
                         ]
                     }} />
                 <EntityLine ctx={ctx.subCtx(dt => dt.entityType)} />

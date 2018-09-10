@@ -1,22 +1,22 @@
 ﻿import * as React from 'react'
 import { Link } from 'react-router-dom'
-import { classes, Dic } from '../../../Framework/Signum.React/Scripts/Globals'
-import * as Services from '../../../Framework/Signum.React/Scripts/Services'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Constructor from '../../../Framework/Signum.React/Scripts/Constructor'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { FindOptions } from '../../../Framework/Signum.React/Scripts/FindOptions'
-import { TypeContext, StyleContext, StyleOptions, FormGroupStyle } from '../../../Framework/Signum.React/Scripts/TypeContext'
-import { PropertyRoute, PropertyRouteType, MemberInfo, getTypeInfo, getTypeInfos, TypeInfo, IsByAll, New, getTypeName } from '../../../Framework/Signum.React/Scripts/Reflection'
-import { LineBase, LineBaseProps, FormGroup, FormControlStatic, runTasks } from '../../../Framework/Signum.React/Scripts/Lines/LineBase'
-import { ModifiableEntity, Lite, Entity, EntityControlMessage, JavascriptMessage, toLite, is, liteKey, getToString } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { classes, Dic } from '@framework/Globals'
+import * as Services from '@framework/Services'
+import * as Navigator from '@framework/Navigator'
+import * as Constructor from '@framework/Constructor'
+import * as Finder from '@framework/Finder'
+import { FindOptions } from '@framework/FindOptions'
+import { TypeContext, StyleContext, StyleOptions, FormGroupStyle } from '@framework/TypeContext'
+import { PropertyRoute, PropertyRouteType, MemberInfo, getTypeInfo, getTypeInfos, TypeInfo, IsByAll, New, getTypeName } from '@framework/Reflection'
+import { LineBase, LineBaseProps } from '@framework/Lines/LineBase'
+import { ModifiableEntity, Lite, Entity, EntityControlMessage, JavascriptMessage, toLite, is, liteKey, getToString } from '@framework/Signum.Entities'
 import { IFile, IFilePath, FileMessage, FileTypeSymbol, FileEntity, FilePathEntity, FileEmbedded, FilePathEmbedded } from './Signum.Entities.Files'
-import Typeahead from '../../../Framework/Signum.React/Scripts/Lines/Typeahead'
-import { EntityBase, EntityBaseProps} from '../../../Framework/Signum.React/Scripts/Lines/EntityBase'
+import { EntityBase, EntityBaseProps } from '@framework/Lines/EntityBase'
 import * as QueryString from 'query-string'
 
 import "./Files.css"
-import { Type } from '../../../Framework/Signum.React/Scripts/Reflection';
+import { Type } from '@framework/Reflection';
+import { isLite } from '@framework/Signum.Entities';
 
 
 export type DownloadBehaviour = "SaveAs" | "View" | "None";
@@ -49,15 +49,13 @@ export default class FileDownloader extends React.Component<FileDownloaderProps>
                 .done();
     }
 
-   
+
 
     render() {
 
         const entityOrLite = this.props.entityOrLite;
 
-        const entity = (entityOrLite as Lite<IFile & Entity>).EntityType ?
-            (entityOrLite as Lite<IFile & Entity>).entity :
-            (entityOrLite as IFile & Entity);
+        const entity = isLite(entityOrLite) ? entityOrLite.entity : entityOrLite;
 
         if (!entity)
             return <span {...this.props.htmlAttributes}>{JavascriptMessage.loading.niceToString()}</span>;
@@ -65,13 +63,25 @@ export default class FileDownloader extends React.Component<FileDownloaderProps>
 
         const configuration = this.props.configuration || FileDownloader.configurtions[entity.Type];
         if (!configuration)
-            throw new Error("No configuration registered in FileDownloader.configurations for "); 
+            throw new Error("No configuration registered in FileDownloader.configurations for ");
 
         return (
             <a
-                href=""
-                onClick={e => entity.binaryFile ? downloadBase64(e, entity.binaryFile, entity.fileName!) : configuration.downloadClick(e, entity)}
-                download={this.props.download == "View" ? undefined : entity.fileName }
+                href="#"
+                onClick={e => {
+                    if (this.props.download == "SaveAs") {
+                        if (entity.binaryFile)
+                            downloadBase64(e, entity.binaryFile, entity.fileName!);
+                        else
+                            configuration.downloadClick ? configuration.downloadClick(e, entity) : downloadUrl(e, configuration.fileUrl!(entity));
+                    } else {
+                        if (entity.binaryFile)
+                            viewBase64(e, entity.binaryFile, entity.fileName!);
+                        else
+                            configuration.viewClick ? configuration.viewClick(e, entity) : viewUrl(e, configuration.fileUrl!(entity));
+                    }
+                }}
+                download={this.props.download == "View" ? undefined : entity.fileName}
                 title={entity.fileName || undefined}
                 target="_blank"
                 {...this.props.htmlAttributes}>
@@ -82,27 +92,28 @@ export default class FileDownloader extends React.Component<FileDownloaderProps>
     }
 }
 
-
 export interface FileDownloaderConfiguration<T extends IFile> {
-    downloadClick: (event: React.MouseEvent<any>, file: T) => void;
+    fileUrl?: (file: T) => string;
+    downloadClick?: (event: React.MouseEvent<any>, file: T) => void;
+    viewClick?: (event: React.MouseEvent<any>, file: T) => void;
 }
 
 FileDownloader.registerConfiguration(FileEntity, {
-    downloadClick: (event, file) => downloadUrl(event, Navigator.toAbsoluteUrl("~/api/files/downloadFile/" + file.id.toString()))
+    fileUrl: file => Navigator.toAbsoluteUrl("~/api/files/downloadFile/" + file.id.toString()),
+    viewClick: (event, file) => viewUrl(event, Navigator.toAbsoluteUrl("~/api/files/downloadFile/" + file.id.toString()))
 });
 
 FileDownloader.registerConfiguration(FilePathEntity, {
-    downloadClick: (event, file) => downloadUrl(event, Navigator.toAbsoluteUrl("~/api/files/downloadFilePath/" + file.id.toString()))
+    fileUrl: file => Navigator.toAbsoluteUrl("~/api/files/downloadFilePath/" + file.id.toString()),
 });
 
 FileDownloader.registerConfiguration(FileEmbedded, {
-    downloadClick: (event, file) => downloadBase64(event, file.binaryFile!, file.fileName!)
+    downloadClick: (event, file) => downloadBase64(event, file.binaryFile!, file.fileName!),
+    viewClick: (event, file) => viewBase64(event, file.binaryFile!, file.fileName!)
 });
 
 FileDownloader.registerConfiguration(FilePathEmbedded, {
-    downloadClick: (event, file) => downloadUrl(event,
-        Navigator.toAbsoluteUrl(`~/api/files/downloadEmbeddedFilePath/${file.fileType!.key}?` + 
-            QueryString.stringify({ suffix: file.suffix, fileName: file.fileName })))
+    fileUrl: file => Navigator.toAbsoluteUrl(`~/api/files/downloadEmbeddedFilePath/${file.fileType!.key}?` + QueryString.stringify({ suffix: file.suffix, fileName: file.fileName }))
 });
 
 function downloadUrl(e: React.MouseEvent<any>, url: string) {
@@ -113,11 +124,38 @@ function downloadUrl(e: React.MouseEvent<any>, url: string) {
         .done();
 };
 
+function viewUrl(e: React.MouseEvent<any>, url: string) {
+
+    e.preventDefault();
+    const win = window.open();
+    if (!win)
+        return;
+
+    Services.ajaxGetRaw({ url: url })
+        .then(resp => resp.blob())
+        .then(blob => {
+            const url = URL.createObjectURL(blob);
+            win.location.assign(url);
+        })
+        .done();
+
+}
+
 function downloadBase64(e: React.MouseEvent<any>, binaryFile: string, fileName: string) {
     e.preventDefault();
 
-    var blob = Services.b64toBlob(binaryFile);
+    const blob = Services.b64toBlob(binaryFile);
 
     Services.saveFileBlob(blob, fileName);
+};
+
+function viewBase64(e: React.MouseEvent<any>, binaryFile: string, fileName: string) {
+    e.preventDefault();
+
+    const blob = Services.b64toBlob(binaryFile);
+
+    const url = URL.createObjectURL(blob);
+
+    window.open(url);
 };
 

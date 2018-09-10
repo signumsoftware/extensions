@@ -1,45 +1,57 @@
 ﻿import * as React from 'react'
-import { Dic, classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { TypeContext, StyleOptions, EntityFrame } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { TypeInfo, getTypeInfo, parseId, GraphExplorer, PropertyRoute, ReadonlyBinding, } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Operations from '../../../../Framework/Signum.React/Scripts/Operations'
-import { EntityPack, Entity, Lite, JavascriptMessage, entityInfo, getToString } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { renderWidgets, renderEmbeddedWidgets, WidgetContext } from '../../../../Framework/Signum.React/Scripts/Frames/Widgets'
-import ValidationErrors from '../../../../Framework/Signum.React/Scripts/Frames/ValidationErrors'
-import ButtonBar from '../../../../Framework/Signum.React/Scripts/Frames/ButtonBar'
+import { Dic, classes } from '@framework/Globals'
+import { TypeContext, StyleOptions, EntityFrame } from '@framework/TypeContext'
+import { TypeInfo, getTypeInfo, parseId, GraphExplorer, PropertyRoute, ReadonlyBinding, } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
+import * as Operations from '@framework/Operations'
+import { EntityPack, Entity, Lite, JavascriptMessage, entityInfo, getToString } from '@framework/Signum.Entities'
+import { renderWidgets, renderEmbeddedWidgets, WidgetContext } from '@framework/Frames/Widgets'
+import ValidationErrors from '@framework/Frames/ValidationErrors'
+import ButtonBar from '@framework/Frames/ButtonBar'
 import { ToolbarElementEmbedded, ToolbarElementType, ToolbarMenuEntity, ToolbarLocation } from '../Signum.Entities.Toolbar'
 import * as ToolbarClient from '../ToolbarClient'
-import { Navbar, Nav, NavItem, NavDropdown, MenuItem } from 'react-bootstrap'
-import { LinkContainer, IndexLinkContainer } from 'react-router-bootstrap'
 import { ToolbarConfig } from "../ToolbarClient";
-import '../../../../Framework/Signum.React/Scripts/Frames/MenuIcons.css'
+import '@framework/Frames/MenuIcons.css'
 import './Toolbar.css'
 import { PermissionSymbol } from "../../Authorization/Signum.Entities.Authorization";
+import * as PropTypes from "prop-types";
+import { Dropdown, DropdownToggle, DropdownMenu, DropdownItem, NavItem } from '@framework/Components';
+import { NavLink } from '@framework/Components/NavItem';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { parseIcon } from '../../Dashboard/Admin/Dashboard';
+
+export interface ToolbarRendererProps {
+    location?: ToolbarLocation;
+    tag?: boolean;
+}
+
 
 export interface ToolbarRendererState {
     response?: ToolbarClient.ToolbarResponse<any>;
     expanded: ToolbarClient.ToolbarResponse<any>[];
     avoidCollapse: ToolbarClient.ToolbarResponse<any>[];
-    isRtl: boolean;
 }
 
-export default class ToolbarRenderer extends React.Component<{ location?: ToolbarLocation;}, ToolbarRendererState>
+export default class ToolbarRenderer extends React.Component<ToolbarRendererProps, ToolbarRendererState>
 {
-    static defaultProps = { location: "Top" as ToolbarLocation };
+    static defaultProps = { location: "Top" as ToolbarLocation, tag: true };
 
     constructor(props: {}) {
         super(props);
         this.state = {
             expanded: [],
             avoidCollapse: [],
-            isRtl: document.body.classList.contains("rtl-mode")
         };
+    }
+
+    isAlive = true;
+    componentWillUnmount() {
+        this.isAlive = false;
     }
 
     componentWillMount() {
         ToolbarClient.API.getCurrentToolbar(this.props.location!)
-            .then(res => this.setState({ response: res }))
+            .then(res => this.isAlive && this.setState({ response: res }))
             .done();
     }
 
@@ -50,28 +62,35 @@ export default class ToolbarRenderer extends React.Component<{ location?: Toolba
         if (!r)
             return null;
 
-        if (this.props.location == "Top")
+        if (this.props.location == "Top") {
+
+            var navItems = r.elements && r.elements.map((res, i) => withKey(this.renderNavItem(res, i), i));
+
+            if (!this.props.tag)
+                return navItems;
+
             return (
-                <ul className="nav navbar-nav">
-                    {r.elements && r.elements.map((res, i) => withKey(this.renderNavItem(res, i), i))}
-                </ul>
+                <div className={classes("nav navbar-nav", this.props.tag)}>
+                    {navItems}
+                </div>
             );
+        }
         else
             return (
-                <ul className="nav">
-                    {r.elements && r.elements.flatMap(sr => this.renderMenuItem(sr, 0, r)).map((sr, i) => withKey(sr, i))}
-                </ul>
+                <DropdownItemContainer tag={this.props.tag}>
+                    {r.elements && r.elements.flatMap(sr => this.renderDropdownItem(sr, 0, r)).map((sr, i) => withKey(sr, i))}
+                </DropdownItemContainer>
             );
     }
 
-    handleOnToggle = (isOpen: boolean, res: ToolbarClient.ToolbarResponse<any>)  => {
+    handleOnToggle = (res: ToolbarClient.ToolbarResponse<any>) => {
 
         if (this.state.avoidCollapse.contains(res)) {
             this.state.avoidCollapse.remove(res);
             return;
         }
 
-        if (isOpen)
+        if (!this.state.expanded.contains(res))
             this.state.expanded.push(res);
         else
             this.state.expanded.clear();
@@ -79,27 +98,25 @@ export default class ToolbarRenderer extends React.Component<{ location?: Toolba
         this.forceUpdate();
     }
 
-
-    
-    
-
     renderNavItem(res: ToolbarClient.ToolbarResponse<any>, index: number) {
 
         switch (res.type) {
             case "Menu":
-
-
                 var title = res.label || res.content!.toStr;
 
                 var icon = this.icon(res);
 
                 return (
-                    <NavDropdown title={!icon ? title : (<span>{icon}{title}</span>) as any}
-                        id={"menu-" + index}
-                        onToggle={isOpen => this.handleOnToggle(isOpen, res)}
-                        open={this.state.expanded.contains(res)}>
-                        {res.elements && res.elements.flatMap(sr => this.renderMenuItem(sr, 0, res)).map((sr, i) => withKey(sr, i))}
-                    </NavDropdown>
+                    <Dropdown
+                        toggle={() => this.handleOnToggle(res)}
+                        isOpen={this.state.expanded.contains(res)}>
+                        <DropdownToggle nav caret>
+                            {!icon ? title : (<span>{icon}{title}</span>)}
+                        </DropdownToggle>
+                        <DropdownMenu>
+                            {res.elements && res.elements.flatMap(sr => this.renderDropdownItem(sr, 1, res)).map((sr, i) => withKey(sr, i))}
+                        </DropdownMenu>
+                    </Dropdown>
                 );
             case "Header":
                 return (
@@ -113,11 +130,12 @@ export default class ToolbarRenderer extends React.Component<{ location?: Toolba
 
             case "Link":
 
-                if (res.url)
-                {
+                if (res.url) {
                     return (
-                        <NavItem onClick={e => Navigator.pushOrOpenInTab(res.url!, e)}>
-                            {ToolbarConfig.coloredIcon(res.iconName, res.iconColor)}{res.label}
+                        <NavItem>
+                            <NavLink onClick={e => Navigator.pushOrOpenInTab(res.url!, e)}>
+                                {ToolbarConfig.coloredIcon(res.iconName ? parseIcon(res.iconName) : undefined, res.iconColor)}{res.label}
+                            </NavLink>
                         </NavItem>
                     );
                 } else if (res.content) {
@@ -125,15 +143,17 @@ export default class ToolbarRenderer extends React.Component<{ location?: Toolba
                     var config = ToolbarClient.configs[res.content!.EntityType];
 
                     if (!config)
-                        return <MenuItem style={{ color: "red" }}>{res.content!.EntityType + "ToolbarConfig not registered"}</MenuItem>;
+                        return <NavItem style={{ color: "red" }}>{res.content!.EntityType + "ToolbarConfig not registered"}</NavItem>;
 
                     return (
-                        <NavItem onClick={e => config.handleNavigateClick(e, res)}>
-                            {config.getIcon(res)}{config.getLabel(res)}
+                        <NavItem>
+                            <NavLink onClick={e => config.handleNavigateClick(e, res)}>
+                                {config.getIcon(res)}{config.getLabel(res)}
+                            </NavLink>
                         </NavItem>
                     );
-                }else{
-                    return <MenuItem style={{ color: "red" }}>{"No Content or Url found"}</MenuItem>;
+                } else {
+                    return <NavItem style={{ color: "red" }}>{"No Content or Url found"}</NavItem>;
                 }
             default: throw new Error("Unexpected " + res.type);
         }
@@ -157,10 +177,10 @@ export default class ToolbarRenderer extends React.Component<{ location?: Toolba
 
         this.forceUpdate();
     }
-    
-    renderMenuItem(res: ToolbarClient.ToolbarResponse<any>, indent: number, topRes: ToolbarClient.ToolbarResponse<any>): React.ReactElement<any>[] {
 
-        var padding  = (indent * 20) + "px";
+    renderDropdownItem(res: ToolbarClient.ToolbarResponse<any>, indent: number, topRes: ToolbarClient.ToolbarResponse<any>): React.ReactElement<any>[] {
+
+        var padding = (indent * 20) + "px";
 
 
 
@@ -169,43 +189,43 @@ export default class ToolbarRenderer extends React.Component<{ location?: Toolba
         switch (res.type) {
             case "Menu":
                 return [
-                    <MenuItem onClick={e => this.handleClick(e, res, topRes)}
+                    <DropdownItem onClick={e => this.handleClick(e, res, topRes)}
                         className={classes(menuItemN, this.state.expanded.contains(res) && "active")}>
-                        {this.icon(res)}{res.label || res.content!.toStr}<span className="fa arrow" />
-                    </MenuItem>
-                ].concat(res.elements && res.elements.length && this.state.expanded.contains(res) ? res.elements.flatMap(r => this.renderMenuItem(r, indent + 1, topRes)) : []);
+                        {this.icon(res)}{res.label || res.content!.toStr}<FontAwesomeIcon icon={this.state.expanded.contains(res) ? "chevron-down" : "chevron-left"} className="arrow-align" />
+                    </DropdownItem>
+                ].concat(res.elements && res.elements.length && this.state.expanded.contains(res) ? res.elements.flatMap(r => this.renderDropdownItem(r, indent + 1, topRes)) : []);
             case "Header":
                 return [
-                    <MenuItem header className={menuItemN}>{this.icon(res)}{res.label}</MenuItem>
+                    <DropdownItem header className={menuItemN}>{this.icon(res)}{res.label}</DropdownItem>
                 ];
 
             case "Divider":
                 return [
-                    <MenuItem divider className={menuItemN}/>
+                    <DropdownItem divider className={menuItemN} />
                 ];
 
             case "Link":
                 if (res.url) {
                     return [
-                        <NavItem onClick={e => Navigator.pushOrOpenInTab(res.url!, e)} className={menuItemN}>
-                            {ToolbarConfig.coloredIcon(res.iconName, res.iconColor)}{res.label}
-                        </NavItem>
+                        <DropdownItem onClick={e => Navigator.pushOrOpenInTab(res.url!, e)} className={menuItemN}>
+                            {ToolbarConfig.coloredIcon(res.iconName ? parseIcon(res.iconName) : undefined, res.iconColor)}{res.label}
+                        </DropdownItem>
                     ];
 
                 } else if (res.content) {
                     var config = ToolbarClient.configs[res.content!.EntityType]
 
                     if (!config)
-                        return [<MenuItem style={{ color: "red" }} className={menuItemN}> {res.content!.EntityType + "ToolbarConfig not registered"}</MenuItem>];
+                        return [<DropdownItem style={{ color: "red" }} className={menuItemN}> {res.content!.EntityType + "ToolbarConfig not registered"}</DropdownItem>];
 
                     return [
-                        <MenuItem onClick={e => config.handleNavigateClick(e, res)} className={menuItemN}>
+                        <DropdownItem onClick={e => config.handleNavigateClick(e, res)} className={menuItemN}>
                             {config.getIcon(res)}{config.getLabel(res)}
-                        </MenuItem>
+                        </DropdownItem>
                     ];
                 }
                 else {
-                    return [<MenuItem style={{ color: "red" }} className={menuItemN}>{"No Content or Url found"}</MenuItem>];
+                    return [<DropdownItem style={{ color: "red" }} className={menuItemN}>{"No Content or Url found"}</DropdownItem>];
                 }
             default: throw new Error("Unexpected " + res.type);
         }
@@ -213,10 +233,9 @@ export default class ToolbarRenderer extends React.Component<{ location?: Toolba
 
     icon(res: ToolbarClient.ToolbarResponse<any>) {
 
-        if (res.iconName == null)
-            return null;
+        var icon = parseIcon(res.iconName);
 
-        return <span className={"icon " + res.iconName} style={{ color: res.iconColor }} />
+        return icon && <FontAwesomeIcon icon={icon} className={"icon"} color={res.iconColor} />
     }
 }
 
@@ -248,3 +267,31 @@ function findPath(target: ToolbarClient.ToolbarResponse<any>, list: ToolbarClien
 
     return null;
 }
+
+
+export class DropdownItemContainer extends React.Component<{ tag?: boolean }> {
+
+    handleToggle = () => {
+
+    }
+
+    getChildContext() {
+        return { toggle: this.handleToggle };
+    }
+
+    static childContextTypes = { "toggle": PropTypes.func };
+
+    render() {
+
+        if (!this.props.tag)
+            return this.props.children;
+
+        return (
+            <div className="nav">
+                {this.props.children}
+            </div>
+        );
+    }
+}
+
+

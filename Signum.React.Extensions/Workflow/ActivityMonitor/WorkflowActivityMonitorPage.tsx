@@ -1,23 +1,24 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab, Modal } from "react-bootstrap";
-import { Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { getMixin, toLite, JavascriptMessage, is, Lite } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Dic } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { getMixin, toLite, JavascriptMessage, is, Lite } from '@framework/Signum.Entities'
 import { WorkflowEntity, WorkflowEntitiesDictionary, WorkflowActivityMessage, WorkflowActivityEntity, WorkflowOperation, WorkflowModel, WorkflowActivityMonitorMessage, CaseActivityEntity } from '../Signum.Entities.Workflow'
 import {
     ValueLine, EntityLine, RenderEntity, EntityCombo, EntityList, EntityDetail, EntityStrip,
     EntityRepeater, EntityCheckboxList, EntityTabRepeater, TypeContext, EntityTable
-} from '../../../../Framework/Signum.React/Scripts/Lines'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
+} from '@framework/Lines'
+import * as Navigator from '@framework/Navigator'
 import { API, WorkflowActivityMonitor, WorkflowActivityMonitorRequest } from '../WorkflowClient'
 import WorkflowActivityMonitorViewerComponent from '../Bpmn/WorkflowActivityMonitorViewerComponent'
-import { SearchControl } from "../../../../Framework/Signum.React/Scripts/Search";
-import { ColumnOptionParsed, FilterOptionParsed, SubTokensOptions, QueryDescription, FilterRequest, ColumnRequest } from '../../../../Framework/Signum.React/Scripts/FindOptions';
+import { SearchControl } from "@framework/Search";
+import { ColumnOptionParsed, FilterOptionParsed, SubTokensOptions, QueryDescription, FilterRequest, ColumnRequest } from '@framework/FindOptions';
 import { RouteComponentProps } from "react-router";
-import { newLite } from '../../../../Framework/Signum.React/Scripts/Reflection';
+import { newLite } from '@framework/Reflection';
 import * as WorkflowClient from '../WorkflowClient';
-import FilterBuilder from '../../../../Framework/Signum.React/Scripts/SearchControl/FilterBuilder';
-import ColumnBuilder from '../../../../Framework/Signum.React/Scripts/SearchControl/ColumnBuilder';
+import FilterBuilder from '@framework/SearchControl/FilterBuilder';
+import ColumnBuilder from '@framework/SearchControl/ColumnBuilder';
+import { toFilterRequests } from '@framework/Finder';
 
 export interface WorkflowActivityMonitorConfig {
     workflow: Lite<WorkflowEntity>;
@@ -68,8 +69,8 @@ export default class WorkflowActivityMonitorPage extends React.Component<Workflo
             .done();
 
         API.getWorkflowModel(workflow)
-            .then(model => this.setState({
-                workflowModel: model,
+            .then(pair => this.setState({
+                workflowModel: pair.model,
             }))
             .done();
     }
@@ -98,7 +99,7 @@ export default class WorkflowActivityMonitorPage extends React.Component<Workflo
                 <h3 className="modal-title">
                     {!this.state.config ? JavascriptMessage.loading.niceToString() : this.state.config.workflow.toStr}
                     {this.state.config && Navigator.isViewable(WorkflowEntity) &&
-                        <small>&nbsp;<a href={Navigator.navigateRoute(this.state.config.workflow)} target="blank"><i className="fa fa-pencil" aria-hidden="true"></i></a></small>}
+                        <small>&nbsp;<a href={Navigator.navigateRoute(this.state.config.workflow)} target="blank"><FontAwesomeIcon icon="pencil"/></a></small>}
                     <br />
                     <small>{WorkflowActivityMonitorMessage.WorkflowActivityMonitor.niceToString()}</small>
                 </h3>
@@ -122,11 +123,7 @@ export default class WorkflowActivityMonitorPage extends React.Component<Workflo
 function toRequest(conf: WorkflowActivityMonitorConfig): WorkflowActivityMonitorRequest {
     return {
         workflow: conf.workflow,
-        filters: conf.filters.filter(f => f.token != null && f.operation != undefined).map(f => ({
-            token: f.token!.fullKey,
-            operation: f.operation,
-            value: f.value,
-        }) as FilterRequest),
+        filters: toFilterRequests(conf.filters),
         columns: conf.columns.filter(c => c.token != null).map(c => ({
             token: c.token!.fullKey,
             displayName: c.token!.niceName

@@ -67,6 +67,11 @@ namespace Signum.Entities.Dynamic
         static ConcurrentDictionary<string, CompilationResult> resultCache = new ConcurrentDictionary<string, CompilationResult>();
 
 
+        static EvalEmbedded()
+        {
+            DynamicCode.OnInvalidated += () => resultCache.Clear();
+        }
+
         public static CompilationResult Compile(IEnumerable<string> assemblies, string code)
         {
             return resultCache.GetOrAdd(code, _ =>
@@ -145,11 +150,11 @@ namespace Signum.Entities.Dynamic
             return null;
         }
 
-        protected override void PreSaving(ref bool graphModified)
+        protected override void PreSaving(PreSavingContext ctx)
         {
             CompileIfNecessary();
 
-            base.PreSaving(ref graphModified);
+            base.PreSaving(ctx);
         }
 
         private void CompileIfNecessary()

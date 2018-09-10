@@ -60,7 +60,7 @@ namespace Signum.React.Selenium
                     var newRoute = route.Add(mi);
 
                     if (newRoute.Parent != route)
-                        element = element.FindElement(By.CssSelector("[data-propertypath='" + route.PropertyString() + "']"));
+                        element = element.FindElement(By.CssSelector("[data-property-path='" + route.PropertyString() + "']"));
 
                     route = newRoute;
                 }
@@ -69,7 +69,7 @@ namespace Signum.React.Selenium
             return new LineLocator<S>
             {
                 Route = route,
-                ElementLocator = element.WithLocator(By.CssSelector("[data-propertypath='" + route.PropertyString() + "']"))
+                ElementLocator = element.WithLocator(By.CssSelector("[data-property-path='" + route.PropertyString() + "']"))
             };
         }
 
@@ -267,14 +267,12 @@ namespace Signum.React.Selenium
             return new QueryTokenBuilderProxy(lineLocator.ElementLocator.WaitVisible());
         }
 
-        public static void SelectTab(this ILineContainer lineContainer, string tabsId, string tabEventKey)
+        public static void SelectTab(this ILineContainer lineContainer, string eventKey)
         {
-            lineContainer.SelectTab(tabsId + "-tab-" + tabEventKey);
-        }
+            var element = lineContainer.Element.WaitElementVisible(By.CssSelector($"li.nav-item[data-eventkey={eventKey}] a"));
 
-        public static void SelectTab(this ILineContainer lineContainer, string tabId)
-        {
-            lineContainer.Element.WaitElementVisible(By.CssSelector($"a[role=tab][id={tabId}]")).Click();
+            element.ScrollTo();
+            element.Click();
         }
 
         public static SearchControlProxy GetSearchControl(this ILineContainer lineContainer, object queryName)

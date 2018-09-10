@@ -1,17 +1,27 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab } from "react-bootstrap";
-import { Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { getMixin, toLite, JavascriptMessage, is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Dic, classes } from '@framework/Globals'
+import { getMixin, toLite, JavascriptMessage, is } from '@framework/Signum.Entities'
 import { ColorTypeaheadLine } from '../../Basics/Templates/ColorTypeahead'
-import { CaseEntity, WorkflowEntity, WorkflowEntitiesDictionary, CaseActivityEntity, WorkflowActivityMessage, WorkflowActivityEntity } from '../Signum.Entities.Workflow'
+import {
+    CaseEntity, WorkflowEntity, WorkflowEntitiesDictionary, CaseActivityEntity, WorkflowActivityMessage, WorkflowActivityEntity,
+    CaseActivityMessage, DoneType, CaseNotificationState, WorkflowEventEntity
+} from '../Signum.Entities.Workflow'
 import {
     ValueLine, EntityLine, RenderEntity, EntityCombo, EntityList, EntityDetail, EntityStrip,
     EntityRepeater, EntityCheckboxList, EntityTabRepeater, TypeContext, EntityTable
-} from '../../../../Framework/Signum.React/Scripts/Lines'
+} from '@framework/Lines'
 import { API, CaseFlow } from '../WorkflowClient'
+import * as OrderUtils from '@framework/Frames/OrderUtils'
 import CaseFlowViewerComponent from '../Bpmn/CaseFlowViewerComponent'
 import InlineCaseTags from "../Case/InlineCaseTags";
-import { SearchControl } from "../../../../Framework/Signum.React/Scripts/Search";
+import { SearchControl, SearchControlLoaded } from "@framework/Search";
+import * as Navigator from "@framework/Navigator";
+import { Tab, Tabs, UncontrolledTabs } from '@framework/Components/Tabs';
+import { UncontrolledTooltip, Button } from "@framework/Components";
+import { ResultRow } from '@framework/FindOptions';
+
+type CaseTab = "CaseFlow" | "CaseActivities" | "InprogressCaseActivities";
 
 interface CaseComponentProps {
     ctx: TypeContext<CaseEntity>;
@@ -22,6 +32,7 @@ interface CaseComponentState {
     initialXmlDiagram?: string;
     entities?: WorkflowEntitiesDictionary;
     caseFlow?: CaseFlow;
+    activeEventKey: CaseTab;
 }
 
 export default class CaseComponent extends React.Component<CaseComponentProps, CaseComponentState> {
@@ -29,16 +40,16 @@ export default class CaseComponent extends React.Component<CaseComponentProps, C
     constructor(props: CaseComponentProps) {
         super(props);
 
-        this.state = { };
+        this.state = { activeEventKey: "CaseFlow" };
     }
 
     caseFlowViewerComponent?: CaseFlowViewerComponent | null;
 
     loadState(props: CaseComponentProps) {
         API.getWorkflowModel(toLite(props.ctx.value.workflow))
-            .then(model => this.setState({
-                initialXmlDiagram: model.diagramXml,
-                entities: model.entities.toObject(mle => mle.element.bpmnElementId, mle => mle.element.model)
+            .then(pair => this.setState({
+                initialXmlDiagram: pair.model.diagramXml,
+                entities: pair.model.entities.toObject(mle => mle.element.bpmnElementId, mle => mle.element.model)
             }))
             .done();
 
@@ -77,10 +88,10 @@ export default class CaseComponent extends React.Component<CaseComponentProps, C
                     </div>
                 </div>
 
-                <Tabs id="caseTabs">
-                    <Tab eventKey="CaseFlow" title={WorkflowActivityMessage.CaseFlow.niceToString()}>
+                <Tabs id="caseTabs" hideOnly={true} activeEventKey={this.state.activeEventKey} toggle={this.handleToggle}>
+                    <Tab eventKey={"CaseFlow" as CaseTab} title={WorkflowActivityMessage.CaseFlow.niceToString()}>
                         {this.state.initialXmlDiagram && this.state.entities && this.state.caseFlow ?
-                            <div className="code-container">
+                            <div>
                                 <CaseFlowViewerComponent ref={m => this.caseFlowViewerComponent = m}
                                     diagramXML={this.state.initialXmlDiagram}
                                     entities={this.state.entities}
@@ -90,19 +101,129 @@ export default class CaseComponent extends React.Component<CaseComponentProps, C
                                 /></div> :
                             <h3>{JavascriptMessage.loading.niceToString()}</h3>}
                     </Tab>
-                    <Tab eventKey="CaseActivities" title={WorkflowActivityEntity.nicePluralName()}>
-                        <SearchControl findOptions={{
-                            queryName: CaseActivityEntity,
-                            parentColumn: "Case",
-                            parentValue: ctx.value,
-                            orderOptions: [{
-                                columnName: "StartDate",
-                                orderType: "Ascending",
-                            }]
-                        }} />
+                    <Tab eventKey={"CaseActivities" as CaseTab} title={WorkflowActivityEntity.nicePluralName()}>
+                        <SearchControl
+                            findOptions={{
+                                queryName: CaseActivityEntity,
+                                parentToken: "Case",
+                                parentValue: ctx.value,
+                                orderOptions: [{
+                                    token: "StartDate",
+                                    orderType: "Ascending",
+                                }]
+                            }}
+                            extraButtons={sc => [
+                                OrderUtils.setOrder(-1.1, <CaseActivityStatsButtonComponent sc={sc} caseFlowViewer={this.caseFlowViewerComponent!} />),
+                                OrderUtils.setOrder(-1.2, <WorkflowActivityLocateButtonComponent sc={sc} caseFlowViewer={this.caseFlowViewerComponent!} onLocated={this.handleOnDiagramNodeLocated} />),
+                            ]}
+                        />
+                    </Tab>
+                    <Tab eventKey={"InprogressCaseActivities" as CaseTab} title={WorkflowActivityMessage.InprogressWorkflowActivities.niceToString()}>
+                        <SearchControl
+                            findOptions={{
+                                queryName: CaseActivityEntity,
+                                parentToken: "Case",
+                                parentValue: ctx.value,
+                                filterOptions: [{ token: "DoneDate", operation: "EqualTo", value: null, frozen: true }],
+                                orderOptions: [{
+                                    token: "StartDate",
+                                    orderType: "Descending",
+                                }]
+                            }}
+                            extraButtons={sc => [
+                                OrderUtils.setOrder(-1.1, <CaseActivityStatsButtonComponent sc={sc} caseFlowViewer={this.caseFlowViewerComponent!} />),
+                                OrderUtils.setOrder(-1.2, <WorkflowActivityLocateButtonComponent sc={sc} caseFlowViewer={this.caseFlowViewerComponent!} onLocated={this.handleOnDiagramNodeLocated} />),
+                            ]}
+                        />
                     </Tab>
                 </Tabs>
             </div>
         );
     }
+
+    handleToggle = (eventKey: string | number) => {
+        if (this.state.activeEventKey !== eventKey)
+            this.setState({ activeEventKey: eventKey as CaseTab });
+    }
+
+    handleOnDiagramNodeLocated = () => {
+        this.setState({ activeEventKey: "CaseFlow" });
+    }
 }
+
+interface CaseActivityButtonBaseProps {
+    sc: SearchControlLoaded;
+    caseFlowViewer: CaseFlowViewerComponent;
+}
+
+class CaseActivityStatsButtonComponent extends React.Component<CaseActivityButtonBaseProps> {
+
+    render() {
+        const sc = this.props.sc;
+        let Div: HTMLDivElement | null;
+
+        const enabled = sc.state.selectedRows && sc.state.selectedRows.length == 1;
+
+        return (
+            [
+                <div ref={comp => Div = comp}>
+                    <a className={classes("sf-line-button btn btn-light", enabled ? undefined : "disabled")}
+                        onClick={() => this.handleOnClick(sc.state.selectedRows![0])}>
+                        <FontAwesomeIcon icon="list" />
+                    </a>
+                </div>,
+                <UncontrolledTooltip placement="top" key="tooltip" target={() => Div!}>
+                    {WorkflowActivityMessage.OpenCaseActivityStats.niceToString()}
+                </UncontrolledTooltip>
+            ]
+        );
+    }
+
+    handleOnClick(rr: ResultRow) {
+        if (rr.entity)
+            Navigator.API.fetchAndForget(rr.entity).then(caseActivity => {
+                const bpmnElementID = ((caseActivity as CaseActivityEntity).workflowActivity as any).bpmnElementId;
+                this.props.caseFlowViewer.showCaseActivityStatsModal(bpmnElementID);
+            }).done();
+    }
+}
+
+interface WorkflowActivityLocateButtonComponentProps extends CaseActivityButtonBaseProps {
+    onLocated?: () => void;
+}
+
+class WorkflowActivityLocateButtonComponent extends React.Component<WorkflowActivityLocateButtonComponentProps> {
+
+    render() {
+        const sc = this.props.sc;
+        let Div: HTMLDivElement | null;
+
+        const enabled = sc.state.selectedRows && sc.state.selectedRows.length == 1;
+        return (
+            [
+                <div ref={comp => Div = comp}>
+                    <a className={classes("sf-line-button btn btn-light", enabled ? undefined : "disabled")}
+                        onClick={() => this.handleOnClick(sc.state.selectedRows![0])}>
+                        <FontAwesomeIcon icon="map-marker" />
+                    </a>
+                </div>,
+                <UncontrolledTooltip placement="top" key="tooltip" target={() => Div!}>
+                    {WorkflowActivityMessage.LocateWorkflowActivityInDiagram.niceToString()}
+                </UncontrolledTooltip>
+            ]
+        );
+    }
+
+    handleOnClick(rr: ResultRow) {
+        if (rr.entity) {
+            Navigator.API.fetchAndForget(rr.entity).then(caseActivity => {
+                const bpmnElementID = ((caseActivity as CaseActivityEntity).workflowActivity as any).bpmnElementId;
+                this.props.caseFlowViewer.focusElement(bpmnElementID);
+
+                if (this.props.onLocated)
+                    this.props.onLocated();
+            }).done();
+        }
+    }
+}
+

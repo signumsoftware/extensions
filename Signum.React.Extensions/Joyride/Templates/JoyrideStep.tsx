@@ -1,8 +1,7 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab } from 'react-bootstrap'
 import { JoyrideStepEntity } from '../Signum.Entities.Joyride'
-import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater, TypeContext, RenderEntity } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl } from "../../../../Framework/Signum.React/Scripts/Search";
+import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater, TypeContext, RenderEntity } from '@framework/Lines'
+import { SearchControl } from "@framework/Search";
 import { TranslatedInstanceEntity } from "../../Translation/Signum.Entities.Translation";
 import HtmlCodemirror from "../../Codemirror/HtmlCodemirror";
 

@@ -1,22 +1,24 @@
 ﻿import * as React from 'react'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTable } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl, FindOptions, FilterOption, ColumnOption } from '../../../../Framework/Signum.React/Scripts/Search'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTable } from '@framework/Lines'
+import { SearchControl, FindOptions, FilterOption, ColumnOption } from '@framework/Search'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import FileLine from '../../Files/FileLine'
 import { PredictorSubQueryEntity, PredictorSubQueryColumnEmbedded, PredictorEntity, PredictorMainQueryEmbedded, PredictorMessage, PredictorSubQueryColumnUsage } from '../Signum.Entities.MachineLearning'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { getQueryNiceName } from '../../../../Framework/Signum.React/Scripts/Reflection'
+import * as Finder from '@framework/Finder'
+import { getQueryNiceName } from '@framework/Reflection'
 import QueryTokenEntityBuilder from '../../UserAssets/Templates/QueryTokenEntityBuilder'
 import { QueryTokenEmbedded } from '../../UserAssets/Signum.Entities.UserAssets'
 import { QueryFilterEmbedded } from '../../UserQueries/Signum.Entities.UserQueries'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
+import * as UserAssetsClient from '../../UserAssets/UserAssetClient'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
 import { API } from '../PredictorClient';
 import FilterBuilderEmbedded from './FilterBuilderEmbedded';
-import { TypeReference } from '../../../../Framework/Signum.React/Scripts/Reflection';
+import { TypeReference } from '@framework/Reflection';
 import { initializeColumn } from './Predictor';
-import { newMListElement } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
-import { is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
+import { newMListElement } from '@framework/Signum.Entities';
+import { is } from '@framework/Signum.Entities';
+import { toFilterOptions } from '@framework/Finder';
 
 export default class PredictorSubQuery extends React.Component<{ ctx: TypeContext<PredictorSubQueryEntity>, mainQuery: PredictorMainQueryEmbedded, mainQueryDescription: QueryDescription }> {
 
@@ -34,18 +36,22 @@ export default class PredictorSubQuery extends React.Component<{ ctx: TypeContex
         var sq = this.props.ctx.value;
 
         Finder.getQueryDescription(sq.query!.key).then(sqd =>
-            FilterBuilderEmbedded.toFilterOptionParsed(sqd!, (this.getMainFilters(sqd) || []).concat(sq.filters), SubTokensOptions.CanElement | SubTokensOptions.CanAggregate)
-                .then(filters => {
+            UserAssetsClient.API.parseFilters({
+                queryKey: sqd.queryKey,
+                canAggregate: true,
+                entity: undefined,
+                filters: (this.getMainFilters(sqd) || []).concat(sq.filters).map(mle => mle.element).map(f => ({
+                    tokenString: f.token!.tokenString,
+                    operation: f.operation,
+                    valueString: f.valueString
+                }) as UserAssetsClient.API.ParseFilterRequest)
+            }).then(filters => {
                     var fo: FindOptions = {
                         queryName: sq.query!.key,
                         groupResults: true,
-                        filterOptions: filters.map(f => ({
-                            columnName: f.token!.fullKey,
-                            operation: f.operation,
-                            value: f.value
-                        }) as FilterOption),
-                        columnOptions: [{ columnName: "Count" } as ColumnOption]
-                            .concat(sq.columns.map(mle => ({ columnName: mle.element.token && mle.element.token.tokenString, } as ColumnOption))),
+                        filterOptions: filters.map(f => UserAssetsClient.Converter.toFilterOption(f)),
+                        columnOptions: [{ token: "Count" } as ColumnOption]
+                            .concat(sq.columns.map(mle => ({ token: mle.element.token && mle.element.token.tokenString, } as ColumnOption))),
                         columnOptionsMode: "Replace",
                     };
 
@@ -95,7 +101,7 @@ export default class PredictorSubQuery extends React.Component<{ ctx: TypeContex
 
     render() {
         const ctx = this.props.ctx;
-        const ctxxs = ctx.subCtx({ formGroupSize: "ExtraSmall" });
+        const ctxxs = ctx.subCtx({ formSize: "ExtraSmall" });
         const entity = ctx.value;
         const queryKey = entity.query && entity.query.key;
         const targetType = this.props.mainQueryDescription.columns["Entity"].type;
@@ -123,7 +129,7 @@ export default class PredictorSubQuery extends React.Component<{ ctx: TypeContex
 
         return (
             <div>
-                <ValueLine ctx={ctx.subCtx(f => f.name)} onTextboxBlur={() => parentCtx.frame!.entityComponent.forceUpdate()} />
+                <ValueLine ctx={ctx.subCtx(f => f.name)} onTextboxBlur={() => parentCtx.frame!.entityComponent!.forceUpdate()} />
                 <EntityLine ctx={ctx.subCtx(f => f.query)} remove={ctx.value.isNew} onChange={this.handleOnChange} />
                 {queryKey &&
                     <div>
@@ -140,7 +146,7 @@ export default class PredictorSubQuery extends React.Component<{ ctx: TypeContex
                                     queryKey={this.props.ctx.value.query!.key}
                                     subTokenOptions={SubTokensOptions.CanElement | SubTokensOptions.CanAggregate}
                                     onTokenChanged={() => this.handleChangeUsage(colCtx)}
-                                    helpBlock={getParentKeyMessage(colCtx.value)}
+                                    helpText={getParentKeyMessage(colCtx.value)}
                                 />,
                                 headerHtmlAttributes: { style: { width: "50%" } },
                             },

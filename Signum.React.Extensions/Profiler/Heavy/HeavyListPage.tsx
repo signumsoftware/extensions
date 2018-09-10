@@ -1,15 +1,14 @@
 ﻿import * as React from 'react'
 import { RouteComponentProps } from 'react-router'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as d3 from 'd3'
-import * as numbro from 'numbro'
-import * as moment from 'moment'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import EntityLink from '../../../../Framework/Signum.React/Scripts/SearchControl/EntityLink'
-import {ValueSearchControl, SearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, PropertyRoute, getTypeInfos } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import EntityLink from '@framework/SearchControl/EntityLink'
+import {ValueSearchControl, SearchControl } from '@framework/Search'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { getQueryNiceName, PropertyRoute, getTypeInfos } from '@framework/Reflection'
+import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '@framework/Signum.Entities'
 import { API, HeavyProfilerEntry} from '../ProfilerClient'
 
 import "./Profiler.css"
@@ -93,23 +92,23 @@ export default class HeavyList extends React.Component<HeavyListProps, { enabled
 
     render() {
         if (this.state.entries == undefined)
-            return <h3>Heavy Profiler (loading...) </h3>;
+            return <h3 className="display-6">Heavy Profiler (loading...) </h3>;
 
         return (
             <div>
-                <h2>Heavy Profiler</h2>
+                <h2 className="display-6">Heavy Profiler</h2>
                 <br />
                 <div className="btn-toolbar" style={{ float: "right" }}>
                     <input key={this.state.fileVer} type="file" className="form-control" onChange={this.handleInputChange} style={{ display: "inline", float: "left", width: "inherit" }} />
-                    <button onClick={this.handleUpload} className="btn btn-info" disabled={!this.state.fileToUpload}><span className="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span> Upload</button>
+                    <button onClick={this.handleUpload} className="btn btn-info" disabled={!this.state.fileToUpload}><FontAwesomeIcon icon="cloud-upload"/> Upload</button>
                 </div>
                 <div className="btn-toolbar">
-                    { !this.state.enabled ? <button onClick={() => this.handleSetEnabled(true) } className="btn btn-default primary">Enable</button> :
-                        <button onClick={() => this.handleSetEnabled(false) } className="btn btn-default" style={{ color: "red" }}>Disable</button>
+                    { !this.state.enabled ? <button onClick={() => this.handleSetEnabled(true) } className="btn btn-light primary">Enable</button> :
+                        <button onClick={() => this.handleSetEnabled(false) } className="btn btn-light" style={{ color: "red" }}>Disable</button>
                     }
-                    <button onClick={this.handleUpdate} className="btn btn-default">Update</button>
-                    <button onClick={this.handleClear} className="btn btn-default">Clear</button>
-                    <button onClick={this.handleDownload} className="btn btn-info"><span className="glyphicon glyphicon-cloud-download" aria-hidden="true"></span> Download</button>
+                    <button onClick={this.handleUpdate} className="btn btn-light">Update</button>
+                    <button onClick={this.handleClear} className="btn btn-light">Clear</button>
+                    <button onClick={this.handleDownload} className="btn btn-info"><FontAwesomeIcon icon="cloud-download-alt"/> Download</button>
                 </div>
                 <br/>
                 <p className="help-block">Upload previous runs to compare performance.</p>

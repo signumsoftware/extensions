@@ -1,19 +1,18 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab } from 'react-bootstrap'
 import { globalModules } from './GlobalModules'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityDetail, EntityStrip } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { ModifiableEntity, isLite, isEntity, External } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { classes, Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { ViewReplacer } from '../../../../Framework/Signum.React/Scripts/Frames/ReactVisitor'
-import { FindOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityDetail, EntityStrip } from '@framework/Lines'
+import { ModifiableEntity, isLite, isEntity, External } from '@framework/Signum.Entities'
+import * as Navigator from '@framework/Navigator'
+import { classes, Dic } from '@framework/Globals'
+import { ViewReplacer } from '@framework/Frames/ReactVisitor'
+import { FindOptions } from '@framework/FindOptions'
 import {
     getQueryNiceName, TypeInfo, MemberInfo, getTypeInfo, EntityData, EntityKind, getTypeInfos, Binding, EnumType,
-    KindOfType, PropertyRoute, PropertyRouteType, LambdaMemberType, isTypeEntity, isTypeModel, isTypeModifiableEntity
-} from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { TypeContext, StyleOptions, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { EntityBase, EntityBaseProps } from '../../../../Framework/Signum.React/Scripts/Lines/EntityBase'
-import { EntityListBase, EntityListBaseProps } from '../../../../Framework/Signum.React/Scripts/Lines/EntityListBase'
+    KindOfType, PropertyRoute, PropertyRouteType, MemberType, isTypeEntity, isTypeModel, isTypeModifiableEntity
+} from '@framework/Reflection'
+import { TypeContext, StyleOptions, FormGroupStyle } from '@framework/TypeContext'
+import { EntityBase, EntityBaseProps } from '@framework/Lines/EntityBase'
+import { EntityListBase, EntityListBaseProps } from '@framework/Lines/EntityListBase'
 import { DynamicViewValidationMessage } from '../Signum.Entities.Dynamic'
 import { ExpressionOrValueComponent, FieldComponent } from './Designer'
 import { FindOptionsLine, ViewNameComponent } from './FindOptionsComponent'
@@ -25,6 +24,7 @@ import { HtmlAttributesLine } from './HtmlAttributesComponent'
 import { StyleOptionsLine } from './StyleOptionsComponent'
 import TypeHelpComponent from '../../TypeHelp/TypeHelpComponent'
 import { registeredCustomContexts } from '../DynamicViewClient'
+import { findMany } from '@framework/Finder';
 
 
 export type ExpressionOrValue<T> = T | Expression<T>;
@@ -59,6 +59,15 @@ export class CodeContext {
     usedNames: string[];
     assignments: { [name: string]: string };
     imports: string[];
+
+    constructor(ctxName: string, usedNames: string[], assignments: { [name: string]: string }, imports: string[])
+    {
+        this.ctxName = ctxName;
+        this.usedNames = usedNames;
+        this.assignments = assignments;
+        this.imports = imports;
+    }
+
     
     subCtx(field?: string, options?: StyleOptionsExpression): CodeContext {
         if (!field && !options)
@@ -71,12 +80,7 @@ export class CodeContext {
 
     createNewContext(newName: string): CodeContext {
         this.usedNames.push(newName);
-        var result = new CodeContext();
-        result.ctxName = newName;
-        result.usedNames = this.usedNames;
-        result.imports = this.imports;
-        result.assignments = this.assignments;
-        return result;
+        return new CodeContext(newName, this.usedNames, this.assignments, this.imports);;
     }
 
     stringifyObject(expressionOrValue: ExpressionOrValue<any>): string {
@@ -152,9 +156,9 @@ ${childrenString}
         return { __code__: this.ctxName + ".subCtx(" + (propStr || "") + (propStr && optionsStr ? ", " : "") + (optionsStr || "") + ")" };
     }
 
-    getEntityBasePropsEx(node: EntityBaseNode, options: { showAutoComplete?: boolean, showMove?: boolean, avoidGetComponent?: boolean }): any/*: EntityBaseProps Expr*/ {
+    getEntityBasePropsEx(node: EntityBaseNode, options: { showAutoComplete?: boolean, findMany?: boolean, showMove?: boolean, avoidGetComponent?: boolean }): any/*: EntityBaseProps Expr*/ {
 
-        var result : any /*EntityBaseProps*/ = {
+        var result: any /*EntityBaseProps*/ = {
             ctx: this.subCtxCode(node.field, node.styleOptions),
             labelText: node.labelText,
             labelHtmlAttributes: node.labelHtmlAttributes,
@@ -166,7 +170,7 @@ ${childrenString}
             remove: node.remove,
             onRemove: node.onRemove,
             find: node.find,
-            onFind: node.onFind,
+            ...(findMany ? { onFindMany: (node as EntityListBaseNode).onFindMany } : { onFind: node.onFind }),
             view: node.view,
             onView: node.onView,
             viewOnCreate: node.viewOnCreate,
@@ -191,12 +195,9 @@ ${childrenString}
         if (!node.children || !node.children.length)
             return undefined;
 
-        const cc = new CodeContext();
-        cc.ctxName = "ctx" + (this.usedNames.length + 1);
-        this.usedNames.push(cc.ctxName);
-        cc.usedNames = this.usedNames;
-        cc.imports = this.imports;
-        cc.assignments = {};
+        var newName = "ctx" + (this.usedNames.length + 1);
+        this.usedNames.push(newName);
+        const cc = new CodeContext(newName, this.usedNames, {}, this.imports);
 
         const div = cc.elementCodeWithChildren("div", null, node);
 
@@ -248,23 +249,26 @@ export class DesignerNode<N extends BaseNode> {
     node: N;
     route?: PropertyRoute;
 
+    constructor(parent: DesignerNode<BaseNode> | undefined, context: DesignerContext, node: N, route: PropertyRoute | undefined) {
+        this.parent = parent;
+        this.context = context;
+        this.node = node;
+        this.route = route;
+    }
+
     static zero<N extends BaseNode>(context: DesignerContext, typeName: string) {
-        var res = new DesignerNode();
-        res.context = context;
-        res.route = PropertyRoute.root(typeName);
+        var res = new DesignerNode(undefined, context, null as any as N, PropertyRoute.root(typeName));
         return res;
     }
 
     createChild<T extends BaseNode>(node: T): DesignerNode<T> {
-        var res = new DesignerNode<T>();
-        res.parent = this;
-        res.context = this.context;
-        res.node = node;
-        res.route = this.fixRoute();
+        var route = this.fixRoute()
         const lbn = node as any as { field: string };
-        if (lbn.field && res.route)
-            res.route = res.route.tryAddMember({ name: lbn.field, type: "Member" });
+        if (lbn.field && route)
+            route = route.tryAddMember("Member", lbn.field);
 
+        var res = new DesignerNode<T>(this, this.context, node, route);
+      
         return res;
     }
 
@@ -298,7 +302,7 @@ export class DesignerNode<N extends BaseNode> {
         }
 
         if (options.hasCollection)
-            res = res.tryAddMember({ name: "", type: "Indexer" });
+            res = res.tryAddMember("Indexer", "");
 
         if (!res)
             return undefined;
@@ -307,7 +311,7 @@ export class DesignerNode<N extends BaseNode> {
         {
             const tr = res.typeReference();
             if (tr.isLite)
-                res = res.tryAddMember({ name: "entity", type: "Member" });
+                res = res.tryAddMember("Member", "Entity");
         }
         return res;
     }
@@ -450,7 +454,7 @@ export function evaluateUntyped(parentCtx: TypeContext<ModifiableEntity>, expres
     if (!expressionOrValue.__code__)
         return undefined;
 
-    var f = asFunction(parentCtx.frame!.entityComponent, expressionOrValue, getFieldName);
+    var f = asFunction(parentCtx.frame!.entityComponent!, expressionOrValue, getFieldName);
 
     try {
         return f(parentCtx);
@@ -620,23 +624,6 @@ export function validateField(dn: DesignerNode<LineBaseNode>): string | undefine
     return undefined;
 }
 
-export function validateTableColumnProperty(dn: DesignerNode<EntityTableColumnNode>) {
-
-    const parentRoute = dn.parent!.fixRoute();
-
-    if (parentRoute == undefined)
-        return undefined;
-
-    const m = parentRoute.subMembers()[dn.node.property!]
-    const DVVM = DynamicViewValidationMessage;
-
-    if ( m.type.isCollection)
-        return DVVM._0RequiresA1.niceToString(dn.node.kind, DVVM.EntityOrValue.niceToString());
-
-    return undefined;
-}
-
-
 export function validateFindOptions(foe: FindOptionsExpr, parentCtx: TypeContext<ModifiableEntity> | undefined) : string | undefined {
     if (!foe.queryName)
         return DynamicViewValidationMessage._0RequiresA1.niceToString("findOptions", "queryKey");
@@ -663,7 +650,7 @@ export function addBreakLines(breakLines: boolean, message: string): React.React
     return message.split("\n").flatMap((e, i) => i == 0 ? [e] : [<br />, e]);
 }
 
-export function getEntityBaseProps(dn: DesignerNode<EntityBaseNode>, parentCtx: TypeContext<ModifiableEntity>, options: { showAutoComplete?: boolean, showMove?: boolean, avoidGetComponent?: boolean }): EntityBaseProps {
+export function getEntityBaseProps(dn: DesignerNode<EntityBaseNode>, parentCtx: TypeContext<ModifiableEntity>, options: { showAutoComplete?: boolean, findMany?: boolean, showMove?: boolean, avoidGetComponent?: boolean }): EntityBaseProps {
 
     var result: EntityBaseProps = {
         ctx: parentCtx.subCtx(dn.node.field, toStyleOptions(parentCtx, dn.node.styleOptions)),
@@ -677,7 +664,10 @@ export function getEntityBaseProps(dn: DesignerNode<EntityBaseNode>, parentCtx: 
         remove: evaluateAndValidate(parentCtx, dn.node, n => n.remove, isBooleanOrFunctionOrNull),
         onRemove: evaluateAndValidate(parentCtx, dn.node, n => n.onRemove, isFunctionOrNull),
         find: evaluateAndValidate(parentCtx, dn.node, n => n.find, isBooleanOrNull),
-        onFind: evaluateAndValidate(parentCtx, dn.node, n => n.onFind, isFunctionOrNull),
+        ...(options.findMany ?
+            { onFindMany: evaluateAndValidate(parentCtx, dn.node, (n: EntityListBaseNode) => n.onFindMany, isFunctionOrNull) } as any :
+            { onFind: evaluateAndValidate(parentCtx, dn.node, n => n.onFind, isFunctionOrNull) }
+        ),
         view: evaluateAndValidate(parentCtx, dn.node, n => n.view, isBooleanOrFunctionOrNull),
         onView: evaluateAndValidate(parentCtx, dn.node, n => n.onView, isFunctionOrNull),
         viewOnCreate: evaluateAndValidate(parentCtx, dn.node, n => n.viewOnCreate, isBooleanOrNull),
@@ -706,7 +696,7 @@ export function getGetComponent(dn: DesignerNode<ContainerNode>) {
     return (ctxe: TypeContext<ModifiableEntity>) => withChildrens(dn, ctxe, <div />);
 }
 
-export function designEntityBase(dn: DesignerNode<EntityBaseNode>, options: { isCreable: boolean; isFindable: boolean; isViewable: boolean; showAutoComplete: boolean, showMove?: boolean }) {
+export function designEntityBase(dn: DesignerNode<EntityBaseNode>, options: { showAutoComplete?: boolean, findMany?: boolean, showMove?: boolean }) {
   
     const m = dn.route && dn.route.member;
 
@@ -726,7 +716,8 @@ export function designEntityBase(dn: DesignerNode<EntityBaseNode>, options: { is
             <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.remove)} type="boolean" defaultValue={null} />
             <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.onRemove)} type={null} defaultValue={null} exampleExpression={"() => Promise.resolve(true)"}/>
             <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.find)} type="boolean" defaultValue={null} />
-            <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.onFind)} type={null} defaultValue={null} exampleExpression={"e => modules.Finder.find('" + typeName + "')"} />
+            {!options.findMany && <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.onFind)} type={null} defaultValue={null} exampleExpression={"e => modules.Finder.find('" + typeName + "')"} />}
+            {options.findMany && <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, (n: EntityListBaseNode) => n.onFindMany)} type={null} defaultValue={null} exampleExpression={"e => modules.Finder.findMany('" + typeName + "')"} />}
             <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.view)} type="boolean" defaultValue={null} />
             <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.onView)} type={null} defaultValue={null} exampleExpression={"e => modules.Navigator.view(e)"}/>
             <ExpressionOrValueComponent dn={dn} binding={Binding.create(dn.node, n => n.viewOnCreate)} type="boolean" defaultValue={null} />

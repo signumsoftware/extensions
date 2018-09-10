@@ -2,18 +2,18 @@
 import { RouteComponentProps } from 'react-router'
 import * as numbro from 'numbro'
 import * as moment from 'moment'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { ValueSearchControl, SearchControl, ValueSearchControlLine } from '../../../Framework/Signum.React/Scripts/Search'
-import EntityLink from '../../../Framework/Signum.React/Scripts/SearchControl/EntityLink'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
-import { QueryDescription, SubTokensOptions } from '../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, PropertyRoute, getTypeInfos } from '../../../Framework/Signum.React/Scripts/Reflection'
-import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { ValueSearchControl, SearchControl, ValueSearchControlLine } from '@framework/Search'
+import EntityLink from '@framework/SearchControl/EntityLink'
+import * as Operations from '@framework/Operations'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { getQueryNiceName, PropertyRoute, getTypeInfos } from '@framework/Reflection'
+import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '@framework/Signum.Entities'
 import { API, SchedulerState } from './SchedulerClient'
 import { ScheduledTaskLogEntity, ScheduledTaskEntity, ScheduledTaskLogOperation } from './Signum.Entities.Scheduler'
-import { Lite } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
-import { StyleContext } from "../../../Framework/Signum.React/Scripts/Lines";
+import { Lite } from "@framework/Signum.Entities";
+import { StyleContext } from "@framework/Lines";
 
 interface SchedulerPanelProps extends RouteComponentProps<{}> {
 
@@ -53,7 +53,7 @@ export default class SchedulerPanelPage extends React.Component<SchedulerPanelPr
 
     render() {
         if (this.state == undefined)
-            return <h2>SchedulerLogic state (loading...) </h2>;
+            return <h2 className="display-6">SchedulerLogic state (loading...) </h2>;
 
         const s = this.state;
 
@@ -61,11 +61,11 @@ export default class SchedulerPanelPage extends React.Component<SchedulerPanelPr
 
         return (
             <div>
-                <h2>SchedulerLogic state</h2>
+                <h2 className="display-6">SchedulerLogic state</h2>
                 <div className="btn-toolbar">
-                    {s.Running && <a href="" className="sf-button btn btn-default active" style={{ color: "red" }} onClick={this.handleStop}>Stop</a>}
-                    {!s.Running && <a href="" className="sf-button btn btn-default" style={{ color: "green" }} onClick={this.handleStart}>Start</a>}
-                    <a href="" className="sf-button btn btn-default" onClick={this.handleUpdate}>Update</a>
+                    {s.Running && <a href="#" className="sf-button btn btn-light active" style={{ color: "red" }} onClick={this.handleStop}>Stop</a>}
+                    {!s.Running && <a href="#" className="sf-button btn btn-light" style={{ color: "green" }} onClick={this.handleStart}>Start</a>}
+                    <a href="#" className="sf-button btn btn-light" onClick={this.handleUpdate}>Update</a>
                 </div >
                 <div id="processMainDiv">
                     <br />
@@ -82,23 +82,23 @@ export default class SchedulerPanelPage extends React.Component<SchedulerPanelPr
                     {this.renderInMemoryQueue()}
                     {this.renderRunningTasks()}
 
-                    <h3>Available Tasks</h3>
-                    <div className="form-horizontal">
+                    <h4>Available Tasks</h4>
+                    <div>
                         {getTypeInfos(ScheduledTaskEntity.memberInfo(a => a.task).type).map(t =>
                             <ValueSearchControlLine key={t.name} ctx={ctx} findOptions={{ queryName: t.name }} onExplored={() => this.loadState().done()} />)}
                     </div>
-                    <h3>{ScheduledTaskEntity.niceName()}</h3>
+                    <h4>{ScheduledTaskEntity.niceName()}</h4>
                     <SearchControl
                         findOptions={{
                             queryName: ScheduledTaskEntity,
                             pagination: { elementsPerPage: 10, mode: "Firsts" }
                         }} />
 
-                    <h3>{ScheduledTaskLogEntity.niceName()}</h3>
+                    <h4>{ScheduledTaskLogEntity.niceName()}</h4>
                     <SearchControl 
                         findOptions={{
                             queryName: ScheduledTaskLogEntity,
-                            orderOptions: [{ columnName: "StartTime", orderType: "Descending" }],
+                            orderOptions: [{ token: "StartTime", orderType: "Descending" }],
                             pagination: { elementsPerPage: 10, mode: "Firsts" }
                         }}/>
                 </div>
@@ -110,7 +110,7 @@ export default class SchedulerPanelPage extends React.Component<SchedulerPanelPr
         const s = this.state;
         return (
             <div>
-                <h3>In Memory Queue</h3>
+                <h4>In Memory Queue</h4>
                 {s.Queue.length == 0 ? <p> -- There is no active ScheduledTask -- </p> :
                     <table className="sf-search-results sf-stats-table">
                         <thead>
@@ -146,7 +146,7 @@ export default class SchedulerPanelPage extends React.Component<SchedulerPanelPr
         const s = this.state;
         return (
             <div>
-                <h3>Running Tasks</h3>
+                <h4>Running Tasks</h4>
                 {s.RunningTask.length == 0 ? <p> -- There are not tasks running --</p> :
                     <table className="sf-search-results sf-stats-table">
                         <thead>
@@ -163,7 +163,7 @@ export default class SchedulerPanelPage extends React.Component<SchedulerPanelPr
                                     <td><EntityLink lite={item.SchedulerTaskLog} inSearch={true} onNavigated={() => this.loadState().done()} /></td>
                                     <td>{item.StartTime} ({moment(item.StartTime).fromNow()})</td>
                                     <td><pre>{item.Remarks}</pre></td>
-                                    <td><button className="btn btn-default btn-xs btn-danger" type="button" onClick={e => this.handleCancelClick(e, item.SchedulerTaskLog)}>Cancel</button></td>
+                                    <td><button className="btn btn-light btn-xs btn-danger" type="button" onClick={e => this.handleCancelClick(e, item.SchedulerTaskLog)}>Cancel</button></td>
                                 </tr>)
                             }
                         </tbody>

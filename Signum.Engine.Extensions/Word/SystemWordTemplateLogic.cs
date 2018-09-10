@@ -74,7 +74,7 @@ namespace Signum.Engine.Word
             if (imp.IsByAll && typeof(Entity).IsAssignableFrom(typeof(T)) || imp.Types.Contains(typeof(T)))
                 return new List<Filter>
                 {
-                    new Filter(QueryUtils.Parse("Entity", qd, 0), FilterOperation.EqualTo, ((Entity)(ModifiableEntity)Entity).ToLite())
+                    new FilterCondition(QueryUtils.Parse("Entity", qd, 0), FilterOperation.EqualTo, ((Entity)(ModifiableEntity)Entity).ToLite())
                 };
 
             throw new InvalidOperationException($"Since {typeof(T).Name} is not in {imp}, it's necessary to override ${nameof(GetFilters)} in ${this.GetType().Name}");
@@ -101,7 +101,7 @@ namespace Signum.Engine.Word
         {
             return new List<Filter>
             {
-                new Filter(QueryUtils.Parse("Entity", qd, 0), FilterOperation.IsIn, this.Entity.Entities.ToList())
+                new FilterCondition(QueryUtils.Parse("Entity", qd, 0), FilterOperation.IsIn, this.Entity.Entities.ToList())
             };
         }
     }
@@ -141,14 +141,14 @@ namespace Signum.Engine.Word
         public static ResetLazy<Dictionary<Type, SystemWordTemplateEntity>> TypeToSystemWordTemplate;
         public static ResetLazy<Dictionary<SystemWordTemplateEntity, Type>> SystemWordTemplateToType;
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 sb.Schema.Generating += Schema_Generating;
                 sb.Schema.Synchronizing += Schema_Synchronizing;
                 sb.Include<SystemWordTemplateEntity>()
-                    .WithQuery(dqm, () => se => new
+                    .WithQuery(() => se => new
                     {
                         Entity = se,
                         se.Id,

@@ -2,12 +2,13 @@
 import { UserQueryEntity, UserQueryMessage, QueryFilterEmbedded, QueryOrderEmbedded, QueryColumnEmbedded } from '../../UserQueries/Signum.Entities.UserQueries'
 import ChartBuilder from '../Templates/ChartBuilder'
 import { UserChartEntity, ChartColumnEmbedded } from '../Signum.Entities.Chart'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater} from '../../../../Framework/Signum.React/Scripts/Lines'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTable} from '@framework/Lines'
+import * as Finder from '@framework/Finder'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { getQueryNiceName } from '@framework/Reflection'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import QueryTokenEntityBuilder from '../../UserAssets/Templates/QueryTokenEntityBuilder'
+import FilterBuilderEmbedded from '../../MachineLearning/Templates/FilterBuilderEmbedded';
 
 import "../Chart.css"
 
@@ -40,17 +41,19 @@ export default class UserChart extends React.Component<{ ctx: TypeContext<UserCh
                         </p>
                     </div>
                 }
-                <div className="form-xs">
-                    <div className="repeater-inline form-inline sf-filters-list ">
-                        <EntityRepeater ctx={ctx.subCtx(e => e.filters) } getComponent={this.renderFilter}/>
-                    </div>
-                </div>
+                <FilterBuilderEmbedded ctx={ctx.subCtx(e => e.filters)} queryKey={this.props.ctx.value.query.key}
+                    subTokenOptions={SubTokensOptions.CanAnyAll | SubTokensOptions.CanElement | SubTokensOptions.CanAggregate} />
                 <ChartBuilder queryKey={queryKey} onInvalidate={this.handleInvalidate} onTokenChange={this.handleTokenChange} onRedraw={this.handleInvalidate} ctx={this.props.ctx} />
-                <div className="form-xs">
-                    <div className="repeater-inline form-inline sf-filters-list ">
-                        <EntityRepeater ctx={ctx.subCtx(e => e.orders) } getComponent={this.renderOrder}/>
-                    </div>
-                </div>
+                <EntityTable ctx={ctx.subCtx(e => e.orders)} columns={EntityTable.typedColumns<QueryOrderEmbedded>([
+                    {
+                        property: a => a.token,
+                        template: ctx => <QueryTokenEntityBuilder
+                            ctx={ctx.subCtx(a => a.token, { formGroupStyle: "SrOnly" })}
+                            queryKey={this.props.ctx.value.query!.key}
+                            subTokenOptions={SubTokensOptions.CanElement | SubTokensOptions.CanAggregate} />
+                    },
+                    { property: a => a.orderType }
+                ])} />
             </div>
         );
     }
@@ -76,37 +79,6 @@ export default class UserChart extends React.Component<{ ctx: TypeContext<UserCh
         }
 
         this.forceUpdate();
-    }
-
-    renderFilter = (ctx: TypeContext<QueryFilterEmbedded>) => {
-        const ctx2 = ctx.subCtx({ formGroupStyle: "None" });
-        return (
-            <div>
-                <QueryTokenEntityBuilder
-                    ctx={ctx2.subCtx(a => a.token, { formGroupStyle: "None" }) }
-                    queryKey={this.props.ctx.value.query!.key}
-                    subTokenOptions={SubTokensOptions.CanAnyAll | SubTokensOptions.CanElement | SubTokensOptions.CanAggregate} />
-                <span style={{ margin: "0px 10px" }}>
-                    <ValueLine ctx={ctx2.subCtx(e => e.operation) } />
-                </span>
-                <ValueLine ctx={ctx2.subCtx(e => e.valueString) } valueHtmlAttributes={{ size: 50 }} />
-            </div>
-        );
-    }
-
-    renderOrder = (ctx: TypeContext<QueryOrderEmbedded>) => {
-        const ctx2 = ctx.subCtx({ formGroupStyle: "None" });
-        return (
-            <div>
-                <QueryTokenEntityBuilder
-                    ctx={ctx2.subCtx(a => a.token, { formGroupStyle: "None" }) }
-                    queryKey={this.props.ctx.value.query!.key}
-                    subTokenOptions={SubTokensOptions.CanAnyAll | SubTokensOptions.CanElement | SubTokensOptions.CanAggregate} />
-                <span style={{ margin: "0px 10px" }}>
-                    <ValueLine ctx={ctx2.subCtx(e => e.orderType) } />
-                </span>
-            </div>
-        );
     }
 }
 

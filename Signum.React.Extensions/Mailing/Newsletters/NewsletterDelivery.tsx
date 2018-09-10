@@ -1,10 +1,10 @@
 ﻿import * as React from 'react'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTabRepeater, EntityDetail} from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl, ValueSearchControl }  from '../../../../Framework/Signum.React/Scripts/Search'
-import { getToString }  from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { ExceptionEntity }  from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTabRepeater, EntityDetail} from '@framework/Lines'
+import { SearchControl, ValueSearchControl }  from '@framework/Search'
+import { getToString }  from '@framework/Signum.Entities'
+import { ExceptionEntity }  from '@framework/Signum.Entities.Basics'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import { NewsletterDeliveryEntity } from '../Signum.Entities.Mailing'
 import { ProcessExceptionLineEntity } from '../../Processes/Signum.Entities.Processes'
 
@@ -20,7 +20,7 @@ export default class NewsletterDelivery extends React.Component<{ ctx: TypeConte
 	            <ValueLine ctx={nc.subCtx(n => n.sendDate)}  />
 	            <EntityLine ctx={nc.subCtx(n => n.recipient)}  />
 	            <EntityLine ctx={nc.subCtx(n => n.newsletter)}  />
-                <SearchControl findOptions={{queryName: ProcessExceptionLineEntity, parentColumn: "Line", parentValue: nc.value}}/>
+                <SearchControl findOptions={{queryName: ProcessExceptionLineEntity, parentToken: "Line", parentValue: nc.value}}/>
             </div>
         );
     }

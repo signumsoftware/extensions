@@ -29,13 +29,13 @@ span.design-default {
     color: #777;
 }
 
-.design-open-icon{
+.design-open-icon {
     opacity: 0.4;
 }
 
-.design-open-icon:hover{
-    opacity: 0.6;
-}
+    .design-open-icon:hover {
+        opacity: 0.6;
+    }
 
 @media screen and (min-width: 600px) {
 
@@ -43,40 +43,41 @@ span.design-default {
         flex-direction: row;
     }
 
-    body.rtl-mode div.design-main {
+    body.rtl div.design-main {
         flex-direction: row-reverse;
     }
 
-        div.design-main .design-left.open {
-            flex: 1;
-        }
+    div.design-main .design-left.open {
+        flex: 1;
+    }
 
-        div.design-main .design-content {
-            flex: 2;
-        }
+    div.design-main .design-content {
+        flex: 2;
+        max-width: -webkit-fill-available;
+    }
 }
 
 
-i.formula {
+.formula {
     margin-right: 5px;
     color: #ccc;
 }
 
-input[type=checkbox].design-check-box{
+input[type=checkbox].design-check-box {
     margin-right: 5px;
 }
 
-i.formula:hover {
+.formula:hover {
     color: #aaa;
 }
 
-i.formula.active {
-    color:black;
+.formula.active {
+    color: black;
 }
 
-.filter-options .table{
-    margin-top:-10px;
-    margin-bottom:-10px;
+.filter-options .table {
+    margin-top: -10px;
+    margin-bottom: -10px;
 }
 
 .small-codemirror .CodeMirror {
@@ -88,10 +89,10 @@ ul.expression-list {
     padding-left: 20px;
 }
 
-ul.expression-list a.sf-remove {
-    float: left;
-    margin-left: -20px;
-}
+    ul.expression-list a.sf-remove {
+        float: left;
+        margin-left: -20px;
+    }
 
 
 .design-help-button {

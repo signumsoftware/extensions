@@ -1,26 +1,23 @@
-﻿
-import * as React from 'react'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, RenderEntity } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, PropertyRoute, getTypeInfos } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, Lite, toLite } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Constructor from '../../../../Framework/Signum.React/Scripts/Constructor'
-import { TypeContext, FormGroupStyle, mlistItemContext } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+﻿import * as React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, RenderEntity } from '@framework/Lines'
+import { classes } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { getQueryNiceName, PropertyRoute, getTypeInfos } from '@framework/Reflection'
+import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, Lite, toLite } from '@framework/Signum.Entities'
+import * as Navigator from '@framework/Navigator'
+import * as Constructor from '@framework/Constructor'
+import { TypeContext, FormGroupStyle, mlistItemContext } from '@framework/TypeContext'
 import QueryTokenEntityBuilder from '../../UserAssets/Templates/QueryTokenEntityBuilder'
 import FileLine, { FileTypeSymbol } from '../../Files/FileLine'
 import * as DashboardClient from '../DashboardClient'
 import { DashboardEntity, PanelPartEmbedded, IPartEntity } from '../Signum.Entities.Dashboard'
-
-
-
 import "../Dashboard.css"
-
+import { ErrorBoundary } from '@framework/Components';
+import { parseIcon } from '../Admin/Dashboard';
 
 export default class DashboardView extends React.Component<{ dashboard: DashboardEntity, entity?: Entity }> {
-
     render() {
         if (this.props.dashboard.combineSimilarRows)
             return this.renderCombinedRows();
@@ -48,7 +45,7 @@ export default class DashboardView extends React.Component<{ dashboard: Dashboar
                                     const offset = c.value.startColumn! - (prev ? (prev.startColumn! + prev.columns!) : 0);
 
                                     return (
-                                        <div key={j} className={`col-sm-${c.value.columns} col-sm-offset-${offset}`}>
+                                        <div key={j} className={`col-sm-${c.value.columns} offset-sm-${offset}`}>
                                             <PanelPart ctx={c} entity={this.props.entity} />
                                         </div>
                                     );
@@ -88,7 +85,7 @@ export default class DashboardView extends React.Component<{ dashboard: Dashboar
                             const offset = c.startColumn! - (last ? (last.startColumn! + last.columnWidth!) : 0);
 
                             return (
-                                <div key={j} className={`col-sm-${c.columnWidth} col-sm-offset-${offset}`}>
+                                <div key={j} className={`col-sm-${c.columnWidth} offset-sm-${offset}`}>
                                     {c.parts.map((p, i) => <PanelPart key={i} ctx={p} entity={this.props.entity} />)}
                                 </div>
                             );
@@ -229,35 +226,42 @@ export class PanelPart extends React.Component<PanelPartProps, PanelPartState>{
         }
 
         const titleText = p.title || getToString(content);
-        const iconColor = renderer.defaultIcon(content);
-        const icon = p.iconName || iconColor && iconColor.iconName;
-        const color = p.iconName || iconColor && iconColor.iconColor;
+        const defaultIcon = renderer.defaultIcon(content);
+        const icon = p.iconName ? parseIcon(p.iconName) : defaultIcon && defaultIcon.icon;
+        const color = p.iconColor || defaultIcon && defaultIcon.iconColor;
         
         const title = !icon ? titleText :
             <span>
-                <span className={icon} style={{ color: color }} />&nbsp;{titleText}
+                <FontAwesomeIcon icon={icon} color={color} />&nbsp;{titleText}
             </span>;
 
+        var style = p.style == undefined || p.style == "Default" ? undefined : p.style.toLowerCase();
+
         return (
-            <div className={classes("panel", "panel-" + (p.style == undefined ? "default" : p.style.firstLower()))}>
-                <div className="panel-heading sf-show-hover">
+            <div className={classes("card", style && ("border-" + style), "mb-4")}>
+                <div className={classes("card-header", "sf-show-hover", 
+                    style && style != "light" && "text-white",
+                    style && ("bg-" + style)
+                )}>
                     {renderer.handleEditClick &&
-                        <a className="sf-pointer pull-right flip sf-hide" onMouseUp={e => renderer.handleEditClick!(content, lite, e)}>
-                            <span className="glyphicon glyphicon-edit"></span>&nbsp;Edit
+                        <a className="sf-pointer float-right flip sf-hide" onMouseUp={e => renderer.handleEditClick!(content, lite, e)}>
+                            <FontAwesomeIcon icon="edit" />&nbsp;Edit
                         </a>}
                     &nbsp;
                     {renderer.handleTitleClick == undefined ? title :
                         <a className="sf-pointer" onMouseUp={e => renderer.handleTitleClick!(content, lite, e)}>{title}</a>}
 
                 </div>
-                <div className="panel-body">
+                <div className="card-body">
+                    <ErrorBoundary>
                     {
                         React.createElement(this.state.component, {
                             partEmbedded: p,
                             part: content,
                             entity: lite,
                         } as DashboardClient.PanelPartContentProps<IPartEntity>)
-                    }
+                        }
+                    </ErrorBoundary>
                 </div>
             </div>
         );

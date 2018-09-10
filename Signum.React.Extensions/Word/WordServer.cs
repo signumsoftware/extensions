@@ -95,7 +95,7 @@ namespace Signum.React.Word
 
                     var cr = (QueryModel)ctx.Entity;
 
-                    var qd = DynamicQueryManager.Current.QueryDescription(cr.QueryName);
+                    var qd = QueryLogic.Queries.QueryDescription(cr.QueryName);
 
                     cr.Filters = list.Select(l => l.ToFilter(qd, canAggregate: true)).ToList();
                 },
@@ -104,12 +104,7 @@ namespace Signum.React.Word
                     var cr = (QueryModel)ctx.Entity;
 
                     ctx.JsonWriter.WritePropertyName(ctx.LowerCaseName);
-                    ctx.JsonSerializer.Serialize(ctx.JsonWriter, cr.Filters.Select(f => new FilterTS
-                    {
-                        token = f.Token.FullKey(),
-                        operation = f.Operation,
-                        value = f.Value
-                    }).ToList());
+                    ctx.JsonSerializer.Serialize(ctx.JsonWriter, cr.Filters.Select(f => FilterTS.FromFilter(f)).ToList());
                 }
             });
 
@@ -122,7 +117,7 @@ namespace Signum.React.Word
 
                     var cr = (QueryModel)ctx.Entity;
 
-                    var qd = DynamicQueryManager.Current.QueryDescription(cr.QueryName);
+                    var qd = QueryLogic.Queries.QueryDescription(cr.QueryName);
 
                     cr.Orders = list.Select(l => l.ToOrder(qd, canAggregate: true)).ToList();
                 },

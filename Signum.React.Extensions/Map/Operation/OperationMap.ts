@@ -1,7 +1,7 @@
 ﻿import * as d3 from "d3"
 import * as React from "react"
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { OperationLogEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
+import * as Finder from '@framework/Finder'
+import { OperationLogEntity } from '@framework/Signum.Entities.Basics'
 import { Point, Rectangle, calculatePoint, wrap, colorScale, forceBoundingBox } from '../Utils'
 
 export interface OperationMapInfo {
@@ -60,13 +60,13 @@ export class OperationMapD3 {
     selectedNode: ForceNode | undefined;
     link: d3.Selection<SVGPathElement, Transition, any, any>;
 
-    statesGroup: d3.Selection<SVGGElement, MapState, any, any>;
-    nodeStates: d3.Selection<SVGRectElement, MapState, any, any>;
-    labelStates: d3.Selection<SVGTextElement, MapState, any, any>;
+    statesGroup!: d3.Selection<SVGGElement, MapState, any, any>;
+    nodeStates!: d3.Selection<SVGRectElement, MapState, any, any>;
+    labelStates!: d3.Selection<SVGTextElement, MapState, any, any>;
 
-    operationsGroup: d3.Selection<SVGGElement, MapOperation, any, any>;
-    nodeOperations: d3.Selection<SVGRectElement, MapOperation, any, any>;
-    labelOperations: d3.Selection<SVGTextElement, MapOperation, any, any>;
+    operationsGroup!: d3.Selection<SVGGElement, MapOperation, any, any>;
+    nodeOperations!: d3.Selection<SVGRectElement, MapOperation, any, any>;
+    labelOperations!: d3.Selection<SVGTextElement, MapOperation, any, any>;
 
     constructor(
         public svgElement: SVGElement,
@@ -146,7 +146,7 @@ export class OperationMapD3 {
                     return;
 
                 if ((<any>event).ctrlKey && d.token) {
-                    window.open(Finder.findOptionsPath({ queryName: this.queryName, filterOptions: [{ columnName: d.token, value: d.key }] }));
+                    window.open(Finder.findOptionsPath({ queryName: this.queryName, filterOptions: [{ token: d.token, value: d.key }] }));
                     d3.event.preventDefault();
                 }
             }).on("dblclick", d => {
@@ -224,7 +224,7 @@ export class OperationMapD3 {
                     return;
 
                 if ((<any>event).ctrlKey) {
-                    window.open(Finder.findOptionsPath({ queryName: OperationLogEntity, filterOptions: [{ columnName: "Operation.Key", value: d.key }] }));
+                    window.open(Finder.findOptionsPath({ queryName: OperationLogEntity, filterOptions: [{ token: "Operation.Key", value: d.key }] }));
                     d3.event.preventDefault();
                 }
             }).on("dblclick", d => {

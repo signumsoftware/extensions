@@ -33,6 +33,7 @@ export interface RestLogEntity extends Entities.Entity {
     httpMethod: string | null;
     url: string;
     startDate: string;
+    endDate: string;
     replayDate: string | null;
     requestBody: string;
     queryString: Entities.MList<QueryStringValueEmbedded>;
@@ -41,10 +42,12 @@ export interface RestLogEntity extends Entities.Entity {
     userHostName: string | null;
     referrer: string | null;
     controller: string;
+    controllerName: string | null;
     action: string;
+    machineName: string | null;
+    applicationName: string | null;
     exception: Entities.Lite<Basics.ExceptionEntity> | null;
     responseBody: string | null;
-    endDate: string;
     replayState: RestLogReplayState | null;
     changedPercentage: number | null;
     allowReplay: boolean;

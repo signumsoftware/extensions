@@ -1,21 +1,22 @@
 ﻿import * as React from 'react'
-import { Popover, OverlayTrigger } from 'react-bootstrap';
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTable, StyleContext, OptionItem, LineBaseProps } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl, ValueSearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTable, StyleContext, OptionItem, LineBaseProps } from '@framework/Lines'
+import { SearchControl, ValueSearchControl } from '@framework/Search'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import FileLine from '../../Files/FileLine'
 import { NeuralNetworkSettingsEntity, PredictorEntity, PredictorColumnUsage, PredictorCodificationEntity, NeuralNetworkHidenLayerEmbedded, PredictorAlgorithmSymbol, NeuralNetworkLearner } from '../Signum.Entities.MachineLearning'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { getQueryNiceName } from '../../../../Framework/Signum.React/Scripts/Reflection'
+import * as Finder from '@framework/Finder'
+import { getQueryNiceName } from '@framework/Reflection'
 import QueryTokenEntityBuilder from '../../UserAssets/Templates/QueryTokenEntityBuilder'
 import { QueryTokenEmbedded } from '../../UserAssets/Signum.Entities.UserAssets'
 import { QueryFilterEmbedded } from '../../UserQueries/Signum.Entities.UserQueries'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
 import { API } from '../PredictorClient';
 import FilterBuilderEmbedded from './FilterBuilderEmbedded';
-import { TypeReference } from '../../../../Framework/Signum.React/Scripts/Reflection';
-import { is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
+import { TypeReference } from '@framework/Reflection';
+import { is } from '@framework/Signum.Entities';
+import { Popover } from '@framework/Components';
 
 export default class NeuralNetworkSettings extends React.Component<{ ctx: TypeContext<NeuralNetworkSettingsEntity> }> {
 
@@ -49,7 +50,7 @@ export default class NeuralNetworkSettings extends React.Component<{ ctx: TypeCo
                     { property: a => a.activation, headerHtmlAttributes: { style: { width: "33%" } } },
                     { property: a => a.initializer, headerHtmlAttributes: { style: { width: "33%" } } },
                 ])} />
-                <div className="form-vertical">
+                <div>
                     <div className="row">
                         <div className="col-sm-4">
                             {this.renderCount(ctxb, p, "Output")}
@@ -76,7 +77,7 @@ export default class NeuralNetworkSettings extends React.Component<{ ctx: TypeCo
                 <hr />
                 <div className="row">
                     <div className="col-sm-6">
-                        <ValueLine ctx={ctx6.subCtx(a => a.learner)} onChange={this.handleLearnerChange} helpBlock={this.getHelpBlock(ctx.value.learner)} />
+                        <ValueLine ctx={ctx6.subCtx(a => a.learner)} onChange={this.handleLearnerChange} helpText={this.getHelpBlock(ctx.value.learner)} />
                         <ValueLine ctx={ctx6.subCtx(a => a.learningRate)} />
                         <ValueLine ctx={ctx6.subCtx(a => a.learningMomentum)} formGroupHtmlAttributes={hideFor(ctx6, "AdaDelta", "AdaGrad", "SGD")} />
                         {withHelp(<ValueLine ctx={ctx6.subCtx(a => a.learningUnitGain)} formGroupHtmlAttributes={hideFor(ctx6, "AdaDelta", "AdaGrad", "SGD")} />, <p>true makes it stable (Loss = 1)<br/>false diverge (Loss >> 1)</p>)}
@@ -103,6 +104,7 @@ export default class NeuralNetworkSettings extends React.Component<{ ctx: TypeCo
             case "MomentumSGD": return "";
             case "RMSProp": return "";
             case "SGD": return "";
+            default: throw new Error("Unexpected " + learner)
         }
     }
 
@@ -155,12 +157,12 @@ export default class NeuralNetworkSettings extends React.Component<{ ctx: TypeCo
     renderCount(ctx: StyleContext, p: PredictorEntity, usage: PredictorColumnUsage) {
         return (
             <FormGroup ctx={ctx} labelText={PredictorColumnUsage.niceToString(usage) + " columns"}>
-                {p.state != "Trained" ? <FormControlStatic ctx={ctx}>?</FormControlStatic> : <ValueSearchControl isBadge={true} isLink={true} findOptions={{
+                {p.state != "Trained" ? <FormControlReadonly ctx={ctx}>?</FormControlReadonly> : <ValueSearchControl isBadge={true} isLink={true} findOptions={{
                     queryName: PredictorCodificationEntity,
-                    parentColumn: "Predictor",
+                    parentToken: "Predictor",
                     parentValue: p,
                     filterOptions: [
-                        { columnName: "Usage", value: usage }
+                        { token: "Usage", value: usage }
                     ]
                 }} />}
             </FormGroup>
@@ -170,15 +172,46 @@ export default class NeuralNetworkSettings extends React.Component<{ ctx: TypeCo
 
 function withHelp(element: React.ReactElement<LineBaseProps>, text: React.ReactNode): React.ReactElement<any> {
     var ctx = element.props.ctx;
-    var id = ctx.prefix + "_help";
-
-    var popover = <Popover id={id} title={ctx.niceName()}> {text}</Popover>;
-
-    var label = <OverlayTrigger trigger="hover" placement="bottom" overlay={popover}>
-        <span>{ctx.niceName()} <i className="fa fa-question-circle" aria-hidden="true"></i></span>
-    </OverlayTrigger>; 
+  
+    var label = <LabelWithHelp ctx={ctx} text={text} />;
 
     return React.cloneElement(element, { labelText: label } as LineBaseProps);
+}
+
+
+interface LabelWithHelpProps {
+    ctx: TypeContext<LineBaseProps>;
+    text: React.ReactNode;
+}
+
+interface LabelWithHelpState {
+    isOpen?: boolean
+}
+
+export class LabelWithHelp extends React.Component<LabelWithHelpProps, LabelWithHelpState> {
+
+    constructor(props: LabelWithHelpProps) {
+        super(props);
+        this.state = {};
+    }
+
+    toggle = () => {
+        this.setState({ isOpen: !this.state.isOpen });
+    }
+
+    span?: HTMLSpanElement | null;
+    render() {
+        const ctx = this.props.ctx;
+        return [
+            <span ref={r => this.span = r} onClick={this.toggle} key="s">
+                {ctx.niceName()} <FontAwesomeIcon icon="question-circle"/>
+            </span>,
+            <Popover placement="auto" target={() => this.span!} toggle={this.toggle} isOpen={this.state.isOpen} key="p">
+                <h3 className="popover-header">{ctx.niceName()}</h3>
+                <div className="popover-body">{this.props.text}</div>
+            </Popover>
+        ];
+    }
 }
 
 function hideFor(ctx: TypeContext<NeuralNetworkSettingsEntity>, ...learners: NeuralNetworkLearner[]): React.HTMLAttributes<any> | undefined {
@@ -223,4 +256,3 @@ export class DeviceLine extends React.Component<DeviceLineProps, DeviceLineState
         );
     }
 }
-

@@ -40,17 +40,17 @@ namespace Signum.Engine.Files
 
         public static void AssertStarted(SchemaBuilder sb)
         {
-            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => FilePathLogic.Start(null, null)));
+            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => FilePathLogic.Start(null)));
         }
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
-                FileTypeLogic.Start(sb, dqm);
+                FileTypeLogic.Start(sb);
 
                 sb.Include<FilePathEntity>()
-                    .WithQuery(dqm, () => p => new
+                    .WithQuery(() => p => new
                     {
                         Entity = p,
                         p.Id,
@@ -65,8 +65,8 @@ namespace Signum.Engine.Files
                 
                 new Graph<FilePathEntity>.Execute(FilePathOperation.Save)
                 {
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (fp, _) =>
                     {
                         if (!fp.IsNew)
@@ -90,8 +90,8 @@ namespace Signum.Engine.Files
 
                 sb.AddUniqueIndex<FilePathEntity>(f => new { f.Suffix, f.FileType }); //With mixins, add AttachToUniqueIndexes to field
 
-                dqm.RegisterExpression((FilePathEntity fp) => fp.WebImage(), () => typeof(WebImage).NiceName(), "Image");
-                dqm.RegisterExpression((FilePathEntity fp) => fp.WebDownload(), () => typeof(WebDownload).NiceName(), "Download");
+                QueryLogic.Expressions.Register((FilePathEntity fp) => fp.WebImage(), () => typeof(WebImage).NiceName(), "Image");
+                QueryLogic.Expressions.Register((FilePathEntity fp) => fp.WebDownload(), () => typeof(WebDownload).NiceName(), "Download");
             }
         }
 
@@ -108,7 +108,7 @@ namespace Signum.Engine.Files
                return fp.FileType.GetAlgorithm().GetPrefixPair(fp);
         }
 
-        public static void FilePathLogic_PreUnsafeDelete(IQueryable<FilePathEntity> query)
+        public static IDisposable FilePathLogic_PreUnsafeDelete(IQueryable<FilePathEntity> query)
         {
             if (!unsafeMode.Value)
             {
@@ -123,6 +123,8 @@ namespace Signum.Engine.Files
                     }
                 };
             }
+
+            return null;
         }
 
         static readonly Variable<bool> unsafeMode = Statics.ThreadVariable<bool>("filePathUnsafeMode");
@@ -134,11 +136,13 @@ namespace Signum.Engine.Files
             return new Disposable(() => unsafeMode.Value = false);
         }
 
-        public static void FilePath_PreSaving(FilePathEntity fp, ref bool graphModified)
+        public static void FilePath_PreSaving(FilePathEntity fp, PreSavingContext ctx)
         {
             if (fp.IsNew && !unsafeMode.Value)
             {
-                fp.FileType.GetAlgorithm().SaveFile(fp);
+                var alg = fp.FileType.GetAlgorithm();
+                alg.ValidateFile(fp);
+                alg.SaveFile(fp);
             }
         }
 

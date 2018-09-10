@@ -16,14 +16,16 @@ namespace Signum.Engine.Authorization
 {
     public static class SessionLogLogic
     {
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static bool IsStarted { get; private set; }
+
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 AuthLogic.AssertStarted(sb);
 
                 sb.Include<SessionLogEntity>()
-                    .WithQuery(dqm, () => sl => new
+                    .WithQuery(() => sl => new
                     {
                         Entity = sl,
                         sl.Id,
@@ -36,14 +38,19 @@ namespace Signum.Engine.Authorization
                 PermissionAuthLogic.RegisterPermissions(SessionLogPermission.TrackSession);
 
                 ExceptionLogic.DeleteLogs += ExceptionLogic_DeleteLogs;
+
+                IsStarted = true;
             }
         }
 
         public static void ExceptionLogic_DeleteLogs(DeleteLogParametersEmbedded parameters, StringBuilder sb, CancellationToken token)
         {
-            var dateLimit = parameters.GetDateLimit(typeof(SessionLogEntity).ToTypeEntity());
+            var dateLimit = parameters.GetDateLimitDelete(typeof(SessionLogEntity).ToTypeEntity());
 
-            Database.Query<SessionLogEntity>().Where(a => a.SessionStart < dateLimit).UnsafeDeleteChunksLog(parameters, sb, token);
+            if (dateLimit == null)
+                return;
+
+            Database.Query<SessionLogEntity>().Where(a => a.SessionStart < dateLimit.Value).UnsafeDeleteChunksLog(parameters, sb, token);
         }
 
         static bool RoleTracked(Lite<RoleEntity> role)

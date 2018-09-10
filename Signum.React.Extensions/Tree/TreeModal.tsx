@@ -1,16 +1,16 @@
-﻿
-import * as React from 'react'
-import { Modal, ModalProps, ModalClass, ButtonToolbar } from 'react-bootstrap'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { openModal, IModalProps } from '../../../Framework/Signum.React/Scripts/Modals';
-import { SearchMessage, JavascriptMessage, Lite, Entity } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { getTypeInfo, Type } from '../../../Framework/Signum.React/Scripts/Reflection'
+﻿import * as React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import * as Finder from '@framework/Finder'
+import { openModal, IModalProps } from '@framework/Modals';
+import { SearchMessage, JavascriptMessage, Lite, Entity } from '@framework/Signum.Entities'
+import { getTypeInfo, Type } from '@framework/Reflection'
 import { TreeViewerMessage, TreeEntity } from './Signum.Entities.Tree'
 import * as TreeClient from './TreeClient'
 import { TreeNode } from './TreeClient'
 import { TreeViewer } from './TreeViewer'
-import { FilterOption } from "../../../Framework/Signum.React/Scripts/FindOptions";
-
+import { FilterOption } from "@framework/FindOptions";
+import { Modal } from '@framework/Components';
+import { ModalHeaderButtons } from '@framework/Components/Modal';
 
 interface TreeModalProps extends React.Props<TreeModal>, IModalProps {
     typeName: string;
@@ -29,7 +29,7 @@ export default class TreeModal extends React.Component<TreeModalProps, { show: b
     }
 
     selectedNode?: TreeNode;
-    okPressed: boolean;
+    okPressed: boolean = false;
 
     handleSelectedNode = (selected: TreeNode | undefined) => {
         this.selectedNode = selected;
@@ -64,25 +64,16 @@ export default class TreeModal extends React.Component<TreeModalProps, { show: b
         const okEnabled = this.selectedNode != null;
 
         return (
-            <Modal bsSize="lg" onHide={this.handleCancelClicked} show={this.state.show} onExited={this.handleOnExited}>
-                <Modal.Header>
-                    <div className="btn-toolbar" style={{ float: "right" }}>
-                        <button className="btn btn-primary sf-entity-button sf-close-button sf-ok-button" disabled={!okEnabled} onClick={this.handleOkClicked}>
-                            {JavascriptMessage.ok.niceToString()}
-                        </button>
+            <Modal size="lg" onHide={this.handleCancelClicked} show={this.state.show} onExited={this.handleOnExited}>
+                <ModalHeaderButtons onClose={this.handleCancelClicked}>
+                    <span className="sf-entity-title"> {this.props.title || getTypeInfo(this.props.typeName).nicePluralName}</span>
+                    &nbsp;
+                        <a className="sf-popup-fullscreen" href="#" onClick={(e) => this.treeView && this.treeView.handleFullScreenClick(e)}>
+                        <FontAwesomeIcon icon="external-link-alt" />
+                    </a>
+                </ModalHeaderButtons>
 
-                        <button className="btn btn-default sf-entity-button sf-close-button sf-cancel-button" onClick={this.handleCancelClicked}>{JavascriptMessage.cancel.niceToString()}</button>
-                    </div>
-                    <h4>
-                        <span className="sf-entity-title"> {this.props.title || getTypeInfo(this.props.typeName).nicePluralName}</span>
-                        &nbsp;
-                        <a className="sf-popup-fullscreen" href="" onClick={(e) => this.treeView && this.treeView.handleFullScreenClick(e)}>
-                            <span className="glyphicon glyphicon-new-window"></span>
-                        </a>
-                    </h4>
-                </Modal.Header>
-
-                <Modal.Body>
+                <div className="modal-body">
                     <TreeViewer
                         filterOptions={this.props.filterOptions}
                         avoidChangeUrl={true}
@@ -91,7 +82,7 @@ export default class TreeModal extends React.Component<TreeModalProps, { show: b
                         onDoubleClick={this.handleDoubleClick}
                         ref={tv => this.treeView = tv!}
                     />
-                </Modal.Body>
+                </div>
             </Modal>
         );
     }

@@ -32,6 +32,7 @@ namespace Signum.Engine.Authorization
     {
         public static event Action<UserEntity> UserLogingIn;
         public static event Func<string> LoginMessage;
+        public static ICustomAuthorizer Authorizer;
 
         public static string SystemUserName { get; private set; }
         static ResetLazy<UserEntity> systemUserLazy = GlobalLazy.WithoutInvalidations(() => SystemUserName == null ? null :
@@ -64,10 +65,10 @@ namespace Signum.Engine.Authorization
 
         public static void AssertStarted(SchemaBuilder sb)
         {
-            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => AuthLogic.Start(null, null, null, null)));
+            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => AuthLogic.Start(null, null, null)));
         }
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm, string systemUserName, string anonymousUserName)
+        public static void Start(SchemaBuilder sb, string systemUserName, string anonymousUserName)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
@@ -81,7 +82,7 @@ namespace Signum.Engine.Authorization
                 sb.Include<RoleEntity>()
                     .WithSave(RoleOperation.Save)
                     .WithDelete(RoleOperation.Delete)
-                    .WithQuery(dqm, () => r => new
+                    .WithQuery(() => r => new
                     {
                         Entity = r,
                         r.Id,
@@ -115,7 +116,7 @@ namespace Signum.Engine.Authorization
 
                 sb.Schema.EntityEvents<RoleEntity>().Saving += Schema_Saving;
                 
-                dqm.RegisterQuery(RoleQuery.RolesReferedBy, () =>
+                QueryLogic.Queries.Register(RoleQuery.RolesReferedBy, () =>
                     from r in Database.Query<RoleEntity>()
                     from rc in r.Roles
                     select new
@@ -126,7 +127,7 @@ namespace Signum.Engine.Authorization
                         Refered = rc,
                     });
                 sb.Include<UserEntity>()
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -280,10 +281,15 @@ namespace Signum.Engine.Authorization
             {
                 UserEntity user = RetrieveUser(username, passwordHash);
 
-                UserLogingIn?.Invoke(user);
+                OnUserLogingIn(user);
 
                 return user;
             }
+        }
+
+        public static void OnUserLogingIn(UserEntity user)
+        {
+            UserLogingIn?.Invoke(user);
         }
 
         public static UserEntity RetrieveUser(string username, byte[] passwordHash)
@@ -319,13 +325,13 @@ namespace Signum.Engine.Authorization
                 userEntity.Execute(UserOperation.Save);
         }
 
-        public static void StartAllModules(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void StartAllModules(SchemaBuilder sb)
         {
-            TypeAuthLogic.Start(sb, dqm);
+            TypeAuthLogic.Start(sb);
             PropertyAuthLogic.Start(sb);
-            QueryAuthLogic.Start(sb, dqm);
+            QueryAuthLogic.Start(sb);
             OperationAuthLogic.Start(sb);
-            PermissionAuthLogic.Start(sb, dqm);
+            PermissionAuthLogic.Start(sb);
         }
 
         public static HashSet<Lite<RoleEntity>> CurrentRoles()
@@ -465,10 +471,15 @@ namespace Signum.Engine.Authorization
                 Console.WriteLine("Part 1: Syncronize roles without relationships");
 
                 var roleInsertsDeletes = Synchronizer.SynchronizeScript(Spacing.Double, rolesXml, rolesDic,
-                    createNew: (name, xelement) => table.InsertSqlSync(new RoleEntity { Name = name }, includeCollections: false),
+                    createNew: (name, xElement) => table.InsertSqlSync(new RoleEntity {
+                        Name = name,
+                        MergeStrategy = xElement.Attribute("MergeStrategy")?.Let(t => t.Value.ToEnum<MergeStrategy>()) ?? MergeStrategy.Union
+                    }, includeCollections: false),
+
                     removeOld: (name, role) => SqlPreCommand.Combine(Spacing.Simple,
                             new SqlPreCommandSimple("DELETE {0} WHERE {1} = {2} --{3}"
                                 .FormatWith(relationalTable.Name, ((IColumn)relationalTable.Field).Name.SqlEscape(), role.Id, role.Name)),
+
                             table.DeleteSqlSync(role, r => r.Name == role.Name)),
                     mergeBoth: (name, xElement, role) =>
                     {
@@ -541,7 +552,7 @@ namespace Signum.Engine.Authorization
         public static void AutomaticImportAuthRules(string fileName)
         {
             Schema.Current.Initialize();
-            var script = AuthLogic.ImportRulesScript(XDocument.Load(fileName), interactive: false);
+            var script = AuthLogic.ImportRulesScript(XDocument.Load(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName)), interactive: false);
             if (script == null)
             {
                 SafeConsole.WriteColor(ConsoleColor.Green, "AuthRules already synchronized");
@@ -655,6 +666,11 @@ namespace Signum.Engine.Authorization
 
             return 0;
         }
+    }
+
+    public interface ICustomAuthorizer
+    {
+        UserEntity Login(string userName, string password);
     }
 
     [Serializable]

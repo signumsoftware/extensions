@@ -21,12 +21,12 @@ namespace Signum.Engine.Dynamic
 {
     public static class DynamicTypeConditionLogic
     {
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 sb.Include<DynamicTypeConditionSymbolEntity>()
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -35,7 +35,7 @@ namespace Signum.Engine.Dynamic
 
                 sb.Include<DynamicTypeConditionEntity>()
                     .WithSave(DynamicTypeConditionOperation.Save)
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -44,10 +44,19 @@ namespace Signum.Engine.Dynamic
                         e.Eval.Script,
                     });
 
+                new Graph<DynamicTypeConditionEntity>.ConstructFrom<DynamicTypeConditionEntity>(DynamicTypeConditionOperation.Clone)
+                {
+                    Construct = (e, args) => new DynamicTypeConditionEntity() {
+                        SymbolName = e.SymbolName,
+                        EntityType = e.EntityType,
+                        Eval = new DynamicTypeConditionEval() { Script = e.Eval.Script } ,
+                    }
+                }.Register();
+
                 new Graph<DynamicTypeConditionSymbolEntity>.Execute(DynamicTypeConditionSymbolOperation.Save)
                 {
-                    Lite = false,
-                    AllowsNew = true,
+                    CanBeModified = true,
+                    CanBeNew = true,
                     Execute = (e, _) =>
                     {
                         if (!e.IsNew)
@@ -66,12 +75,13 @@ namespace Signum.Engine.Dynamic
                 DynamicLogic.GetCodeFiles += GetCodeFiles;
                 DynamicLogic.OnWriteDynamicStarter += WriteDynamicStarter;
                 sb.Schema.Table<TypeEntity>().PreDeleteSqlSync += type => Administrator.UnsafeDeletePreCommand(Database.Query<DynamicTypeConditionEntity>().Where(dtc => dtc.EntityType == type));
+                sb.AddUniqueIndex((DynamicTypeConditionEntity e) => new { e.SymbolName, e.EntityType });
             }
         }
 
         public static void WriteDynamicStarter(StringBuilder sb, int indent) {
 
-            sb.AppendLine("CodeGenTypeConditionStarter.Start(sb, dqm);".Indent(indent));
+            sb.AppendLine("CodeGenTypeConditionStarter.Start(sb);".Indent(indent));
         }
 
         public static List<CodeFile> GetCodeFiles()
@@ -140,7 +150,7 @@ namespace Signum.Engine.Dynamic
 
             sb.AppendLine($"public static class CodeGenTypeConditionStarter");
             sb.AppendLine("{");
-            sb.AppendLine("    public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)");
+            sb.AppendLine("    public static void Start(SchemaBuilder sb)");
             sb.AppendLine("    {");
             foreach (var item in this.TypeConditions)
             {

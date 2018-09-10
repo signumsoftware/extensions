@@ -1,13 +1,14 @@
 ﻿import * as React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as ReactDOM from 'react-dom'
 import * as d3 from 'd3'
 import * as QueryString from 'query-string'
-import { DomUtils, Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import  { Expander } from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { is, JavascriptMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { ResultTable, FindOptions, FilterOption, QueryDescription, SubTokensOptions, QueryToken, QueryTokenType, ColumnOption } from '../../../../Framework/Signum.React/Scripts/FindOptions'
+import { DomUtils, Dic } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import * as Navigator from '@framework/Navigator'
+import  { Expander } from '@framework/Navigator'
+import { is, JavascriptMessage } from '@framework/Signum.Entities'
+import { ResultTable, FindOptions, FilterOption, QueryDescription, SubTokensOptions, QueryToken, QueryTokenType, ColumnOption } from '@framework/FindOptions'
 import { MapMessage } from '../Signum.Entities.Map'
 import * as MapClient from '../MapClient'
 import { SchemaMapInfo, EntityBaseType, ITableInfo, MListRelationInfo, IRelationInfo, ClientColorProvider, SchemaMapD3 } from './SchemaMap'
@@ -42,7 +43,7 @@ export default class SchemaMapPage extends React.Component<SchemaMapPageProps, S
         this.state = { filter: "", color: "" };
     }
 
-    wasExpanded: boolean;
+    wasExpanded!: boolean;
 
     componentWillMount() {
 
@@ -73,14 +74,14 @@ export default class SchemaMapPage extends React.Component<SchemaMapPageProps, S
     }
 
 
-    componentWillUnmount(){
+    componentWillUnmount() {
         Navigator.Expander.setExpanded(this.wasExpanded);
     }
 
 
 
     getParsedQuery(): ParsedQueryString {
-    
+
         const result: ParsedQueryString = { tables: {} };
 
         const query = QueryString.parse(this.props.location.search) as { [name: string]: string };
@@ -99,12 +100,12 @@ export default class SchemaMapPage extends React.Component<SchemaMapPageProps, S
                     y: parseFloat(value.after(",")),
                 };
             }
-        }); 
+        });
 
         return result;
     }
 
-    div: HTMLDivElement;
+    div!: HTMLDivElement;
     handleSetInitialSize = (div: HTMLDivElement) => {
 
         if (this.div)
@@ -124,9 +125,9 @@ export default class SchemaMapPage extends React.Component<SchemaMapPageProps, S
         const s = this.state;
         return (
             <div ref={this.handleSetInitialSize}>
-                {this.renderFilter() }
+                {this.renderFilter()}
                 {!s.schemaMapInfo || this.div == undefined ?
-                    <span>{ JavascriptMessage.loading.niceToString() }</span> :
+                    <span>{JavascriptMessage.loading.niceToString()}</span> :
                     <SchemaMapRenderer
                         schemaMapInfo={s.schemaMapInfo}
                         parsedQuery={s.parsedQuery!}
@@ -176,33 +177,31 @@ export default class SchemaMapPage extends React.Component<SchemaMapPageProps, S
         const s = this.state;
 
         return (
-            <div className="form-inline form-sm container" style={{ marginTop: "10px" }}>
-                <div className="form-group">
-                    <label htmlFor="filter"> { MapMessage.Filter.niceToString() }</label>&nbsp;
-                    <input type="text" className="form-control" id="filter" placeholder="type or namespace" value={s.filter} onChange={this.handleSetFilter}/>
+            <div className="form-inline container" style={{ marginTop: "10px" }}>
+                <div className="form-group form-group-sm">
+                    <label htmlFor="filter"> {MapMessage.Filter.niceToString()}</label>&nbsp;
+                    <input type="text" className="form-control form-control-sm" id="filter" placeholder="type or namespace" value={s.filter} onChange={this.handleSetFilter} />
                 </div>
-                <div className="form-group" style={{ marginLeft: "10px" }}>
-                    <label htmlFor="color"> { MapMessage.Color.niceToString() }</label>&nbsp;
-                    <select className="form-control" id="color" value={s.color} onChange={this.handleSetColor}>
+                <div className="form-group form-group-sm" style={{ marginLeft: "10px" }}>
+                    <label htmlFor="color"> {MapMessage.Color.niceToString()}</label>&nbsp;
+                    <select className="form-control form-control-sm" id="color" value={s.color} onChange={this.handleSetColor}>
                         {
                             s.schemaMapInfo &&
                             s.schemaMapInfo.providers.map((a, i) =>
-                                <option key={i} value={a.name}>{ a.niceName}</option>)
+                                <option key={i} value={a.name}>{a.niceName}</option>)
                         }
                     </select>
                 </div>
                 <span style={{ marginLeft: "10px" }}>
-                    { MapMessage.Press0ToExploreEachTable.niceToString().formatHtml(<u>Ctrl + Click</u>) }
+                    {MapMessage.Press0ToExploreEachTable.niceToString().formatHtml(<u>Ctrl + Click</u>)}
                 </span>
                 &nbsp;
                 <a id="sfFullScreen" className="sf-popup-fullscreen" onClick={this.handleFullscreenClick} href="#">
-                    <span className="glyphicon glyphicon-new-window"></span>
+                    <FontAwesomeIcon icon="external-link-alt" />
                 </a>
             </div>
         );
-
     }
-
 }
 
 export interface SchemaMapRendererProps {
@@ -216,7 +215,6 @@ export interface SchemaMapRendererProps {
 }
 
 export class SchemaMapRenderer extends React.Component<SchemaMapRendererProps, { mapD3: SchemaMapD3 }> { 
-
     componentDidMount() {
         const p = this.props;
 
@@ -225,7 +223,6 @@ export class SchemaMapRenderer extends React.Component<SchemaMapRendererProps, {
         const d3 = new SchemaMapD3(this.svg, p.providers, p.schemaMapInfo, p.filter, p.color, p.width, p.height);
         this.setState({ mapD3: d3 });
     }
-
     
     fixSchemaMap(map: SchemaMapInfo, parsedQuery: ParsedQueryString) {
         map.tables.forEach(t => t.mlistTables.forEach(ml => {
@@ -297,10 +294,9 @@ export class SchemaMapRenderer extends React.Component<SchemaMapRendererProps, {
         this.state.mapD3.stop();
     }
 
-    svg: SVGElement;
+    svg!: SVGElement;
 
     render() {
-
         return (
             <div id="map" style={{ backgroundColor: "transparent", width: "100%", height: this.props.height + "px" }}>
                 <svg id="svgMap" ref={svg => this.svg = svg!}>
@@ -317,7 +313,7 @@ export class SchemaMapRenderer extends React.Component<SchemaMapRendererProps, {
                             <path fill="gray" d="M0,0L0,-5L10,0L0,5L0,0L-10,5L-10,-5L0,0" />
                         </marker>
                         {
-                            React.Children.map(Dic.getValues(this.props.providers).map(a => a.defs).filter(d=>!!d),
+                            React.Children.map(Dic.getValues(this.props.providers).map(a => a.defs).filter(defs => !!defs).flatMap(defs => defs!),
                                 (c, i) => React.cloneElement(c as React.ReactElement<any>, { key: i }))
                         }
                     </defs>

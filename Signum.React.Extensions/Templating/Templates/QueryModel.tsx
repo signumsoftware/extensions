@@ -1,16 +1,15 @@
 ﻿import * as React from 'react'
-import { Tab, Tabs } from 'react-bootstrap'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityDetail, EntityList, EntityRepeater, EntityTabRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SubTokensOptions, QueryToken, QueryTokenType, hasAnyOrAll } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { SearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import { getToString, getMixin } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityDetail, EntityList, EntityRepeater, EntityTabRepeater } from '@framework/Lines'
+import { SubTokensOptions, QueryToken, QueryTokenType, hasAnyOrAll } from '@framework/FindOptions'
+import { SearchControl } from '@framework/Search'
+import { getToString, getMixin } from '@framework/Signum.Entities'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import { TemplateTokenMessage, QueryModelMessage, QueryModel } from '../../Templating/Signum.Entities.Templating'
 import FileLine from '../../Files/FileLine'
 import QueryTokenEntityBuilder from '../../UserAssets/Templates/QueryTokenEntityBuilder'
 import TemplateControls from '../../Templating/TemplateControls'
-import ValueLineModal from '../../../../Framework/Signum.React/Scripts/ValueLineModal'
+import ValueLineModal from '@framework/ValueLineModal'
 
 
 interface QueryModelComponentProps {
@@ -20,7 +19,7 @@ interface QueryModelComponentProps {
 export default class QueryModelComponent extends React.Component<QueryModelComponentProps> {
     
     handleOnSearch = () => {
-        const qr = this.searchControl.searchControlLoaded.getQueryRequest();
+        const qr = this.searchControl.searchControlLoaded!.getQueryRequest();
         const model = this.props.ctx.value;
         model.filters = qr.filters;
         model.orders = qr.orders;
@@ -28,7 +27,7 @@ export default class QueryModelComponent extends React.Component<QueryModelCompo
         model.modified = true;
     }
 
-    searchControl: SearchControl;
+    searchControl!: SearchControl;
     render() {
         const ctx = this.props.ctx;
         return (

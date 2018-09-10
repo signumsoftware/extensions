@@ -42,14 +42,14 @@ namespace Signum.Engine.Files
         
         public static void AssertStarted(SchemaBuilder sb)
         {
-            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => FilePathEmbeddedLogic.Start(null, null)));
+            sb.AssertDefined(ReflectionTools.GetMethodInfo(() => FilePathEmbeddedLogic.Start(null)));
         }
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
-                FileTypeLogic.Start(sb, dqm);
+                FileTypeLogic.Start(sb);
 
                 FilePathEmbedded.CloneFunc = fp => new FilePathEmbedded(fp.FileType, fp.FileName, fp.GetByteArray());
 
@@ -83,7 +83,9 @@ namespace Signum.Engine.Files
 
         public static FilePathEmbedded SaveFile(this FilePathEmbedded efp)
         {
-            efp.FileType.GetAlgorithm().SaveFile(efp);
+            var alg = efp.FileType.GetAlgorithm();
+            alg.ValidateFile(efp);
+            alg.SaveFile(efp);
             efp.BinaryFile = null;
             return efp;
         }

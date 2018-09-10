@@ -1,15 +1,15 @@
 ﻿import * as React from 'react'
 import { Route } from 'react-router'
-import { ajaxPost, ajaxGet } from '../../../Framework/Signum.React/Scripts/Services';
-import { EntitySettings, ViewPromise } from '../../../Framework/Signum.React/Scripts/Navigator'
-import { Entity, Lite } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { EntityOperationSettings } from '../../../Framework/Signum.React/Scripts/Operations'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
+import { ajaxPost, ajaxGet } from '@framework/Services';
+import { EntitySettings, ViewPromise } from '@framework/Navigator'
+import { Entity, Lite } from '@framework/Signum.Entities'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { EntityOperationSettings } from '@framework/Operations'
+import * as Operations from '@framework/Operations'
 import { CultureInfoEntity } from '../Basics/Signum.Entities.Basics'
-import { reloadTypes } from '../../../Framework/Signum.React/Scripts/Reflection'
-import { toLite } from '../../../Framework/Signum.React/Scripts/Signum.Entities';
+import { reloadTypes } from '@framework/Reflection'
+import { toLite } from '@framework/Signum.Entities';
 
 export let currentCulture: CultureInfoEntity;
 
@@ -46,7 +46,7 @@ export function getCultures(withHidden: boolean): Promise<{ [name: string]: Lite
     return cachedCultures.then(list => {
         return list
             .filter(a => withHidden || !a.hidden)
-            .toObject(a => a.name, a => toLite(a));
+            .toObject(a => a.name, a => toLite(a, false, a.nativeName!));
     });
 }
 

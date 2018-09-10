@@ -25,12 +25,12 @@ namespace Signum.Engine.Scheduler
     {
         public static bool Started = false;
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
                 sb.Include<SystemEventLogEntity>()
-                    .WithQuery(dqm, () => s => new
+                    .WithQuery(() => s => new
                     {
                         Entity = s,
                         s.Id,
@@ -48,9 +48,12 @@ namespace Signum.Engine.Scheduler
 
         public static void ExceptionLogic_DeleteLogs(DeleteLogParametersEmbedded parameters, StringBuilder sb, CancellationToken token)
         {
-            var dateLimit = parameters.GetDateLimit(typeof(SystemEventLogEntity).ToTypeEntity());
+            var dateLimit = parameters.GetDateLimitDelete(typeof(SystemEventLogEntity).ToTypeEntity());
 
-            Database.Query<SystemEventLogEntity>().Where(a => a.Date < dateLimit).UnsafeDeleteChunksLog(parameters, sb, token);
+            if (dateLimit == null)
+                return;
+
+            Database.Query<SystemEventLogEntity>().Where(a => a.Date < dateLimit.Value).UnsafeDeleteChunksLog(parameters, sb, token);
         }
 
         public static bool Log(string eventType, ExceptionEntity exception = null)

@@ -122,7 +122,15 @@ namespace Signum.React.Selenium
 
         public static bool IsStale(this IWebElement element)
         {
-            return ExpectedConditions.StalenessOf(element)(element.GetDriver());
+            try
+            {
+                // Calling any method forces a staleness check
+                return element == null || !element.Enabled;
+            }
+            catch (StaleElementReferenceException)
+            {
+                return true;
+            }
         }
 
         public static IWebElement WaitElementVisible(this RemoteWebDriver selenium, By locator, Func<string> actionDescription = null, TimeSpan? timeout = null)
@@ -314,7 +322,7 @@ namespace Signum.React.Selenium
                 if (last == newLast)
                     return null;
 
-                return newLast.TryFindElement(By.CssSelector(".fade.in.modal"));
+                return newLast.TryFindElement(By.CssSelector(".modal.fade.show"));
             });
 
             return result;
@@ -357,6 +365,7 @@ namespace Signum.React.Selenium
 
             try
             {
+                button.ScrollTo();
                 button.Click();
             }
             catch (InvalidOperationException e)

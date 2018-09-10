@@ -1,29 +1,31 @@
 ﻿import * as React from 'react'
-import { MenuItem, DropdownButton } from 'react-bootstrap'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { API, TreeNode, TreeNodeState, fixState } from './TreeClient'
-import { Dic, classes, DomUtils } from '../../../Framework/Signum.React/Scripts/Globals'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import ContextMenu from '../../../Framework/Signum.React/Scripts/SearchControl/ContextMenu'
-import { ContextMenuPosition } from '../../../Framework/Signum.React/Scripts/SearchControl/ContextMenu'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
-import * as EntityOperations from '../../../Framework/Signum.React/Scripts/Operations/EntityOperations'
-import { SearchMessage, JavascriptMessage, EntityControlMessage, toLite, liteKey, ExecuteSymbol, ConstructSymbol_From, ConstructSymbol_Simple, DeleteSymbol, OperationMessage } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { Dic, classes, DomUtils } from '@framework/Globals'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import ContextMenu from '@framework/SearchControl/ContextMenu'
+import { ContextMenuPosition } from '@framework/SearchControl/ContextMenu'
+import * as Operations from '@framework/Operations'
+import * as EntityOperations from '@framework/Operations/EntityOperations'
+import { SearchMessage, JavascriptMessage, EntityControlMessage, toLite, liteKey, ExecuteSymbol, ConstructSymbol_From, ConstructSymbol_Simple, DeleteSymbol, OperationMessage } from '@framework/Signum.Entities'
 import { TreeViewerMessage, TreeEntity, TreeOperation, MoveTreeModel } from './Signum.Entities.Tree'
 import * as TreeClient from './TreeClient'
-import { FilterOptionParsed, QueryDescription, FilterRequest, SubTokensOptions, FilterOption } from "../../../Framework/Signum.React/Scripts/FindOptions";
-import FilterBuilder from "../../../Framework/Signum.React/Scripts/SearchControl/FilterBuilder";
-import { ISimpleFilterBuilder } from "../../../Framework/Signum.React/Scripts/Search";
-import { is } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
-import MessageModal from "../../../Framework/Signum.React/Scripts/Modals/MessageModal";
-import { ContextualItemsContext, renderContextualItems } from "../../../Framework/Signum.React/Scripts/SearchControl/ContextualItems";
-import { Entity } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
-import { Lite } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
+import { FilterOptionParsed, QueryDescription, FilterRequest, SubTokensOptions, FilterOption, isFilterGroupOptionParsed } from "@framework/FindOptions";
+import FilterBuilder from "@framework/SearchControl/FilterBuilder";
+import { ISimpleFilterBuilder } from "@framework/Search";
+import { is } from "@framework/Signum.Entities";
+import MessageModal from "@framework/Modals/MessageModal";
+import { ContextualItemsContext, renderContextualItems } from "@framework/SearchControl/ContextualItems";
+import { Entity } from "@framework/Signum.Entities";
+import { Lite } from "@framework/Signum.Entities";
 import { DisabledMixin } from "../Basics/Signum.Entities.Basics";
-import { getMixin } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
-import { tryGetMixin } from "../../../Framework/Signum.React/Scripts/Signum.Entities";
+import { getMixin } from "@framework/Signum.Entities";
+import { tryGetMixin } from "@framework/Signum.Entities";
 
 import "./TreeViewer.css"
+import { DropdownToggle, Dropdown, DropdownItem, DropdownMenu } from '@framework/Components';
+import { toFilterRequest, toFilterRequests } from '@framework/Finder';
 
 interface TreeViewerProps {
     typeName: string;
@@ -52,6 +54,8 @@ interface TreeViewerState {
     simpleFilterBuilder?: React.ReactElement<any>;
     showFilters?: boolean;
 
+    isSelectOpen: boolean;
+
     draggedNode?: TreeNode;
     draggedKind?: "Move" | "Copy";
     draggedOver?: DraggedOver;
@@ -70,7 +74,8 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
         super(props);
         this.state = {
             filterOptions: [],
-            showFilters: props.initialShowFilters
+            showFilters: props.initialShowFilters,
+            isSelectOpen: false
         };
     }
 
@@ -95,7 +100,11 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
                 return;
         }
 
-        this.state = { filterOptions: [], showFilters: newProps.initialShowFilters };
+        this.state = {
+            filterOptions: [],
+            showFilters: newProps.initialShowFilters,
+            isSelectOpen: false,
+        };
         this.forceUpdate();
 
         this.initilize(newProps.typeName, newProps.filterOptions);
@@ -167,7 +176,7 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
             .done();
     }
 
-    treeContainer: HTMLElement;
+    treeContainer!: HTMLElement;
 
     render() {
         return (
@@ -238,16 +247,16 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
         let type = this.props.typeName;
 
         var menuItems = [
-            Navigator.isNavigable(type, undefined, true) && <MenuItem onClick={this.handleNavigate} bsClass="danger" > <i className="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;{EntityControlMessage.View.niceToString()}</MenuItem >,
-            Operations.isOperationAllowed(TreeOperation.CreateChild, type) && <MenuItem onClick={this.handleAddChildren}><i className="fa fa-caret-square-o-right" aria-hidden="true"></i>&nbsp;{TreeViewerMessage.AddChild.niceToString()}</MenuItem>,
-            Operations.isOperationAllowed(TreeOperation.CreateNextSibling, type) && <MenuItem onClick={this.handleAddSibling}><i className="fa fa-caret-square-o-down" aria-hidden="true"></i>&nbsp;{TreeViewerMessage.AddSibling.niceToString()}</MenuItem>,
+            Navigator.isNavigable(type, undefined, true) && <DropdownItem onClick={this.handleNavigate} className="btn-danger"><FontAwesomeIcon icon="arrow-right"/>&nbsp;{EntityControlMessage.View.niceToString()}</DropdownItem >,
+            Operations.isOperationAllowed(TreeOperation.CreateChild, type) && <DropdownItem onClick={this.handleAddChildren}><FontAwesomeIcon icon="caret-square-right"/>&nbsp;{TreeViewerMessage.AddChild.niceToString()}</DropdownItem>,
+            Operations.isOperationAllowed(TreeOperation.CreateNextSibling, type) && <DropdownItem onClick={this.handleAddSibling}><FontAwesomeIcon icon="caret-square-down" />&nbsp;{TreeViewerMessage.AddSibling.niceToString()}</DropdownItem>,
         ].filter(a => a != false) as React.ReactElement<any>[];
 
         if (this.state.currentMenuItems == undefined) {
-            menuItems.push(<MenuItem header>{JavascriptMessage.loading.niceToString()}</MenuItem>);
+            menuItems.push(<DropdownItem header>{JavascriptMessage.loading.niceToString()}</DropdownItem>);
         } else {
             if (menuItems.length && this.state.currentMenuItems.length)
-                menuItems.push(<MenuItem divider />);
+                menuItems.push(<DropdownItem divider />);
 
             menuItems.splice(menuItems.length, 0, ...this.state.currentMenuItems);
         }
@@ -265,18 +274,14 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
 
     search(clearExpanded: boolean) {
         this.getFilterOptionsWithSFB().then(filters => {
-
             let expandedNodes = clearExpanded || !this.state.treeNodes ? [] :
                 this.state.treeNodes!.flatMap(allNodes).filter(a => a.nodeState == "Expanded").map(a => a.lite);
 
-            const validFilters = filters.filter(fo => fo.token != undefined && fo.operation != undefined);
 
-            const userFilters = validFilters.filter(fo => fo.frozen == false).map(fo => ({ token: fo.token!.fullKey, operation: fo.operation!, value: fo.value }) as FilterRequest);
-            const frozenFilters = validFilters.filter(fo => fo.frozen == true).map(fo => ({ token: fo.token!.fullKey, operation: fo.operation!, value: fo.value }) as FilterRequest);
+            const userFilters = toFilterRequests(filters.filter(fo => fo.frozen == false));
+            const frozenFilters = toFilterRequests(filters.filter(fo => fo.frozen == true));
 
-            const newLastFilters = JSON.stringify(userFilters);
-            
-            if (userFilters.length == 0 && frozenFilters.length == 0)
+            if (userFilters.length == 0)
                 userFilters.push({ token: "Entity.Level", operation: "EqualTo", value: 1 });
 
             return API.findNodes(this.props.typeName, { userFilters, frozenFilters, expandedNodes });
@@ -359,7 +364,7 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
     findParent(childNode: TreeNode) {
         return this.state.treeNodes!.flatMap(allNodes).filter(n => n.loadedChildren.contains(childNode)).singleOrNull();
     }
-    
+
     simpleFilterBuilderInstance?: ISimpleFilterBuilder;
     getFilterOptionsWithSFB(): Promise<FilterOptionParsed[]> {
 
@@ -388,29 +393,36 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
 
         return (
             <div className="btn-toolbar">
-                <a className={"sf-query-button sf-filters-header btn btn-default" + (s.showFilters ? " active" : "")}
+                <a className={"sf-query-button sf-filters-header btn btn-light" + (s.showFilters ? " active" : "")}
                     onClick={this.handleToggleFilters}
-                    title={s.showFilters ? JavascriptMessage.hideFilters.niceToString() : JavascriptMessage.showFilters.niceToString()}><span className="glyphicon glyphicon glyphicon-filter"></span></a>
+                    title={s.showFilters ? JavascriptMessage.hideFilters.niceToString() : JavascriptMessage.showFilters.niceToString()}><FontAwesomeIcon icon="filter" /></a>
                 <button className="btn btn-primary" onClick={this.handleSearchSubmit}>{JavascriptMessage.search.niceToString()}</button>
-                {Operations.isOperationAllowed(TreeOperation.CreateRoot, this.props.typeName) && <button className="btn btn-default" onClick={this.handleAddRoot} disabled={s.treeNodes == null} > <i className="fa fa-star" aria-hidden="true"></i>&nbsp;{TreeViewerMessage.AddRoot.niceToString()}</button>}
-                <DropdownButton id="selectedButton"
+                {Operations.isOperationAllowed(TreeOperation.CreateRoot, this.props.typeName) && <button className="btn btn-light" onClick={this.handleAddRoot} disabled={s.treeNodes == null} > <FontAwesomeIcon icon="star"/>&nbsp;{TreeViewerMessage.AddRoot.niceToString()}</button>}
+                <Dropdown id="selectedButton"
                     className="sf-query-button sf-tm-selected"
-                    title={`${JavascriptMessage.Selected.niceToString()} (${selected && selected.lite.toStr || TreeViewerMessage.AddRoot.niceToString()})`}
-                    onToggle={this.handleSelectedToggle}
+                    toggle={this.handleSelectedToggle}
+                    isOpen={s.isSelectOpen}
                     disabled={selected == undefined}>
-                    {menuItems == undefined ? <MenuItem className="sf-tm-selected-loading">{JavascriptMessage.loading.niceToString()}</MenuItem> :
-                        menuItems.length == 0 ? <MenuItem className="sf-search-ctxitem-no-results">{JavascriptMessage.noActionsFound.niceToString()}</MenuItem> :
-                            menuItems.map((e, i) => React.cloneElement(e, { key: i }))}
-                </DropdownButton>
-                <button className="btn btn-default" onClick={this.handleExplore} ><i className="glyphicon glyphicon-search"></i> &nbsp; {SearchMessage.Explore.niceToString()}</button>
+                    <DropdownToggle color="light" caret disabled={selected == undefined}>
+                        {`${JavascriptMessage.Selected.niceToString()} (${selected ? selected.lite.toStr : TreeViewerMessage.None.niceToString()})`}
+                    </DropdownToggle>
+                    <DropdownMenu>
+                        {menuItems == undefined ? <DropdownItem className="sf-tm-selected-loading">{JavascriptMessage.loading.niceToString()}</DropdownItem> :
+                            menuItems.length == 0 ? <DropdownItem className="sf-search-ctxitem-no-results">{JavascriptMessage.noActionsFound.niceToString()}</DropdownItem> :
+                                menuItems.map((e, i) => React.cloneElement(e, { key: i }))}
+                    </DropdownMenu>
+                </Dropdown>
+                <button className="btn btn-light" onClick={this.handleExplore} ><FontAwesomeIcon icon="search" /> &nbsp; {SearchMessage.Explore.niceToString()}</button>
             </div>
         );
     }
 
-    handleSelectedToggle = (isOpen: boolean) => {
-
-        if (isOpen && this.state.currentMenuItems == undefined)
+    handleSelectedToggle = () => {
+        
+        if (!this.state.isSelectOpen && this.state.currentMenuItems == undefined)
             this.loadMenuItems();
+
+        this.setState({ isSelectOpen: !this.state.isSelectOpen });
     }
 
     handleExplore = (e: React.MouseEvent<any>) => {
@@ -439,7 +451,7 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
 
         var isCopy = e.ctrlKey || e.shiftKey || e.altKey;
         e.dataTransfer.effectAllowed = isCopy ? "copy" : "move";
-        this.setState({ draggedNode: node, draggedKind: isCopy? "Copy":  "Move" });
+        this.setState({ draggedNode: node, draggedKind: isCopy ? "Copy" : "Move" });
     }
 
 
@@ -488,7 +500,7 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
 
         if (dragged == over.node)
             return;
-        
+
         var nodeParent = this.findParent(over.node);
         const ts = TreeClient.settings[this.props.typeName];
         if (ts && ts.dragTargetIsValid)
@@ -517,7 +529,7 @@ export class TreeViewer extends React.Component<TreeViewerProps, TreeViewerState
         if (this.state.draggedKind == "Move") {
             const treeModel = MoveTreeModel.New(partial);
             Operations.API.executeLite(dragged.lite, TreeOperation.Move, treeModel).then(() =>
-                
+
                 this.setState({ draggedNode: undefined, draggedOver: undefined, draggedKind: undefined, selectedNode: dragged }, () => {
                     if (toExpand)
                         toExpand.nodeState = "Expanded";
@@ -575,12 +587,18 @@ class TreeNodeControl extends React.Component<TreeNodeControlProps> {
         var node = this.props.treeNode;
         const tv = this.props.treeViewer;
         switch (nodeState) {
-            case "Collapsed": return <span onClick={() => tv.handleNodeIconClick(node)} className = "tree-icon fa fa-plus-square-o" />;
-            case "Expanded": return <span onClick={() => tv.handleNodeIconClick(node)} className="tree-icon fa fa-minus-square-o" />;
+            case "Collapsed": return (
+                <span onClick={() => tv.handleNodeIconClick(node)} className="tree-icon" >
+                    <FontAwesomeIcon icon={["far", "plus-square"]} />
+                </span>);
+            case "Expanded": return (
+                <span onClick={() => tv.handleNodeIconClick(node)} className="tree-icon" >
+                    <FontAwesomeIcon icon={["far", "minus-square"]} />
+                </span>);
             case "Filtered": return (
-                <span onClick={() => tv.handleNodeIconClick(node)} className = "tree-icon fa-stack fa-sm" >
-                    <i className="fa fa-square-o fa-stack-2x"></i>
-                    <i className="fa fa-filter fa-stack-1x"></i>
+                <span onClick={() => tv.handleNodeIconClick(node)} className="tree-icon fa-layers fa-fw" >
+                    <FontAwesomeIcon icon="square"/>
+                    <FontAwesomeIcon icon="filter" inverse transform="shrink-2" />
                 </span>);
             default: return <span className="place-holder" />;
         }
@@ -597,7 +615,7 @@ class TreeNodeControl extends React.Component<TreeNodeControlProps> {
                     onDragEnter={de => tv.handleDragOver(node, de)}
                     onDragOver={de => tv.handleDragOver(node, de)}
                     onDragEnd={de => tv.handleDragEnd(node, de)}
-                    onDrop={this.props.dropDisabled ? undefined: de => tv.handleDrop(node, de)}
+                    onDrop={this.props.dropDisabled ? undefined : de => tv.handleDrop(node, de)}
                     style={this.getDragAndDropStyle(node)}>
                     {this.renderIcon(node.nodeState)}
 
@@ -611,8 +629,8 @@ class TreeNodeControl extends React.Component<TreeNodeControlProps> {
 
                 {node.loadedChildren.length > 0 && (node.nodeState == "Expanded" || node.nodeState == "Filtered") &&
                     <ul>
-                    {node.loadedChildren.map((n, i) =>
-                        <TreeNodeControl key={i} treeViewer={tv} treeNode={n} dropDisabled={this.props.dropDisabled || n == tv.state.draggedNode} />)}
+                        {node.loadedChildren.map((n, i) =>
+                            <TreeNodeControl key={i} treeViewer={tv} treeNode={n} dropDisabled={this.props.dropDisabled || n == tv.state.draggedNode} />)}
                     </ul>
                 }
             </li>

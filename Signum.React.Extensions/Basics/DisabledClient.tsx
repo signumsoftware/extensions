@@ -1,23 +1,44 @@
 ﻿import * as React from 'react'
 import { Route } from 'react-router'
-import { Dic, classes } from '../../../Framework/Signum.React/Scripts/Globals';
-import { Button, OverlayTrigger, Tooltip, MenuItem } from "react-bootstrap"
-import { ajaxPost, ajaxPostRaw, ajaxGet, saveFile } from '../../../Framework/Signum.React/Scripts/Services';
-import { EntitySettings, ViewPromise } from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Constructor from '../../../Framework/Signum.React/Scripts/Constructor'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { Lite, Entity, EntityPack, ExecuteSymbol, DeleteSymbol, ConstructSymbol_From, registerToString, JavascriptMessage, toLite } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { EntityOperationSettings } from '../../../Framework/Signum.React/Scripts/Operations'
-import { PseudoType, QueryKey, GraphExplorer, OperationType, Type, getTypeName } from '../../../Framework/Signum.React/Scripts/Reflection'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
-import { TimeSpanEmbedded, DateSpanEmbedded } from './Signum.Entities.Basics'
+import { Dic, classes } from '@framework/Globals';
+import { ajaxPost, ajaxPostRaw, ajaxGet, saveFile } from '@framework/Services';
+import { EntitySettings, ViewPromise } from '@framework/Navigator'
+import * as Constructor from '@framework/Constructor'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { Lite, Entity, EntityPack, ExecuteSymbol, DeleteSymbol, ConstructSymbol_From, registerToString, JavascriptMessage, toLite } from '@framework/Signum.Entities'
+import { EntityOperationSettings } from '@framework/Operations'
+import { PseudoType, QueryKey, GraphExplorer, OperationType, Type, getTypeName } from '@framework/Reflection'
+import * as Operations from '@framework/Operations'
+import { TimeSpanEmbedded, DateSpanEmbedded, DisableOperation } from './Signum.Entities.Basics'
 import * as OmniboxClient from '../Omnibox/OmniboxClient'
 import * as AuthClient from '../Authorization/AuthClient'
-import * as QuickLinks from '../../../Framework/Signum.React/Scripts/QuickLinks'
-import { getAllTypes } from "../../../Framework/Signum.React/Scripts/Reflection";
+import * as QuickLinks from '@framework/QuickLinks'
+import { getAllTypes } from "@framework/Reflection";
 
 export function start(options: { routes: JSX.Element[] }) {
+
+    Operations.addSettings(new EntityOperationSettings(DisableOperation.Disable, {
+        contextual: {
+            icon: ["fas", "arrow-down"],
+            iconColor: "gray",
+        },
+        contextualFromMany: {
+            icon: ["fas", "arrow-down"],
+            iconColor: "gray",
+        },
+    }));
+
+    Operations.addSettings(new EntityOperationSettings(DisableOperation.Enabled, {
+        contextual: {
+            icon: ["fas", "arrow-up"],
+            iconColor: "black",
+        },
+        contextualFromMany: {
+            icon: ["fas", "arrow-up"],
+            iconColor: "black",
+        },
+    }));
 
     var typesToOverride = getAllTypes().filter(a => a.queryDefined && a.kind == "Entity" && a.members["[DisabledMixin].IsDisabled"]);
 
@@ -32,7 +53,7 @@ export function start(options: { routes: JSX.Element[] }) {
             }
 
             querySettings.hiddenColumns = [
-                { columnName: "Entity.IsDisabled" }
+                { token: "Entity.IsDisabled" }
             ];
 
             querySettings.rowAttributes = (row, columns) => {
@@ -53,7 +74,7 @@ export function start(options: { routes: JSX.Element[] }) {
             if (!entitySettings.findOptions) {
                 entitySettings.findOptions = {
                     queryName: ti.name,
-                    filterOptions: [{ columnName: "Entity.IsDisabled", operation: "EqualTo", value: false, frozen: true }]
+                    filterOptions: [{ token: "Entity.IsDisabled", operation: "EqualTo", value: false, frozen: true }]
                 };
             }
         }

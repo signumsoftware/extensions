@@ -1,16 +1,17 @@
 ﻿import * as React from 'react'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { classes, Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { QueryDescription, SubTokensOptions, QueryToken, filterOperations, OrderType, ColumnOptionsMode } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, getTypeInfo, isTypeEntity, Binding } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import Typeahead from '../../../../Framework/Signum.React/Scripts/Lines/Typeahead'
-import QueryTokenBuilder from '../../../../Framework/Signum.React/Scripts/SearchControl/QueryTokenBuilder'
-import { ModifiableEntity, JavascriptMessage, EntityControlMessage } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { QueryEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
-import { FilterOperation, PaginationMode } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.DynamicQuery'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '@framework/Lines'
+import { classes, Dic } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { QueryDescription, SubTokensOptions, QueryToken, filterOperations, OrderType, ColumnOptionsMode } from '@framework/FindOptions'
+import { getQueryNiceName, getTypeInfo, isTypeEntity, Binding } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
+import { Typeahead } from '@framework/Components'
+import QueryTokenBuilder from '@framework/SearchControl/QueryTokenBuilder'
+import { ModifiableEntity, JavascriptMessage, EntityControlMessage } from '@framework/Signum.Entities'
+import { QueryEntity } from '@framework/Signum.Entities.Basics'
+import { FilterOperation, PaginationMode } from '@framework/Signum.Entities.DynamicQuery'
 import { ExpressionOrValueComponent, FieldComponent, DesignerModal } from './Designer'
 import * as Nodes from './Nodes'
 import * as NodeUtils from './NodeUtils'
@@ -19,9 +20,9 @@ import { BaseNode, SearchControlNode } from './Nodes'
 import { FindOptionsExpr, FilterOptionExpr, OrderOptionExpr, ColumnOptionExpr } from './FindOptionsExpression'
 import * as DynamicViewClient from '../DynamicViewClient'
 import { DynamicViewMessage, DynamicViewValidationMessage } from '../Signum.Entities.Dynamic'
-import SelectorModal from '../../../../Framework/Signum.React/Scripts/SelectorModal';
-import { getTypeInfos } from '../../../../Framework/Signum.React/Scripts/Reflection';
-import { TypeInfo } from '../../../../Framework/Signum.React/Scripts/Reflection';
+import SelectorModal from '@framework/SelectorModal';
+import { getTypeInfos } from '@framework/Reflection';
+import { TypeInfo } from '@framework/Reflection';
 
 
 interface FindOptionsLineProps {
@@ -39,13 +40,15 @@ export class FindOptionsLine extends React.Component<FindOptionsLineProps>{
         </span>);
     }
 
-    handleRemove = () => {
+    handleRemove = (e: React.MouseEvent<any>) => {
+        e.preventDefault();
         this.props.binding.deleteValue();
         this.props.dn.context.refreshView();
     }
 
-    handleCreate = () => {
+    handleCreate = (e: React.MouseEvent<any>) => {
 
+        e.preventDefault();
         const route = this.props.dn.route;
         const ti = route && route.typeReferenceInfo();
 
@@ -54,11 +57,11 @@ export class FindOptionsLine extends React.Component<FindOptionsLineProps>{
                 .then(sfos => SelectorModal.chooseElement(sfos, {
                     title: DynamicViewMessage.SuggestedFindOptions.niceToString(),
                     message: DynamicViewMessage.TheFollowingQueriesReference0.niceToString().formatHtml(<strong>{ti.niceName}</strong>),
-                    buttonDisplay: sfo => <div><strong>{sfo.queryKey}</strong><br /><small>(by <code>{sfo.parentColumn}</code>)</small></div>
+                    buttonDisplay: sfo => <div><strong>{sfo.queryKey}</strong><br /><small>(by <code>{sfo.parentToken}</code>)</small></div>
                 }))
                 .then(sfo => ({
                     queryName: sfo && sfo.queryKey,
-                    parentColumn: sfo && sfo.parentColumn,
+                    parentToken: sfo && sfo.parentToken,
                     parentValue: sfo && { __code__: "ctx.value" } as Expression<ModifiableEntity>
                 } as FindOptionsExpr));
 
@@ -82,9 +85,9 @@ export class FindOptionsLine extends React.Component<FindOptionsLineProps>{
 
     clean(fo: FindOptionsExpr) {
         delete fo.parentToken;
-        if (fo.filterOptions) fo.filterOptions.forEach(f => delete f.token);
-        if (fo.orderOptions) fo.orderOptions.forEach(o => delete o.token);
-        if (fo.columnOptions) fo.columnOptions.forEach(c => delete c.token);
+        if (fo.filterOptions) fo.filterOptions.forEach(f => delete f.parsedToken);
+        if (fo.orderOptions) fo.orderOptions.forEach(o => delete o.parsedToken);
+        if (fo.columnOptions) fo.columnOptions.forEach(c => delete c.parsedToken);
         return fo;
     }
 
@@ -98,17 +101,17 @@ export class FindOptionsLine extends React.Component<FindOptionsLineProps>{
                 </label>
                 <div>
                     {fo ? <div>
-                        <a href="" onClick={this.handleView}>{this.getDescription(fo)}</a>
+                        <a href="#" onClick={this.handleView}>{this.getDescription(fo)}</a>
                         {" "}
-                        <a className={classes("sf-line-button", "sf-remove")}
+                        <a href="#" className={classes("sf-line-button", "sf-remove")}
                             onClick={this.handleRemove}
                             title={EntityControlMessage.Remove.niceToString()}>
-                            <span className="glyphicon glyphicon-remove" />
+                            <FontAwesomeIcon icon="times" />
                         </a></div> :
-                        <a title={EntityControlMessage.Create.niceToString()}
+                        <a href="#" title={EntityControlMessage.Create.niceToString()}
                             className="sf-line-button sf-create"
                             onClick={this.handleCreate}>
-                            <span className="glyphicon glyphicon-plus sf-create sf-create-label" />{EntityControlMessage.Create.niceToString()}
+                            <FontAwesomeIcon icon="plus" className="sf-create sf-create-label" />{EntityControlMessage.Create.niceToString()}
                         </a>}
                 </div>
             </div>
@@ -118,7 +121,7 @@ export class FindOptionsLine extends React.Component<FindOptionsLineProps>{
     getDescription(fo: FindOptionsExpr) {
 
         var filters = [
-            fo.parentColumn,
+            fo.parentToken,
             fo.filterOptions && fo.filterOptions.length && fo.filterOptions.length + " filters"]
             .filter(a => !!a).join(", ");
 
@@ -135,22 +138,23 @@ interface QueryTokenLineProps {
 }
 
 interface QueryTokenLineState {
-    token?: QueryToken;
+    parsedToken?: QueryToken;
 }
 
 export class QueryTokenLine extends React.Component<QueryTokenLineProps, QueryTokenLineState>{
 
     state = {} as QueryTokenLineState;
 
-    renderMember(columnName: string| undefined): React.ReactNode {
-        return (<span
-            className={columnName === undefined ? "design-default" : "design-changed"}>
-            {this.props.binding.member}
-        </span>);
+    renderMember(token: string| undefined): React.ReactNode {
+        return (
+            <span className={token === undefined ? "design-default" : "design-changed"}>
+                {this.props.binding.member}
+            </span>
+        );
     }
 
     handleChange = (qt: QueryToken | undefined) => {
-        this.setState({ token: qt });
+        this.setState({ parsedToken: qt });
         if (qt)
             this.props.binding.setValue(qt.fullKey);
         else
@@ -165,19 +169,19 @@ export class QueryTokenLine extends React.Component<QueryTokenLineProps, QueryTo
     }   
 
     render() {
-        const columnName = this.props.binding.getValue();
+        const token = this.props.binding.getValue();
 
         return (
             <div className="form-group">
                 <label className="control-label">
-                    {this.renderMember(columnName)} {this.props.queryKey && <small>({getQueryNiceName(this.props.queryKey)})</small>}
+                    {this.renderMember(token)} {this.props.queryKey && <small>({getQueryNiceName(this.props.queryKey)})</small>}
                 </label>
                 <div>
                     <QueryTokenBuilderString key={this.props.queryKey}
                         queryKey={this.props.queryKey}
-                        columnName={columnName}
+                        token={token}
                         subTokenOptions={this.props.subTokenOptions}
-                        token={this.state.token}
+                        parsedToken={this.state.parsedToken}
                         hideLabel={true}
                         onChange={this.handleChange}
                         label=""
@@ -190,7 +194,7 @@ export class QueryTokenLine extends React.Component<QueryTokenLineProps, QueryTo
     getDescription(fo: FindOptionsExpr) {
 
         var filters = [
-            fo.parentColumn,
+            fo.parentToken,
             fo.filterOptions && fo.filterOptions.length && fo.filterOptions.length + " filters"]
             .filter(a => !!a).join(", ");
 
@@ -299,7 +303,7 @@ export class FindOptionsComponent extends React.Component<FindOptionsComponentPr
     handleChangeQueryKey = (queryKey: string | undefined) => {
         const fo = this.props.findOptions;
         fo.queryName = queryKey;
-        delete fo.parentColumn;
+        delete fo.parsedParentToken;
         delete fo.parentToken;
         delete fo.parentValue;
         delete fo.filterOptions;
@@ -309,8 +313,8 @@ export class FindOptionsComponent extends React.Component<FindOptionsComponentPr
     }
 
     handleChangeParentColumn = (newToken: QueryToken | undefined) => {
-        this.props.findOptions.parentColumn = newToken && newToken.fullKey;
-        this.props.findOptions.parentToken = newToken;
+        this.props.findOptions.parentToken = newToken && newToken.fullKey;
+        this.props.findOptions.parsedParentToken = newToken;
         this.forceUpdate();
     }
     
@@ -324,14 +328,14 @@ export class FindOptionsComponent extends React.Component<FindOptionsComponentPr
                 {fo.queryName &&
                     <div>
                         <div className="row">
-                            <div className="col-sm-6">
-                            <QueryTokenBuilderString label="parentColumn" token={fo.parentToken} columnName={fo.parentColumn} 
+                        <div className="col-sm-6">
+                            <QueryTokenBuilderString label="parentToken" parsedToken={fo.parsedParentToken} token={fo.parentToken} 
                                     onChange={this.handleChangeParentColumn} queryKey={fo.queryName} subTokenOptions={SubTokensOptions.CanAnyAll | SubTokensOptions.CanElement} />
                             </div>
                             <div className="col-sm-6">
-                            {fo.parentToken &&
+                            {fo.parsedParentToken &&
                                 <ExpressionOrValueComponent dn={dn} binding={Binding.create(fo, f => f.parentValue)} refreshView={() => this.forceUpdate()}
-                                    type={FilterOptionsComponent.getValueType(fo.parentToken)} defaultValue={null} />}
+                                    type={FilterOptionsComponent.getValueType(fo.parsedParentToken)} defaultValue={null} />}
                             </div>
                         </div>
 
@@ -382,15 +386,14 @@ export class QueryKeyLine extends React.Component<{ queryKey: string | undefined
     renderLink() {
         return (
             <div className="input-group">
-                <span className="form-control btn-default sf-entity-line-entity">
+                <span className="form-control btn-light sf-entity-line-entity">
                     {this.props.queryKey}
-
                 </span>
-                <span className="input-group-btn">
-                    <a className={classes("sf-line-button", "sf-remove btn btn-default")}
+                <span className="input-group-append">
+                    <a href="#" className={classes("sf-line-button", "sf-remove btn btn-light")}
                         onClick={() => this.props.onChange(undefined)}
                         title={EntityControlMessage.Remove.niceToString()}>
-                        <span className="glyphicon glyphicon-remove" />
+                        <FontAwesomeIcon icon="times" />
                     </a>
                 </span>
             </div>
@@ -400,8 +403,8 @@ export class QueryKeyLine extends React.Component<{ queryKey: string | undefined
 
 interface QueryTokenBuilderStringProps {
     queryKey: string;
-    columnName: string | undefined;
-    token: QueryToken | undefined;
+    token: string | undefined;
+    parsedToken: QueryToken | undefined;
     label: string;
     onChange: (newToken: QueryToken | undefined) => void;
     subTokenOptions: SubTokensOptions;
@@ -419,12 +422,12 @@ class QueryTokenBuilderString extends React.Component<QueryTokenBuilderStringPro
     }
 
     loadInitialToken(props: QueryTokenBuilderStringProps) {
-        if (props.columnName == undefined) {
-            if (this.props.columnName != props.columnName)
+        if (props.token == undefined) {
+            if (this.props.token != props.token)
                 props.onChange(undefined);
         }
-        else if (!props.token || this.props.queryKey != props.queryKey || props.token.fullKey != props.columnName)
-            return Finder.parseSingleToken(props.queryKey, props.columnName, props.subTokenOptions)
+        else if (!props.parsedToken || this.props.queryKey != props.queryKey || props.parsedToken.fullKey != props.token)
+            return Finder.parseSingleToken(props.queryKey, props.token, props.subTokenOptions)
                 .then(t => this.props.onChange(t))
                 .done();
     }
@@ -432,7 +435,7 @@ class QueryTokenBuilderString extends React.Component<QueryTokenBuilderStringPro
     render() {
 
         var qt = <QueryTokenBuilder
-            queryToken={this.props.token}
+            queryToken={this.props.parsedToken}
             queryKey={this.props.queryKey}
             onTokenChange={this.props.onChange}
             readOnly={false}
@@ -502,22 +505,22 @@ abstract class BaseOptionsComponent<T> extends React.Component<BaseOptionsCompon
 
     renderButtons(index: number) {
         return (<div className="item-group">
-            <a className={classes("sf-line-button", "sf-remove")}
+            <a href="#" className={classes("sf-line-button", "sf-remove")}
                 onClick={e => this.handleOnRemove(e, index)}
                 title={EntityControlMessage.Remove.niceToString()}>
-                <span className="glyphicon glyphicon-remove" />
+                <FontAwesomeIcon icon="times" />
             </a>
 
-            <a className={classes("sf-line-button", "move-up")}
+            <a href="#" className={classes("sf-line-button", "move-up")}
                 onClick={e => this.handleOnMoveUp(e, index)}
                 title={EntityControlMessage.MoveUp.niceToString()}>
-                <span className="glyphicon glyphicon-chevron-up" />
+                <FontAwesomeIcon icon="chevron-up" />
             </a>
 
-            <a className={classes("sf-line-button", "move-down")}
+            <a href="#" className={classes("sf-line-button", "move-down")}
                 onClick={e => this.handleOnMoveDown(e, index)}
                 title={EntityControlMessage.MoveDown.niceToString()}>
-                <span className="glyphicon glyphicon-chevron-down" />
+                <FontAwesomeIcon icon="chevron-down" />
             </a>
         </div>);
     }
@@ -537,7 +540,7 @@ abstract class BaseOptionsComponent<T> extends React.Component<BaseOptionsCompon
             <legend>
                 {this.renderTitle()}
             </legend>
-            <table className="table table-condensed form-vertical code-container">
+            <table className="table table-sm code-container">
                 <thead>
                     {this.renderHeader()}
                 </thead>
@@ -548,7 +551,7 @@ abstract class BaseOptionsComponent<T> extends React.Component<BaseOptionsCompon
                             <a title={EntityControlMessage.Create.niceToString()}
                                 className="sf-line-button sf-create"
                                 onClick={this.handleCreateClick}>
-                                <span className="glyphicon glyphicon-plus sf-create sf-create-label" />{EntityControlMessage.Create.niceToString()}
+                                <FontAwesomeIcon icon="plus" className="sf-create" />&nbsp;{EntityControlMessage.Create.niceToString()}
                             </a>
                         </td>
                     </tr>
@@ -578,8 +581,8 @@ class FilterOptionsComponent extends BaseOptionsComponent<FilterOptionExpr> {
     }
 
     handleColumnChange = (item: FilterOptionExpr, newToken: QueryToken | undefined) => {
-        item.columnName = newToken && newToken.fullKey;
-        item.token = newToken;
+        item.token = newToken && newToken.fullKey;
+        item.parsedToken = newToken;
         this.props.refreshView();
     }
 
@@ -588,10 +591,10 @@ class FilterOptionsComponent extends BaseOptionsComponent<FilterOptionExpr> {
         return (
             <tr key={index}>
                 <td>{this.renderButtons(index)}</td>
-                <td> <QueryTokenBuilderString label="columnName" columnName={item.columnName} token={item.token} onChange={newToken => this.handleColumnChange(item, newToken)}
+                <td> <QueryTokenBuilderString label="columnName" token={item.token} parsedToken={item.parsedToken} onChange={newToken => this.handleColumnChange(item, newToken)}
                     queryKey={this.props.queryKey} subTokenOptions={SubTokensOptions.CanAnyAll | SubTokensOptions.CanElement} hideLabel={true} /></td>
-                <td> {item.token && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.operation)} type="string" defaultValue={null} options={this.getOperations(item.token)} />}</td>
-                <td> {item.token && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.value)} type={FilterOptionsComponent.getValueType(item.token)} defaultValue={null} />}</td>
+                <td> {item.parsedToken && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.operation)} type="string" defaultValue={null} options={this.getOperations(item.parsedToken)} />}</td>
+                <td> {item.parsedToken && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.value)} type={FilterOptionsComponent.getValueType(item.parsedToken)} defaultValue={null} />}</td>
                 <td> <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.frozen)} type="boolean" defaultValue={false} /></td>
                 <td> <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.applicable)} type="boolean" defaultValue={true} /></td>
             </tr>
@@ -649,8 +652,8 @@ class OrderOptionsComponent extends BaseOptionsComponent<OrderOptionExpr> {
     }
 
     handleColumnChange = (item: OrderOptionExpr, newToken: QueryToken | undefined) => {
-        item.columnName = newToken && newToken.fullKey;;
-        item.token = newToken;
+        item.token = newToken && newToken.fullKey;;
+        item.parsedToken = newToken;
         this.props.refreshView();
     }
 
@@ -659,9 +662,9 @@ class OrderOptionsComponent extends BaseOptionsComponent<OrderOptionExpr> {
         return (
             <tr key={index}>
                 <td>{this.renderButtons(index)}</td>
-                <td> <QueryTokenBuilderString label="columnName" token={item.token} columnName={item.columnName}
+                <td> <QueryTokenBuilderString label="columnName" parsedToken={item.parsedToken} token={item.token}
                     onChange={newToken => this.handleColumnChange(item, newToken)} queryKey={this.props.queryKey} subTokenOptions={SubTokensOptions.CanElement} hideLabel={true} /></td>
-                <td> {item.token && !item.token.type.isEmbedded && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.orderType)} type="string" defaultValue={null} options={OrderType.values()} />}</td>
+                <td> {item.parsedToken && !item.parsedToken.type.isEmbedded && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.orderType)} type="string" defaultValue={null} options={OrderType.values()} />}</td>
                 <td> <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.applicable)} type="boolean" defaultValue={true} /></td>
             </tr>
         );
@@ -692,8 +695,8 @@ class ColumnOptionsComponent extends BaseOptionsComponent<ColumnOptionExpr> {
     }
 
     handleColumnChange = (item: ColumnOptionExpr, newToken: QueryToken | undefined) => {
-        item.columnName = newToken && newToken.fullKey;
-        item.token = newToken;
+        item.token = newToken && newToken.fullKey;
+        item.parsedToken = newToken;
         this.props.refreshView();
     }
     
@@ -702,10 +705,12 @@ class ColumnOptionsComponent extends BaseOptionsComponent<ColumnOptionExpr> {
         return (
             <tr key={index}>
                 <td>{this.renderButtons(index)}</td>
-                <td> <QueryTokenBuilderString label="columnName" token={item.token} columnName={item.columnName}
+                <td>
+                    <QueryTokenBuilderString label="columnName" parsedToken={item.parsedToken} token={item.token}
                     onChange={newToken => this.handleColumnChange(item, newToken)}
-                    queryKey={this.props.queryKey} subTokenOptions={SubTokensOptions.CanElement} hideLabel={true} /></td>
-                <td> {item.token && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.displayName)} type="string" defaultValue={null} />}</td>
+                    queryKey={this.props.queryKey} subTokenOptions={SubTokensOptions.CanElement} hideLabel={true} />
+                </td>
+                <td> {item.parsedToken && <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.displayName)} type="string" defaultValue={null} />}</td>
                 <td> <ExpressionOrValueComponent dn={dn} hideLabel={true} refreshView={() => this.forceUpdate()} binding={Binding.create(item, f => f.applicable)} type="boolean" defaultValue={true} /></td>
             </tr>
         );

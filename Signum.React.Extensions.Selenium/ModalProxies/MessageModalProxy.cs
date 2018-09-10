@@ -13,7 +13,7 @@ namespace Signum.React.Selenium.ModalProxies
     {
         public MessageModalProxy(IWebElement element) : base(element)
         {
-            if (!this.Element.HasClass("modal", "fade", "in"))
+            if (!this.Element.HasClass("modal"))
                 throw new InvalidOperationException("Not a valid modal");
         }
 
@@ -69,7 +69,7 @@ namespace Signum.React.Selenium.ModalProxies
             if (element == null)
                  return null;
 
-            return new MessageModalProxy(element);
+            return new MessageModalProxy(element.GetParent());
         }
 
         public static void CloseMessageModal(this RemoteWebDriver selenium, MessageModalButton button)

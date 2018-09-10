@@ -1,17 +1,18 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab } from 'react-bootstrap'
-import { LinkContainer } from 'react-router-bootstrap'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { Entity, getMixin, is, JavascriptMessage, Lite } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { OperationLogEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+
+import { classes } from '@framework/Globals'
+import * as Navigator from '@framework/Navigator'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '@framework/Lines'
+import { Entity, getMixin, is, JavascriptMessage, Lite } from '@framework/Signum.Entities'
+import { OperationLogEntity } from '@framework/Signum.Entities.Basics'
 import { DiffLogMixin, DiffLogMessage } from '../Signum.Entities.DiffLog'
 import { API, DiffLogResult, DiffPair } from '../DiffLogClient'
-import {SearchControl }  from '../../../../Framework/Signum.React/Scripts/Search'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import {DiffDocument} from './DiffDocument'
+import {SearchControl }  from '@framework/Search'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
+import { DiffDocument } from './DiffDocument'
 import "./DiffLog.css"
+import { UncontrolledTabs, Tab, LinkContainer } from '@framework/Components';
 
 export default class OperationLog extends React.Component<{ ctx: TypeContext<OperationLogEntity> }> {
 
@@ -73,7 +74,7 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
         const result = this.state.result;
         const target = this.props.ctx.value.target;
         return (
-            <Tabs id="diffTabs" defaultActiveKey="diff">
+            <UncontrolledTabs id="diffTabs" defaultEventKey="diff">
                 {result && result.prev && this.renderPrev(result.prev)}
                 {result && result.diffPrev && this.renderPrevDiff(result.diffPrev)}
                 {this.renderInitialState() }
@@ -81,7 +82,7 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
                 {this.renderFinalState()}
                 {result && result.diffNext && this.renderNextDiff(result.diffNext)}
                 {result && (result.next ? this.renderNext(result.next) : target && this.renderCurrentEntity(target))}            
-            </Tabs>
+            </UncontrolledTabs>
         );
     }
 
@@ -92,7 +93,7 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
                     <span title={DiffLogMessage.NavigatesToThePreviousOperationLog.niceToString() }>
                         {DiffLogMessage.PreviousLog.niceToString() }
                         &nbsp;
-                        <span className="glyphicon glyphicon-new-window"></span>
+                        <FontAwesomeIcon icon="external-link-alt" />
                     </span>
                 </LinkContainer> as any
             }>
@@ -105,9 +106,9 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
         const eq = isEqual(diffPrev);
 
         const title =  (
-            <span title={ DiffLogMessage.DifferenceBetweenFinalStateOfPreviousLogAndTheInitialState.niceToString()}>
-                <span className={`glyphicon glyphicon-fast-backward colorIcon red ${eq ? "mini" : ""}`}></span>
-                <span className={`glyphicon glyphicon-step-backward colorIcon green ${eq ? "mini" : ""}`}></span>
+            <span title={DiffLogMessage.DifferenceBetweenFinalStateOfPreviousLogAndTheInitialState.niceToString()}>
+                <FontAwesomeIcon icon="fast-backward" className={`colorIcon red ${eq ? "mini" : ""}`} />
+                <FontAwesomeIcon icon="step-backward" className={`colorIcon green ${eq ? "mini" : ""}`} />
             </span>
         );
 
@@ -120,7 +121,7 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
 
     renderInitialState() {
         return (
-            <Tab eventKey="initialState" title={this.mctx().niceName(d => d.initialState) }>
+            <Tab eventKey="initialState" title={this.mctx().niceName(d => d.initialState)}>
                 <pre><code>{this.mctx().value.initialState}</code></pre>
             </Tab>
         );
@@ -135,9 +136,9 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
         const eq = !this.state.result.diff || isEqual(this.state.result.diff);
 
         const title = (
-            <span title={ DiffLogMessage.DifferenceBetweenInitialStateAndFinalState.niceToString() }>
-                <span className={`glyphicon glyphicon-step-backward colorIcon red ${eq ? "mini" : ""}`}></span>
-                <span className={`glyphicon glyphicon-step-forward colorIcon green ${eq ? "mini" : ""}`}></span>
+            <span title={DiffLogMessage.DifferenceBetweenInitialStateAndFinalState.niceToString()}>
+                <FontAwesomeIcon icon="step-backward" className={`colorIcon red ${eq ? "mini" : ""}`} />
+                <FontAwesomeIcon icon="step-forward" className={`colorIcon green ${eq ? "mini" : ""}`} />
             </span>
         );
 
@@ -161,9 +162,10 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
         const eq = isEqual(diffNext);
 
         const title = (
-            <span title={ DiffLogMessage.DifferenceBetweenFinalStateAndTheInitialStateOfNextLog.niceToString() }>
-                <span className={`glyphicon glyphicon-step-forward colorIcon red ${eq ? "mini" : ""}`}></span>
-                <span className={`glyphicon glyphicon-fast-forward colorIcon green ${eq ? "mini" : ""}`}></span>
+            <span title={DiffLogMessage.DifferenceBetweenFinalStateAndTheInitialStateOfNextLog.niceToString()}>
+
+                <FontAwesomeIcon icon="step-forward" className={`colorIcon red ${eq ? "mini" : ""}`} />
+                <FontAwesomeIcon icon="fast-forward" className={`colorIcon green ${eq ? "mini" : ""}`} />
             </span>
         );
 
@@ -181,7 +183,7 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
                     <span title={DiffLogMessage.NavigatesToTheNextOperationLog.niceToString() }>
                         {DiffLogMessage.NextLog.niceToString() }
                         &nbsp;
-                        <span className="glyphicon glyphicon-new-window"></span>
+                        <FontAwesomeIcon icon="external-link-alt" />
                     </span>
                 </LinkContainer> as any}>
             </Tab>
@@ -195,7 +197,7 @@ export class DiffMixinTabs extends React.Component<{ ctx: TypeContext<OperationL
                     <span title={DiffLogMessage.NavigatesToTheCurrentEntity.niceToString() }>
                         {DiffLogMessage.CurrentEntity.niceToString() }
                         &nbsp;
-                        <span className="glyphicon glyphicon-new-window"></span>
+                        <FontAwesomeIcon icon="external-link-alt" />
                     </span>
                 </LinkContainer> as any}>
             </Tab>

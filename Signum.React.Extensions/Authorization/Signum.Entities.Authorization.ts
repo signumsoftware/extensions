@@ -14,6 +14,16 @@ export interface UserEntity {
 	newPassword: string;
 }
 
+export module ActiveDirectoryAuthorizerMessage {
+    export const ActiveDirectoryUser0IsNotAssociatedWithAUserInThisApplication = new MessageKey("ActiveDirectoryAuthorizerMessage", "ActiveDirectoryUser0IsNotAssociatedWithAUserInThisApplication");
+}
+
+export const ActiveDirectoryConfigurationEmbedded = new Type<ActiveDirectoryConfigurationEmbedded>("ActiveDirectoryConfigurationEmbedded");
+export interface ActiveDirectoryConfigurationEmbedded extends Entities.EmbeddedEntity {
+    Type: "ActiveDirectoryConfigurationEmbedded";
+    domainName?: string | null;
+}
+
 export interface AllowedRule<R, A> extends Entities.ModelEntity {
     allowedBase: A;
     allowed: A;
@@ -90,6 +100,7 @@ export module AuthMessage {
     export const Login_UserName_Watermark = new MessageKey("AuthMessage", "Login_UserName_Watermark");
     export const Login = new MessageKey("AuthMessage", "Login");
     export const Logout = new MessageKey("AuthMessage", "Logout");
+    export const SwitchUser = new MessageKey("AuthMessage", "SwitchUser");
     export const NewPassword = new MessageKey("AuthMessage", "NewPassword");
     export const NotAllowedToSaveThis0WhileOffline = new MessageKey("AuthMessage", "NotAllowedToSaveThis0WhileOffline");
     export const NotAuthorizedTo0The1WithId2 = new MessageKey("AuthMessage", "NotAuthorizedTo0The1WithId2");

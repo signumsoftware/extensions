@@ -1,16 +1,16 @@
 ﻿import * as React from 'react'
-import { DropdownButton, MenuItem } from 'react-bootstrap'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { ModifiableEntity, OperationSymbol, JavascriptMessage, NormalWindowMessage, is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { FindOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { getQueryNiceName, PropertyRoute, getTypeInfo } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import MessageModal from '../../../../Framework/Signum.React/Scripts/Modals/MessageModal'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import * as Operations from '../../../../Framework/Signum.React/Scripts/Operations'
-import * as EntityOperations from '../../../../Framework/Signum.React/Scripts/Operations/EntityOperations'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater } from '@framework/Lines'
+import { ModifiableEntity, OperationSymbol, JavascriptMessage, NormalWindowMessage, is } from '@framework/Signum.Entities'
+import { classes } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { FindOptions } from '@framework/FindOptions'
+import { getQueryNiceName, PropertyRoute, getTypeInfo } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
+import MessageModal from '@framework/Modals/MessageModal'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
+import * as Operations from '@framework/Operations'
+import * as EntityOperations from '@framework/Operations/EntityOperations'
 import { BaseNode } from './Nodes'
 import { DesignerContext, DesignerNode } from './NodeUtils'
 import * as NodeUtils from './NodeUtils'
@@ -21,6 +21,7 @@ import ShowCodeModal from './ShowCodeModal'
 import { DynamicViewEntity, DynamicViewOperation, DynamicViewMessage } from '../Signum.Entities.Dynamic'
 
 import "./DynamicView.css"
+import { Dropdown, DropdownItem, DropdownToggle, DropdownMenu } from '@framework/Components';
 
 export interface DynamicViewComponentProps {
     ctx: TypeContext<ModifiableEntity>;
@@ -89,7 +90,7 @@ export default class DynamicViewComponent extends React.Component<DynamicViewCom
     }
 
     render() {
-        
+
         const rootNode = this.getZeroNode().createChild(this.state.rootNode);
         const ctx = this.props.ctx;
 
@@ -108,7 +109,7 @@ export default class DynamicViewComponent extends React.Component<DynamicViewCom
         return (<div className="design-main">
             <div className={classes("design-left", this.state.isDesignerOpen && "open")}>
                 {!this.state.isDesignerOpen ?
-                    <i className="fa fa-pencil-square-o design-open-icon" aria-hidden="true" onClick={this.handleOpen}></i> :
+                    <span onClick={this.handleOpen}><FontAwesomeIcon icon={["fas", "edit"]} className="design-open-icon"/></span> :
                     <DynamicViewDesigner
                         rootNode={rootNode}
                         dynamicView={this.state.dynamicView}
@@ -148,12 +149,16 @@ interface DynamicViewDesignerProps {
     typeName: string;
 }
 
+interface DynamicViewDesignerState {
+    viewNames?: string[];
+    isDropdownOpen: boolean;
+}
 
-class DynamicViewDesigner extends React.Component<DynamicViewDesignerProps, { viewNames?: string[]; }>{
+class DynamicViewDesigner extends React.Component<DynamicViewDesignerProps, DynamicViewDesignerState>{
 
     constructor(props: DynamicViewDesignerProps) {
         super(props);
-        this.state = {};
+        this.state = { isDropdownOpen: false };
     }
 
     render() {
@@ -161,7 +166,7 @@ class DynamicViewDesigner extends React.Component<DynamicViewDesignerProps, { vi
         var ctx = TypeContext.root(dv);
 
         return (
-            <div className="form-vertical code-container">
+            <div className="code-container">
                 <button type="button" className="close" aria-label="Close" style={{ float: "right" }} onClick={this.props.rootNode.context.onClose}><span aria-hidden="true">×</span></button>
                 <h3>
                     <small>{Navigator.getTypeTitle(this.props.dynamicView, undefined)}</small>
@@ -232,11 +237,13 @@ class DynamicViewDesigner extends React.Component<DynamicViewDesignerProps, { vi
         }).done();
     }
 
-    handleOnToggle = (isOpen: boolean) => {
-        if (isOpen && !this.state.viewNames)
+    handleOnToggle = () => {
+        if (!this.state.isDropdownOpen && !this.state.viewNames)
             DynamicViewClient.API.getDynamicViewNames(this.props.typeName)
                 .then(viewNames => this.setState({ viewNames: viewNames }))
                 .done();
+
+        this.setState({ isDropdownOpen: !this.state.isDropdownOpen });
     }
 
     handleShowCode = () => {
@@ -252,17 +259,19 @@ class DynamicViewDesigner extends React.Component<DynamicViewDesignerProps, { vi
             <div className="btn-group btn-group-sm" role="group" style={{ marginBottom: "5px" }}>
                 {operations[DynamicViewOperation.Save.key] && <button type="button" className="btn btn-primary" onClick={this.handleSave}>{operations[DynamicViewOperation.Save.key].niceName}</button>}
                 <button type="button" className="btn btn-success" onClick={this.handleShowCode}>Show code</button>
-                <DropdownButton title=" … " id="bg-nested-dropdown" onToggle={this.handleOnToggle} bsSize="sm">
-                    {operations[DynamicViewOperation.Create.key] && <MenuItem eventKey="create" onSelect={this.handleCreate}>{operations[DynamicViewOperation.Create.key].niceName}</MenuItem>}
-                    {operations[DynamicViewOperation.Clone.key] && !this.props.dynamicView.isNew && <MenuItem eventKey="clone" onSelect={this.handleClone}>{operations[DynamicViewOperation.Clone.key].niceName}</MenuItem>}
-                    {this.state.viewNames && this.state.viewNames.length > 0 && <MenuItem divider={true} />}
-                    {this.state.viewNames && this.state.viewNames.map(vn => <MenuItem key={vn}
-                        eventKey={"view-" + vn}
-                        className={classes("sf-dynamic-view", vn == this.props.dynamicView.viewName && "active")}
-                        onSelect={() => this.handleChangeView(vn)}>
-                        {vn}
-                    </MenuItem>)}
-                </DropdownButton>
+                <Dropdown id="bg-nested-dropdown" tag={false} toggle={this.handleOnToggle} isOpen={this.state.isDropdownOpen} size="sm">
+                    <DropdownToggle>{" … "}</DropdownToggle>
+                    <DropdownMenu>
+                        {operations[DynamicViewOperation.Create.key] && <DropdownItem onClick={this.handleCreate}>{operations[DynamicViewOperation.Create.key].niceName}</DropdownItem>}
+                        {operations[DynamicViewOperation.Clone.key] && !this.props.dynamicView.isNew && <DropdownItem onClick={this.handleClone}>{operations[DynamicViewOperation.Clone.key].niceName}</DropdownItem>}
+                        {this.state.viewNames && this.state.viewNames.length > 0 && <DropdownItem divider={true} />}
+                        {this.state.viewNames && this.state.viewNames.map(vn => <DropdownItem key={vn}
+                            className={classes("sf-dynamic-view", vn == this.props.dynamicView.viewName && "active")}
+                            onClick={() => this.handleChangeView(vn)}>
+                            {vn}
+                        </DropdownItem>)}
+                    </DropdownMenu>
+                </Dropdown>
             </div >);
     }
 }

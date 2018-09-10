@@ -109,7 +109,7 @@ namespace Signum.Entities.Files
         {
             var pp = this.GetPrefixPair();
 
-            return Path.Combine(pp.PhysicalPrefix, Suffix);
+            return FilePathUtils.SafeCombine(pp.PhysicalPrefix, Suffix);
         }
 
         public string FullWebPath()
@@ -119,7 +119,7 @@ namespace Signum.Entities.Files
             if (string.IsNullOrEmpty(pp.WebPrefix))
                 return null;
 
-            string url = pp.WebPrefix + "/" + HttpFilePathUtils.UrlPathEncode(Suffix.Replace("\\", "/"));
+            string url = pp.WebPrefix + "/" + FilePathUtils.UrlPathEncode(Suffix.Replace("\\", "/"));
             if (url.StartsWith("http"))
                 return url;
 
@@ -132,7 +132,7 @@ namespace Signum.Entities.Files
         }
 
         public static Action<FilePathEmbedded> OnPreSaving;
-        protected override void PreSaving(ref bool graphModified)
+        protected override void PreSaving(PreSavingContext ctx)
         {
             if (OnPreSaving == null)
                 throw new InvalidOperationException("OnPreSaving not set");

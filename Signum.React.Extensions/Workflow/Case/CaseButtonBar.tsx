@@ -1,17 +1,16 @@
 ﻿
 import * as React from 'react'
 import * as moment from 'moment'
-import { Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { Modal, ModalProps, ModalClass, ButtonToolbar, Button } from 'react-bootstrap'
-import { openModal, IModalProps } from '../../../../Framework/Signum.React/Scripts/Modals'
-import { TypeContext, StyleOptions, EntityFrame } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { TypeInfo, getTypeInfo, parseId, GraphExplorer, PropertyRoute, ReadonlyBinding, } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { ValueLine } from '../../../../Framework/Signum.React/Scripts/Lines'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Operations from '../../../../Framework/Signum.React/Scripts/Operations'
-import { EntityPack, Entity, Lite, JavascriptMessage, NormalWindowMessage, entityInfo, getToString, is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import ValidationErrors from '../../../../Framework/Signum.React/Scripts/Frames/ValidationErrors'
-import ButtonBar from '../../../../Framework/Signum.React/Scripts/Frames/ButtonBar'
+import { Dic } from '@framework/Globals'
+import { openModal, IModalProps } from '@framework/Modals'
+import { TypeContext, StyleOptions, EntityFrame } from '@framework/TypeContext'
+import { TypeInfo, getTypeInfo, parseId, GraphExplorer, PropertyRoute, ReadonlyBinding, } from '@framework/Reflection'
+import { ValueLine } from '@framework/Lines'
+import * as Navigator from '@framework/Navigator'
+import * as Operations from '@framework/Operations'
+import { EntityPack, Entity, Lite, JavascriptMessage, NormalWindowMessage, entityInfo, getToString, is } from '@framework/Signum.Entities'
+import ValidationErrors from '@framework/Frames/ValidationErrors'
+import ButtonBar from '@framework/Frames/ButtonBar'
 import { CaseActivityEntity, WorkflowEntity, ICaseMainEntity, CaseActivityOperation, CaseActivityMessage, WorkflowActivityEntity, WorkflowActivityMessage } from '../Signum.Entities.Workflow'
 import * as WorkflowClient from '../WorkflowClient'
 import { DynamicViewMessage } from '../../Dynamic/Signum.Entities.Dynamic'
@@ -27,28 +26,28 @@ export default class CaseButtonBar extends React.Component<CaseButtonBarProps>{
 
     render() {
 
-        var a = this.props.pack.entity;
+        var ca = this.props.pack.entity;
 
-        if (a.doneDate != null) {
+        if (ca.doneDate != null) {
             return (
                 <div className="workflow-buttons">
                     {CaseActivityMessage.DoneBy0On1.niceToString().formatHtml(
-                        <strong>{a.doneBy && a.doneBy.toStr}</strong>,
-                        a.doneDate && <strong>{moment(a.doneDate).format("L LT")} ({moment(a.doneDate).fromNow()})</strong>)
+                        <strong>{ca.doneBy && ca.doneBy.toStr}</strong>,
+                        ca.doneDate && <strong>{moment(ca.doneDate).format("L LT")} ({moment(ca.doneDate).fromNow()})</strong>)
                     }
                 </div>
             );
         }
 
-        const ctx = new TypeContext(undefined, undefined, PropertyRoute.root(CaseActivityEntity), new ReadonlyBinding(a, "act"));
+        const ctx = new TypeContext(undefined, undefined, PropertyRoute.root(CaseActivityEntity), new ReadonlyBinding(ca, "act"));
         return (
             <div>
                 <div className="workflow-buttons">
                     <ButtonBar frame={this.props.frame} pack={this.props.pack} />
                     <ValueLine ctx={ctx.subCtx(a => a.note)} formGroupStyle="None" placeholderLabels={true} />
                 </div>
-                {a.workflowActivity.userHelp &&
-                    <UserHelpComponent activity={a.workflowActivity} />}
+                {(ca.workflowActivity as WorkflowActivityEntity).userHelp &&
+                    <UserHelpComponent activity={ca.workflowActivity as WorkflowActivityEntity} />}
             </div>
         );
     }
@@ -68,7 +67,7 @@ export class UserHelpComponent extends React.Component<UserHelpProps, { open: bo
     render() {
         return (
             <div style={{ marginTop: "10px" }}>
-                <a href="" onClick={this.handleHelpClick} className="case-help-button">
+                <a href="#" onClick={this.handleHelpClick} className="case-help-button">
                     {this.state.open ?
                         DynamicViewMessage.HideHelp.niceToString() :
                         DynamicViewMessage.ShowHelp.niceToString()}

@@ -1,16 +1,16 @@
 ﻿import * as React from 'react'
 import { Route } from 'react-router'
-import { ajaxPost, ajaxGet } from '../../../../Framework/Signum.React/Scripts/Services';
-import { EntitySettings, ViewPromise } from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { getQueryKey } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { EntityOperationSettings } from '../../../../Framework/Signum.React/Scripts/Operations'
-import { Entity, Lite, liteKey } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import * as Constructor from '../../../../Framework/Signum.React/Scripts/Constructor'
-import * as Operations from '../../../../Framework/Signum.React/Scripts/Operations'
-import * as QuickLinks from '../../../../Framework/Signum.React/Scripts/QuickLinks'
-import { FindOptions, QueryToken, FilterOption, FilterOptionParsed, FilterOperation, OrderOption, OrderOptionParsed, ColumnOption, FilterRequest, QueryRequest, Pagination, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
+import { ajaxPost, ajaxGet } from '@framework/Services';
+import { EntitySettings, ViewPromise } from '@framework/Navigator'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { getQueryKey } from '@framework/Reflection'
+import { EntityOperationSettings } from '@framework/Operations'
+import { Entity, Lite, liteKey } from '@framework/Signum.Entities'
+import * as Constructor from '@framework/Constructor'
+import * as Operations from '@framework/Operations'
+import * as QuickLinks from '@framework/QuickLinks'
+import { FindOptions, QueryToken, FilterOption, FilterOptionParsed, FilterOperation, OrderOption, OrderOptionParsed, ColumnOption, FilterRequest, QueryRequest, Pagination, SubTokensOptions, FilterGroupOptionParsed, FilterConditionOptionParsed } from '@framework/FindOptions'
 import * as AuthClient from '../../Authorization/AuthClient'
 import { UserChartEntity, ChartPermission, ChartMessage, ChartRequest, ChartParameterEmbedded, ChartColumnEmbedded } from '../Signum.Entities.Chart'
 import { QueryFilterEmbedded, QueryOrderEmbedded } from '../../UserQueries/Signum.Entities.UserQueries'
@@ -18,8 +18,9 @@ import { QueryTokenEmbedded } from '../../UserAssets/Signum.Entities.UserAssets'
 import UserChartMenu from './UserChartMenu'
 import * as ChartClient from '../ChartClient'
 import * as UserAssetsClient from '../../UserAssets/UserAssetClient'
-import { ImportRoute } from "../../../../Framework/Signum.React/Scripts/AsyncImport";
-import { OrderRequest } from '../../../../Framework/Signum.React/Scripts/FindOptions';
+import { ImportRoute } from "@framework/AsyncImport";
+import { OrderRequest } from '@framework/FindOptions';
+import { toFilterRequests, TokenCompleter } from '@framework/Finder';
 
 
 export function start(options: { routes: JSX.Element[] }) {
@@ -48,7 +49,7 @@ export function start(options: { routes: JSX.Element[] }) {
         return promise.then(uqs =>
             uqs.map(uc => new QuickLinks.QuickLinkAction(liteKey(uc), uc.toStr || "", e => {
                 window.open(Navigator.toAbsoluteUrl(`~/userChart/${uc.id}/${liteKey(ctx.lite)}`));
-            }, { icon: "glyphicon glyphicon-stats", iconColor: "darkviolet" })));
+            }, { icon: "chart-bar", iconColor: "darkviolet" })));
     });
 
     QuickLinks.registerQuickLink(UserChartEntity, ctx => new QuickLinks.QuickLinkAction("preview", ChartMessage.Preview.niceToString(),
@@ -76,6 +77,7 @@ export function start(options: { routes: JSX.Element[] }) {
 
 export module Converter {
 
+   
     export function applyUserChart(cr: ChartRequest, uq: UserChartEntity, entity?: Lite<Entity>): Promise<ChartRequest> {
 
         cr.chartScript = uq.chartScript;
@@ -85,23 +87,23 @@ export module Converter {
             canAggregate: uq.groupResults,
             entity: entity,
             filters: uq.filters!.map(mle => mle.element).map(f => ({
+                isGroup: f.isGroup,
+                indentation: f.indentation,
                 tokenString: f.token!.tokenString,
                 operation: f.operation,
-                valueString: f.valueString
+                valueString: f.valueString,
+                groupOperation: f.groupOperation,
             }) as UserAssetsClient.API.ParseFilterRequest)
         });
 
+        
         return promise.then(filters => {
 
             cr.groupResults = uq.groupResults;
 
             cr.filterOptions = (cr.filterOptions || []).filter(f => f.frozen);
-            cr.filterOptions.push(...uq.filters.map((f, i) => ({
-                token: f.element.token!.token,
-                operation: f.element.operation!,
-                value: filters[i].value,
-                frozen: false,
-            }) as FilterOptionParsed));
+
+            cr.filterOptions.push(...filters.map(f => UserAssetsClient.Converter.toFilterOptionParsed(f)));
             
             cr.parameters = uq.parameters!.map(mle => ({
                 rowId: null,
@@ -120,8 +122,8 @@ export module Converter {
                         displayName: mle.element.displayName,
 
                         token: t && QueryTokenEmbedded.New({
-                            token: t!.token,
-                            tokenString: t!.tokenString
+                            token: UserAssetsClient.getToken(t),
+                            tokenString: t.tokenString
                         })
                     })
                 })
@@ -131,12 +133,11 @@ export module Converter {
                 token: f.element.token!.token,
                 orderType: f.element.orderType
             }) as OrderOptionParsed);
-
-
-
+            
             return cr;
         });
     }
+
 
     export function toChartRequest(uq: UserChartEntity, entity?: Lite<Entity>): Promise<ChartRequest> {
         const cs = ChartRequest.New({ queryKey: uq.query!.key }); 
@@ -160,9 +161,7 @@ export module API {
             .map(oo => ({ token: oo.token.fullKey, orderType: oo.orderType }) as OrderRequest);
         delete clone.orderOptions;
 
-        clone.filters = clone.filterOptions!
-            .filter(a => a.token != null)
-            .map(fo => ({ token: fo.token!.fullKey, operation: fo.operation, value: fo.value }) as FilterRequest);
+        clone.filters = toFilterRequests(clone.filterOptions);
         delete clone.filterOptions;
 
         return clone;
@@ -176,7 +175,7 @@ export module API {
     }
 }
 
-declare module '../../../../Framework/Signum.React/Scripts/Signum.Entities' {
+declare module '@framework/Signum.Entities' {
 
     export interface EntityPack<T extends ModifiableEntity> {
         userCharts?: Array<Lite<UserChartEntity>>;

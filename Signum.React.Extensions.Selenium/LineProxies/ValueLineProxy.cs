@@ -71,24 +71,44 @@ namespace Signum.React.Selenium
 
             IWebElement textOrTextArea = this.Element.TryFindElement(By.CssSelector("input[type=text], textarea"));
             if (textOrTextArea != null)
-                return textOrTextArea.GetAttribute("value");
-            
-            IWebElement readonlyField = this.Element.TryFindElement(By.CssSelector("p.form-control, p.form-control-static"));
+            {
+                return textOrTextArea.GetAttribute("data-value")  ?? textOrTextArea.GetAttribute("value");
+            }
+
+            IWebElement select = this.Element.TryFindElement(By.CssSelector("select"));
+            if (select != null)
+                return select.SelectElement().SelectedOption.GetAttribute("value").ToString();
+
+            IWebElement readonlyField =
+                this.Element.TryFindElement(By.CssSelector("input.form-control")) ??
+                this.Element.TryFindElement(By.CssSelector("div.form-control")) ??
+                this.Element.TryFindElement(By.CssSelector("input.form-control-plaintext")) ??
+                this.Element.TryFindElement(By.CssSelector("div.form-control-plaintext"));
+
             if (readonlyField != null)
-                return readonlyField.Text;
+                return readonlyField.GetAttribute("data-value") ?? readonlyField.GetAttribute("value") ?? readonlyField.Text;
 
             throw new InvalidOperationException("Element {0} not found".FormatWith(Route.PropertyString()));
         }
 
         public bool IsReadonly()
         {
-            return this.Element.IsElementPresent(By.CssSelector("p.form-control"));
+            return Element.TryFindElement(By.CssSelector(".form-control-plaintext")) != null ||
+                Element.TryFindElement(By.CssSelector(".form-control.readonly")) != null ||
+                Element.TryFindElement(By.CssSelector(".form-control[readonly]")) != null;
         }
+
+        public bool IsDisabled()
+        {
+            return this.EditableElement.WaitVisible().GetAttribute("disabled") == "true";
+        }
+
 
         public WebElementLocator EditableElement
         {
             get { return this.Element.WithLocator(By.CssSelector("input, textarea, select")); }
         }
+
 
         public object GetValue()
         {

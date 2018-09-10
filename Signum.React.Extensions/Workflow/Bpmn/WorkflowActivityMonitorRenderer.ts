@@ -1,31 +1,31 @@
 ﻿/// <reference path="../bpmn-js.d.ts" />
-import * as Modeler from "bpmn-js/lib/Modeler"
-import * as BpmnRenderer from "bpmn-js/lib/draw/BpmnRenderer"
+import Modeler from "bpmn-js/lib/Modeler"
+import BpmnRenderer from "bpmn-js/lib/draw/BpmnRenderer"
 import * as moment from 'moment'
 import {
-    WorkflowConditionEntity, WorkflowActionEntity, DecisionResult, CaseActivityEntity,
+    WorkflowConditionEntity, WorkflowActionEntity, CaseActivityEntity,
     CaseNotificationEntity, DoneType, WorkflowActivityEntity, CaseFlowColor, WorkflowModel,
     WorkflowActivityModel
 } from '../Signum.Entities.Workflow'
-import { Lite, liteKey } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { Lite, liteKey } from '@framework/Signum.Entities'
 import { Color, Gradient } from '../../Basics/Color'
 import { CustomRenderer } from './CustomRenderer'
 import { WorkflowActivityStats, WorkflowActivityMonitor } from '../WorkflowClient'
 import * as BpmnUtils from './BpmnUtils'
 import { calculatePoint, Rectangle } from "../../Map/Utils"
-import * as NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
+import NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
 import "moment-duration-format"
 import { WorkflowActivityMonitorConfig } from "../ActivityMonitor/WorkflowActivityMonitorPage";
-import { QueryToken } from "../../../../Framework/Signum.React/Scripts/FindOptions";
-import { is } from "../../../../Framework/Signum.React/Scripts/Signum.Entities";
+import { QueryToken } from "@framework/FindOptions";
+import { is } from "@framework/Signum.Entities";
 
 export class WorkflowActivityMonitorRenderer extends CustomRenderer {
 
-    workflowActivityMonitor: WorkflowActivityMonitor;
-    workflowConfig: WorkflowActivityMonitorConfig;
-    workflowModel: WorkflowModel;
+    workflowActivityMonitor!: WorkflowActivityMonitor;
+    workflowConfig!: WorkflowActivityMonitorConfig;
+    workflowModel!: WorkflowModel;
 
-    viewer: NavigatedViewer;
+    viewer!: NavigatedViewer;
 
     gradient = new Gradient([
         { value: 0, color: Color.parse("rgb(117, 202, 112)")},

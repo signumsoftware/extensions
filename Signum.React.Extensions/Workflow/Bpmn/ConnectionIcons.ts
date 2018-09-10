@@ -1,7 +1,7 @@
 ﻿/// <reference path="../bpmn-js.d.ts" />
-import * as Modeler from "bpmn-js/lib/Modeler"
+import Modeler from "bpmn-js/lib/Modeler"
 import { WorkflowConditionEntity, WorkflowActionEntity } from '../Signum.Entities.Workflow'
-import { Lite, liteKey } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { Lite, liteKey } from '@framework/Signum.Entities'
 
 export function getOrientation(rect: BPMN.DiElement, reference: BPMN.DiElement, padding: number) {
     padding = padding || 0;
@@ -131,8 +131,8 @@ export class ConnectionIcons {
     };
 
 
-    hasAction: (con: BPMN.Connection) => Lite<WorkflowActionEntity> | undefined;
-    hasCondition: (con: BPMN.Connection) => Lite<WorkflowConditionEntity> | undefined;
+    hasAction!: (con: BPMN.Connection) => Lite<WorkflowActionEntity> | undefined;
+    hasCondition!: (con: BPMN.Connection) => Lite<WorkflowConditionEntity> | undefined;
 
     show() {
 

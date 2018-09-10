@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -17,16 +16,16 @@ namespace Signum.Engine.Rest
 {
     public class RestLogLogic
     {
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
-            if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
+            if (sb.NotDefined(MethodBase.GetCurrentMethod()))
             {
                 sb.Include<RestLogEntity>()
                     .WithIndex(a => a.StartDate)
                     .WithIndex(a => a.EndDate)
                     .WithIndex(a => a.Controller)
                     .WithIndex(a => a.Action)
-                    .WithQuery(dqm, () => e => new
+                    .WithQuery(() => e => new
                     {
                         Entity = e,
                         e.Id,
@@ -43,9 +42,12 @@ namespace Signum.Engine.Rest
 
         private static void ExceptionLogic_DeleteRestLogs(DeleteLogParametersEmbedded parameters, StringBuilder sb, CancellationToken token)
         {
-            var dateLimit = parameters.GetDateLimit(typeof(RestLogEntity).ToTypeEntity());
+            var dateLimit = parameters.GetDateLimitDelete(typeof(RestLogEntity).ToTypeEntity());
 
-            Database.Query<RestLogEntity>().Where(a => a.StartDate < dateLimit).UnsafeDeleteChunksLog(parameters, sb, token);
+            if (dateLimit == null)
+                return;
+
+            Database.Query<RestLogEntity>().Where(a => a.StartDate < dateLimit.Value).UnsafeDeleteChunksLog(parameters, sb, token);
         }
 
         public static async Task<RestDiffResult> GetRestDiffResult(HttpMethod httpMethod, string url, string apiKey, string oldRequestBody, string oldResponseBody)
@@ -72,9 +74,9 @@ namespace Signum.Engine.Rest
                         ? new Uri(requestUriAbsoluteUri.Before("apiKey=") + requestUriAbsoluteUri.After("apiKey=").After('&'))
                         : new Uri(requestUriAbsoluteUri.Before("apiKey="));
                 }
-
                 result.current = await restClient.SendAsync(request).Result.Content.ReadAsStringAsync();
             }
+
             return RestDiffLog(result);
         }
 
@@ -88,10 +90,7 @@ namespace Signum.Engine.Rest
                 result.diff = diff;
             }
 
-            
-            
             return result;
         }
-
     }
 }

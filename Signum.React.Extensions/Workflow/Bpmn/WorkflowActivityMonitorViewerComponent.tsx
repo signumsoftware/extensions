@@ -1,25 +1,24 @@
 ﻿import * as React from 'react'
-import { DropdownButton, MenuItem } from 'react-bootstrap'
 import {
     WorkflowEntitiesDictionary, WorkflowActivityModel, WorkflowActivityType, WorkflowPoolModel,
     WorkflowLaneModel, WorkflowConnectionModel, WorkflowEventModel, WorkflowEntity,
     IWorkflowNodeEntity, WorkflowMessage, WorkflowActivityEntity, WorkflowActivityMessage, WorkflowModel, WorkflowActivityMonitorMessage
 } from '../Signum.Entities.Workflow'
 import { WorkflowActivityMonitor, API } from '../WorkflowClient'
-import { JavascriptMessage, toLite } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
+import { JavascriptMessage, toLite } from '@framework/Signum.Entities'
+import { Dic } from '@framework/Globals'
+import * as Navigator from '@framework/Navigator'
+import NavigatedViewer from "bpmn-js/lib/NavigatedViewer"
+import searchPad from 'bpmn-js/lib/features/search'
 import * as WorkflowActivityMonitorRenderer from './WorkflowActivityMonitorRenderer'
-import * as searchPad from 'bpmn-js/lib/features/search'
 import * as BpmnUtils from './BpmnUtils'
 import WorkflowActivityStatsModal from '../ActivityMonitor/WorkflowActivityStatsModal';
-import SelectorModal from '../../../../Framework/Signum.React/Scripts/SelectorModal';
+import SelectorModal from '@framework/SelectorModal';
 
-import "bpmn-js/assets/bpmn-font/css/bpmn-embedded.css"
+import "bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css"
 import "diagram-js/assets/diagram-js.css"
 import "./Bpmn.css"
-import { is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
+import { is } from '@framework/Signum.Entities';
 import { WorkflowActivityMonitorConfig } from '../ActivityMonitor/WorkflowActivityMonitorPage';
 
 export interface WorkflowActivityMonitorViewerComponentProps {
@@ -38,8 +37,8 @@ CustomViewer.prototype._modules =
 
 export default class WorkflowActivityMonitorViewerComponent extends React.Component<WorkflowActivityMonitorViewerComponentProps> {
 
-    viewer: NavigatedViewer;
-    divArea: HTMLDivElement;
+    viewer!: NavigatedViewer;
+    divArea!: HTMLDivElement;
 
     handleOnModelError = (err: string) => {
         if (err)

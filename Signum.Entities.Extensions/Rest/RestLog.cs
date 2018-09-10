@@ -22,6 +22,8 @@ namespace Signum.Entities.Rest
 
         public DateTime StartDate { get; set; }
 
+        public DateTime EndDate { get; set; }
+
         public DateTime? ReplayDate { get; set; }
 
         [NotNullable, SqlDbType(Size = MaxValue)]
@@ -44,16 +46,25 @@ namespace Signum.Entities.Rest
         [NotNullable, SqlDbType(Size = 100)]
         public string Controller { get; set; }
 
+        [Nullable, SqlDbType(Size = 100)]
+        public string ControllerName { get; set; }
+
         [NotNullable, SqlDbType(Size = 100)]
         public string Action { get; set; }
 
-        [AvoidForeignKey]
+        
+        [SqlDbType(Size = 100)]
+        public string MachineName { get; set; }
+
+        [SqlDbType(Size = 100)]
+        public string ApplicationName { get; set; }
+
+[AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         [SqlDbType(Size = MaxValue)]
         public string ResponseBody { get; set; }
 
-        public DateTime EndDate { get; set; }
 
         public RestLogReplayState? ReplayState { get; set; }
 

@@ -36,17 +36,20 @@ namespace Signum.Engine.Mailing
             return new TemplateWalker(text, qd, modelType).TryParse(out errorMessage);
         }
 
-        internal class TemplateWalker
+        internal class TemplateWalker: ITemplateParser
         {
-            QueryDescription qd;
-            Type modelType;
             string text;
-
-
+            
             BlockNode mainBlock;
             Stack<BlockNode> stack;
-            ScopedDictionary<string, ValueProviderBase> variables;
+            public ScopedDictionary<string, ValueProviderBase> Variables { get; set; }
             List<TemplateError> errors;
+
+            public Type ModelType { get; private set; }
+
+            static PropertyInfo piSystemEmail = ReflectionTools.GetPropertyInfo((EmailTemplateEntity e) => e.SystemEmail);
+            public PropertyInfo ModelProperty => piSystemEmail;
+            public QueryDescription QueryDescription { get; private set; }
 
             public TemplateWalker(string text, QueryDescription qd, Type modelType)
             {
@@ -54,8 +57,8 @@ namespace Signum.Engine.Mailing
                     throw new ArgumentNullException("qd");
 
                 this.text = text ?? "";
-                this.qd = qd;
-                this.modelType = modelType; 
+                this.QueryDescription = qd;
+                this.ModelType = modelType; 
             }
 
             public BlockNode Parse()
@@ -85,7 +88,7 @@ namespace Signum.Engine.Mailing
                 return mainBlock;
             }
 
-            internal void AddError(bool fatal, string message)
+            public void AddError(bool fatal, string message)
             {
                 errors.Add(new TemplateError(fatal, message)); 
             }
@@ -94,10 +97,10 @@ namespace Signum.Engine.Mailing
             {
                 if (token?.Variable.HasText() == true)
                 {
-                    if (variables.ContainsKey(token.Variable))
+                    if (Variables.ContainsKey(token.Variable))
                         AddError(true, "There's already a variable '{0}' defined in this scope".FormatWith(token.Variable));
 
-                    variables.Add(token.Variable, token);
+                    Variables.Add(token.Variable, token);
                 }
             }
 
@@ -109,7 +112,7 @@ namespace Signum.Engine.Mailing
                     return null;
                 }
                 var n = stack.Pop();
-                variables = variables.Previous;
+                Variables = Variables.Previous;
                 if (n.owner == null || n.owner.GetType() != type)
                 {
                     AddError(true, "Unexpected '{0}'".FormatWith(BlockNode.UserString(n.owner?.GetType())));
@@ -121,7 +124,7 @@ namespace Signum.Engine.Mailing
             public void PushBlock(BlockNode block)
             {
                 stack.Push(block);
-                variables = new ScopedDictionary<string, ValueProviderBase>(variables); 
+                Variables = new ScopedDictionary<string, ValueProviderBase>(Variables); 
             }
 
             void ParseInternal()
@@ -149,20 +152,19 @@ namespace Signum.Engine.Mailing
                         {
                             stack.Peek().Nodes.Add(new LiteralNode { Text = text.Substring(index, match.Index - index) });
                         }
-                        var type = match.Groups["type"].Value;
-                        var token = match.Groups["token"].Value;
+                        var expr = match.Groups["expr"].Value;
                         var keyword = match.Groups["keyword"].Value;
-                        var dec = match.Groups["dec"].Value;
+                        var variable = match.Groups["dec"].Value;
                         switch (keyword)
                         {
                             case "":
                             case "raw":
-                                var s = TemplateUtils.SplitToken(token);
+                                var s = TemplateUtils.SplitToken(expr);
                                 if (s == null)
-                                    AddError(true, "{0} has invalid format".FormatWith(token));
+                                    AddError(true, "{0} has invalid format".FormatWith(expr));
                                 else
                                 {
-                                    var t = TryParseValueProvider(type, s.Value.Token, dec);
+                                    var t = ValueProviderBase.TryParse(s.Value.Token, variable, this);
 
                                     stack.Peek().Nodes.Add(new ValueNode(t, s.Value.Format, isRaw: keyword.Contains("raw")));
 
@@ -171,7 +173,7 @@ namespace Signum.Engine.Mailing
                                 break;
                             case "declare":
                                 {
-                                    var t = TryParseValueProvider(type, token, dec);
+                                    var t = ValueProviderBase.TryParse(expr, variable, this);
 
                                     stack.Peek().Nodes.Add(new DeclareNode(t, this.AddError));
 
@@ -180,27 +182,12 @@ namespace Signum.Engine.Mailing
                                 break;
                             case "any":
                                 {
-                                    AnyNode any;
-                                    ValueProviderBase vp;
-                                    var filter = TemplateUtils.TokenOperationValueRegex.Match(token);
-                                    if (!filter.Success)
-                                    {
-                                        vp = TryParseValueProvider(type, token, dec);
-
-                                        any = new AnyNode(vp);
-                                    }
-                                    else
-                                    {
-                                        vp = TryParseValueProvider(type, filter.Groups["token"].Value, dec);
-                                        var comparer = filter.Groups["comparer"].Value;
-                                        var value = filter.Groups["value"].Value;
-                                        any = new AnyNode(vp, comparer, value, this.AddError);
-
-                                    }
+                                    ConditionBase cond = TemplateUtils.ParseCondition(expr, variable, this);
+                                    AnyNode any = new AnyNode(cond);
                                     stack.Peek().Nodes.Add(any);
                                     PushBlock(any.AnyBlock);
-
-                                    DeclareVariable(vp);
+                                    if (cond is ConditionCompare cc)
+                                        DeclareVariable(cc.ValueProvider);
                                     break;
                                 }
                             case "notany":
@@ -217,7 +204,7 @@ namespace Signum.Engine.Mailing
                                 }
                             case "foreach":
                                 {
-                                    ValueProviderBase vp = TryParseValueProvider(type, token, dec);
+                                    ValueProviderBase vp = ValueProviderBase.TryParse(expr, variable, this);
                                     var fn = new ForeachNode(vp);
                                     stack.Peek().Nodes.Add(fn);
                                     PushBlock(fn.Block);
@@ -232,24 +219,12 @@ namespace Signum.Engine.Mailing
                                 break;
                             case "if":
                                 {
-                                    IfNode ifn;
-                                    ValueProviderBase vp;
-                                    var filter = TemplateUtils.TokenOperationValueRegex.Match(token);
-                                    if (!filter.Success)
-                                    {
-                                        vp = TryParseValueProvider(type, token, dec);
-                                        ifn = new IfNode(vp, this);
-                                    }
-                                    else
-                                    {
-                                        vp = TryParseValueProvider(type, filter.Groups["token"].Value, dec);
-                                        var comparer = filter.Groups["comparer"].Value;
-                                        var value = filter.Groups["value"].Value;
-                                        ifn = new IfNode(vp, comparer, value, this.AddError);
-                                    }
+                                    ConditionBase cond = TemplateUtils.ParseCondition(expr, variable, this);
+                                    IfNode ifn = new IfNode(cond, this);
                                     stack.Peek().Nodes.Add(ifn);
                                     PushBlock(ifn.IfBlock);
-                                    DeclareVariable(vp);
+                                    if (cond is ConditionCompare cc)
+                                        DeclareVariable(cc.ValueProvider);
                                     break;
                                 }
                             case "else":
@@ -285,21 +260,11 @@ namespace Signum.Engine.Mailing
                     AddError(true, e.Message);
                 }
             }
-
-            public ValueProviderBase TryParseValueProvider(string type, string token, string variable)
-            {
-                return ValueProviderBase.TryParse(type, token, variable, this.modelType, piSystemEmail, this.qd, this.variables, this.AddError);
-            }
         }
 
-        static PropertyInfo piSystemEmail = ReflectionTools.GetPropertyInfo((EmailTemplateEntity e) => e.SystemEmail);
 
-        internal static object Parse(string title, object queryDescription, object modelType)
-        {
-            throw new NotImplementedException();
-        }
 
-        private static string Synchronize(string text, SyncronizationContext sc)
+        private static string Synchronize(string text, SynchronizationContext sc)
         {
             BlockNode node = new TemplateWalker(text, sc.QueryDescription, sc.ModelType).ParseSync();
 
@@ -311,87 +276,85 @@ namespace Signum.Engine.Mailing
 
         internal static SqlPreCommand ProcessEmailTemplate( Replacements replacements, Table table, EmailTemplateEntity et, StringDistance sd)
         {
+            Console.Write(".");
             try
             {
                 var queryName = QueryLogic.ToQueryName(et.Query.Key);
 
-                QueryDescription qd = DynamicQueryManager.Current.QueryDescription(queryName);
+                QueryDescription qd = QueryLogic.Queries.QueryDescription(queryName);
 
-                Console.Clear();
-
-                SafeConsole.WriteLineColor(ConsoleColor.White, "EmailTemplate: " + et.Name);
-                Console.WriteLine(" Query: " + et.Query.Key);
-
-                if (et.From != null && et.From.Token != null)
+                using (DelayedConsole.Delay(() => SafeConsole.WriteLineColor(ConsoleColor.White, "EmailTemplate: " + et.Name)))
+                using (DelayedConsole.Delay(() => Console.WriteLine(" Query: " + et.Query.Key)))
                 {
-                    QueryTokenEmbedded token = et.From.Token;
-                    switch (QueryTokenSynchronizer.FixToken(replacements, ref token, qd, SubTokensOptions.CanElement, " From", allowRemoveToken: false, allowReCreate: et.SystemEmail != null))
+                    if (et.From != null && et.From.Token != null)
                     {
-                        case FixTokenResult.Nothing: break;
-                        case FixTokenResult.DeleteEntity: return table.DeleteSqlSync(et, e => e.Name == et.Name);
-                        case FixTokenResult.SkipEntity: return null;
-                        case FixTokenResult.Fix: et.From.Token = token; break;
-                        case FixTokenResult.ReGenerateEntity: return Regenerate(et, replacements, table);
-                        default: break;
-                    }
-                }
-
-                if (et.Recipients.Any(a=>a.Token != null))
-                {
-                    Console.WriteLine(" Recipients:");
-                    foreach (var item in et.Recipients.Where(a => a.Token != null).ToList())
-                    {
-                        QueryTokenEmbedded token = item.Token;
-                        switch (QueryTokenSynchronizer.FixToken(replacements, ref token, qd, SubTokensOptions.CanElement, " Recipient", allowRemoveToken: false, allowReCreate: et.SystemEmail != null))
+                        QueryTokenEmbedded token = et.From.Token;
+                        switch (QueryTokenSynchronizer.FixToken(replacements, ref token, qd, SubTokensOptions.CanElement, " From", allowRemoveToken: false, allowReCreate: et.SystemEmail != null))
                         {
                             case FixTokenResult.Nothing: break;
                             case FixTokenResult.DeleteEntity: return table.DeleteSqlSync(et, e => e.Name == et.Name);
-                            case FixTokenResult.RemoveToken: et.Recipients.Remove(item); break;
                             case FixTokenResult.SkipEntity: return null;
-                            case FixTokenResult.Fix: item.Token = token; break;
+                            case FixTokenResult.Fix: et.From.Token = token; break;
                             case FixTokenResult.ReGenerateEntity: return Regenerate(et, replacements, table);
                             default: break;
                         }
                     }
-                }
 
-                try
-                {
-
-                    foreach (var item in et.Messages)
+                    if (et.Recipients.Any(a => a.Token != null))
                     {
-                        SyncronizationContext sc = new SyncronizationContext
+                        using (DelayedConsole.Delay(() => Console.WriteLine(" Recipients:")))
                         {
-                            ModelType = et.SystemEmail.ToType(),
-                            QueryDescription = qd,
-                            Replacements = replacements,
-                            StringDistance = sd,
-                            Variables = new ScopedDictionary<string, ValueProviderBase>(null)
-                        };
-
-                        item.Subject = Synchronize(item.Subject, sc);
-                        item.Text = Synchronize(item.Text, sc);
+                            foreach (var item in et.Recipients.Where(a => a.Token != null).ToList())
+                            {
+                                QueryTokenEmbedded token = item.Token;
+                                switch (QueryTokenSynchronizer.FixToken(replacements, ref token, qd, SubTokensOptions.CanElement, " Recipient", allowRemoveToken: false, allowReCreate: et.SystemEmail != null))
+                                {
+                                    case FixTokenResult.Nothing: break;
+                                    case FixTokenResult.DeleteEntity: return table.DeleteSqlSync(et, e => e.Name == et.Name);
+                                    case FixTokenResult.RemoveToken: et.Recipients.Remove(item); break;
+                                    case FixTokenResult.SkipEntity: return null;
+                                    case FixTokenResult.Fix: item.Token = token; break;
+                                    case FixTokenResult.ReGenerateEntity: return Regenerate(et, replacements, table);
+                                    default: break;
+                                }
+                            }
+                        }
                     }
 
-                    using (replacements.WithReplacedDatabaseName())
-                        return table.UpdateSqlSync(et, e => e.Name == et.Name, includeCollections: true, comment: "EmailTemplate: " + et.Name);
-                }
-                catch (TemplateSyncException ex)
-                {
-                    if (ex.Result == FixTokenResult.SkipEntity)
-                        return null;
+                    try
+                    {
 
-                    if (ex.Result == FixTokenResult.DeleteEntity)
-                        return table.DeleteSqlSync(et, e => e.Name == et.Name);
+                        foreach (var item in et.Messages)
+                        {
+                            SynchronizationContext sc = new SynchronizationContext
+                            {
+                                ModelType = et.SystemEmail.ToType(),
+                                QueryDescription = qd,
+                                Replacements = replacements,
+                                StringDistance = sd,
+                                Variables = new ScopedDictionary<string, ValueProviderBase>(null)
+                            };
 
-                    if (ex.Result == FixTokenResult.ReGenerateEntity)
-                        return Regenerate(et, replacements, table);
+                            item.Subject = Synchronize(item.Subject, sc);
+                            item.Text = Synchronize(item.Text, sc);
+                        }
 
-                    throw new InvalidOperationException("Unexcpected {0}".FormatWith(ex.Result));
-                }
-                finally
-                {
-                    Console.Clear();
+                        using (replacements.WithReplacedDatabaseName())
+                            return table.UpdateSqlSync(et, e => e.Name == et.Name, includeCollections: true, comment: "EmailTemplate: " + et.Name);
+                    }
+                    catch (TemplateSyncException ex)
+                    {
+                        if (ex.Result == FixTokenResult.SkipEntity)
+                            return null;
+
+                        if (ex.Result == FixTokenResult.DeleteEntity)
+                            return table.DeleteSqlSync(et, e => e.Name == et.Name);
+
+                        if (ex.Result == FixTokenResult.ReGenerateEntity)
+                            return Regenerate(et, replacements, table);
+
+                        throw new UnexpectedValueException(ex.Result);
+                    }
                 }
             }
             catch (Exception e)

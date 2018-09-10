@@ -1,21 +1,20 @@
 ﻿import * as React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import * as numbro from 'numbro'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import EntityLink from '../../../Framework/Signum.React/Scripts/SearchControl/EntityLink'
-import { ValueSearchControl, SearchControl, ValueSearchControlLine } from '../../../Framework/Signum.React/Scripts/Search'
-import { QueryDescription, SubTokensOptions } from '../../../Framework/Signum.React/Scripts/FindOptions'
-import { StyleContext } from '../../../Framework/Signum.React/Scripts/Lines'
-import { getQueryNiceName, PropertyRoute, getTypeInfos } from '../../../Framework/Signum.React/Scripts/Reflection'
-import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
+import * as Finder from '@framework/Finder'
+import EntityLink from '@framework/SearchControl/EntityLink'
+import { ValueSearchControl, SearchControl, ValueSearchControlLine } from '@framework/Search'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
+import { StyleContext } from '@framework/Lines'
+import { getQueryNiceName, PropertyRoute, getTypeInfos } from '@framework/Reflection'
+import { ModifiableEntity, EntityControlMessage, Entity, parseLite, getToString, JavascriptMessage } from '@framework/Signum.Entities'
 import { API, PrintStat } from './PrintClient'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
+import * as Operations from '@framework/Operations'
+import * as Navigator from '@framework/Navigator'
 import { PrintPackageEntity, PrintLineState, PrintLineEntity, PrintPackageProcess, } from './Signum.Entities.Printing'
 import { FileTypeSymbol } from '../Files/Signum.Entities.Files'
 import { ProcessEntity } from '../Processes/Signum.Entities.Processes'
-import { Type } from '../../../Framework/Signum.React/Scripts/Reflection'
-
-
+import { Type } from '@framework/Reflection'
 
 export interface PrintPanelPageState {
     stats: PrintStat[];
@@ -42,7 +41,7 @@ export default class PrintPanelPage extends React.Component<{}, PrintPanelPageSt
             <div>
                 <h2>PrintPanel</h2>
 
-                <div className="form-horizontal">
+                <div>
                     <fieldset>
                         <legend>Ready To Print</legend>
                         {this.state.stats.map((s, i) =>
@@ -52,8 +51,8 @@ export default class PrintPanelPage extends React.Component<{}, PrintPanelPageSt
                                 findOptions={{
                                     queryName: PrintLineEntity,
                                     filterOptions: [
-                                        { columnName: "State", value: "ReadyToPrint" as PrintLineState },
-                                        { columnName: "File.FileType", value: s.fileType },
+                                        { token: "State", value: "ReadyToPrint" as PrintLineState },
+                                        { token: "File.FileType", value: s.fileType },
                                     ]
                                 }} />)
                         }
@@ -63,7 +62,7 @@ export default class PrintPanelPage extends React.Component<{}, PrintPanelPageSt
                 <h3>{ProcessEntity.nicePluralName()}</h3>
                 <SearchControl findOptions={{
                         queryName: ProcessEntity,
-                        filterOptions: [{ columnName: "Entity.Data.(PrintPackage)", operation: "DistinctTo", value: undefined }],
+                        filterOptions: [{ token: "Entity.Data.(PrintPackage)", operation: "DistinctTo", value: undefined }],
                         pagination: { elementsPerPage: 10, mode: "Paginate", currentPage: 1 },
                     }}
                 />
@@ -76,17 +75,17 @@ export default class PrintPanelPage extends React.Component<{}, PrintPanelPageSt
             return undefined;
 
         return (
-            <a className="sf-line-button" title="Print" onClick={() => this.handlePrintClick(fileType, vsc)}>
-                <span className="glyphicon glyphicon-print"></span>
+            <a href="#" className="sf-line-button" title="Print" onClick={e => this.handlePrintClick(e, fileType, vsc)}>
+                <FontAwesomeIcon icon="print" />
             </a>
         );
     }
 
-    handlePrintClick = (fileType: FileTypeSymbol, vsc: ValueSearchControl) => {
+    handlePrintClick = (e: React.MouseEvent<any>, fileType: FileTypeSymbol, vsc: ValueSearchControl) => {
+        e.preventDefault();
         API.createPrintProcess(fileType)
             .then(p => p && Navigator.navigate(p))
             .then(p => vsc.refreshValue())
             .done();
     }
-
 }

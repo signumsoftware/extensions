@@ -24,7 +24,7 @@ namespace Signum.React.MachineLearning
             Dictionary<QueryToken, object> filters = new Dictionary<QueryToken, object>();
 
             var serializer = JsonSerializer.Create(GlobalConfiguration.Configuration.Formatters.JsonFormatter.SerializerSettings);
-            var qd = DynamicQueryManager.Current.QueryDescription(pctx.Predictor.MainQuery.Query.ToQueryName());
+            var qd = QueryLogic.Queries.QueryDescription(pctx.Predictor.MainQuery.Query.ToQueryName());
             foreach (var kvp in mainKeys)
             {
                 var qt = QueryUtils.Parse(kvp.Key, qd, SubTokensOptions.CanElement | SubTokensOptions.CanAggregate);
@@ -162,7 +162,7 @@ namespace Signum.React.MachineLearning
                     {
                         subQuery = sq.ToLite(),
                         columnHeaders = columnHeaders,
-                        rows = pctx.SubQueryOutputColumn[sq].Groups.Select(kvp => CreateRow(splitKeys, values, kvp.Key, inputsSQ, originalOutputsSQ, predictedOutputsSQ)).ToList()
+                        rows = pctx.SubQueryOutputCodifications[sq].Groups.Select(kvp => CreateRow(splitKeys, values, kvp.Key, inputsSQ, originalOutputsSQ, predictedOutputsSQ)).ToList()
                     };
                 }).ToList()
             };
@@ -205,7 +205,7 @@ namespace Signum.React.MachineLearning
                 predict.columns[i].value = FixValue(predict.columns[i].value, ctx.Predictor.MainQuery.Columns[i].Token.Token, serializer);
             }
 
-            foreach (var tuple in ctx.SubQueryOutputColumn.Values.ZipStrict(predict.subQueries, (sqCtx, table) => (sqCtx, table)))
+            foreach (var tuple in ctx.SubQueryOutputCodifications.Values.ZipStrict(predict.subQueries, (sqCtx, table) => (sqCtx, table)))
             {
                 var sq = tuple.sqCtx.SubQuery;
 
@@ -243,6 +243,13 @@ namespace Signum.React.MachineLearning
                 };
             }
 
+            if(jt is JArray ja)
+            {
+                var list = ja.ToObject<List<AlternativePrediction>>();
+                var result = list.Select(val => ReflectionTools.ChangeType(val, token.Type));
+                return result;
+            }
+
             return jt.ToObject(token.Type, serializer);
         }
     }
@@ -252,6 +259,7 @@ namespace Signum.React.MachineLearning
     public class PredictRequestTS
     {
         public bool hasOriginal { get; set; }
+        public int? alternativesCount { get; set; }
         public Lite<PredictorEntity> predictor { get; set; }
         public List<PredictColumnTS> columns { get; set; }
         public List<PredictSubQueryTableTS> subQueries { get; set; }

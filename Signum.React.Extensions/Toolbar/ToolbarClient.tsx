@@ -1,19 +1,21 @@
 ﻿import * as React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { IconProp } from '@fortawesome/fontawesome-svg-core'
 import { Route } from 'react-router'
-import { Dic, classes } from '../../../Framework/Signum.React/Scripts/Globals';
-import { Button, OverlayTrigger, Tooltip, MenuItem,  } from "react-bootstrap"
-import { ajaxPost, ajaxPostRaw, ajaxGet, saveFile } from '../../../Framework/Signum.React/Scripts/Services';
-import { EntitySettings, ViewPromise } from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { QueryEntity } from '../../../Framework/Signum.React/Scripts/Signum.Entities.Basics'
-import { Lite, Entity, EntityPack, ExecuteSymbol, DeleteSymbol, ConstructSymbol_From, registerToString, JavascriptMessage, toLite } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { EntityOperationSettings } from '../../../Framework/Signum.React/Scripts/Operations'
-import { PseudoType, QueryKey, GraphExplorer, OperationType, Type, getTypeName  } from '../../../Framework/Signum.React/Scripts/Reflection'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
+import { Dic, classes } from '@framework/Globals';
+import { ajaxPost, ajaxPostRaw, ajaxGet, saveFile } from '@framework/Services';
+import { EntitySettings, ViewPromise } from '@framework/Navigator'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { QueryEntity } from '@framework/Signum.Entities.Basics'
+import { Lite, Entity, EntityPack, ExecuteSymbol, DeleteSymbol, ConstructSymbol_From, registerToString, JavascriptMessage, toLite } from '@framework/Signum.Entities'
+import { EntityOperationSettings } from '@framework/Operations'
+import { PseudoType, QueryKey, GraphExplorer, OperationType, Type, getTypeName  } from '@framework/Reflection'
+import * as Operations from '@framework/Operations'
 import { ToolbarEntity, ToolbarMenuEntity, ToolbarElementEmbedded, ToolbarElementType, ToolbarLocation } from './Signum.Entities.Toolbar'
-import * as Constructor from '../../../Framework/Signum.React/Scripts/Constructor'
+import * as Constructor from '@framework/Constructor'
 import * as UserAssetClient from '../UserAssets/UserAssetClient'
+import { parseIcon } from '../Dashboard/Admin/Dashboard';
 
 export function start(options: { routes: JSX.Element[] }, ...configs: ToolbarConfig<any>[]) {
     Navigator.addSettings(new EntitySettings(ToolbarEntity, t => import('./Templates/Toolbar')));
@@ -34,15 +36,19 @@ export function start(options: { routes: JSX.Element[] }, ...configs: ToolbarCon
 
 export abstract class ToolbarConfig<T extends Entity> {
     type: Type<T>;
-    getIcon(element: ToolbarResponse<T>) {
-        return ToolbarConfig.coloredIcon(element.iconName, element.iconColor);
+    constructor(type: Type<T>) {
+        this.type = type;
     }
 
-    static coloredIcon(className: string | null | undefined, color: string | null | undefined): React.ReactChild | null {
-        if (!className || className.toLowerCase() == "none")
+    getIcon(element: ToolbarResponse<T>) {
+        return ToolbarConfig.coloredIcon(element.iconName == null ? undefined : parseIcon(element.iconName), element.iconColor);
+    }
+
+    static coloredIcon(icon: IconProp | undefined, color: string | undefined): React.ReactChild | null {
+        if (!icon)
             return null;
 
-        return <span className={"icon " + className} style={{ color: color }} />;
+        return <FontAwesomeIcon icon={icon} className={"icon"} color={color} />;
     }
 
     getLabel(element: ToolbarResponse<T>) {

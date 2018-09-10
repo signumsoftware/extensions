@@ -23,6 +23,8 @@ using Signum.Entities.UserAssets;
 using Signum.Entities.UserQueries;
 using Signum.Engine.Authorization;
 using Signum.Entities.Authorization;
+using Signum.Entities.Mailing;
+using Signum.Engine.Mailing;
 
 namespace Signum.Engine.UserAssets
 {
@@ -89,6 +91,13 @@ namespace Signum.Engine.UserAssets
             public PreviewContext(XDocument doc)
             {
                 elements = doc.Element("Entities").Elements().ToDictionary(a => Guid.Parse(a.Attribute("Guid").Value));
+            }
+
+            public QueryEntity GetQuery(string queryKey)
+            {
+                var qn = QueryLogic.ToQueryName(queryKey);
+
+                return QueryLogic.GetQueryEntity(qn);
             }
 
             QueryEntity IFromXmlContext.TryGetQuery(string queryKey)
@@ -161,12 +170,22 @@ namespace Signum.Engine.UserAssets
 
             public QueryDescription GetQueryDescription(QueryEntity Query)
             {
-                return DynamicQueryManager.Current.QueryDescription(QueryLogic.QueryNames.GetOrThrow(Query.Key));
+                return QueryLogic.Queries.QueryDescription(QueryLogic.QueryNames.GetOrThrow(Query.Key));
             }
 
             public PermissionSymbol TryPermission(string permissionKey)
             {
                 return SymbolLogic<PermissionSymbol>.TryToSymbol(permissionKey);
+            }
+
+            public SystemEmailEntity GetSystemEmail(string fullClassName)
+            {
+                return SystemEmailLogic.GetSystemEmailEntity(fullClassName);
+            }
+
+            public CultureInfoEntity GetCultureInfoEntity(string cultureName)
+            {
+                return CultureInfoLogic.GetCultureInfoEntity(cultureName);
             }
         }
 
@@ -193,6 +212,13 @@ namespace Signum.Engine.UserAssets
             {
                 this.overrideEntity = overrideEntity;
                 elements = doc.Element("Entities").Elements().ToDictionary(a => Guid.Parse(a.Attribute("Guid").Value));
+            }
+
+            QueryEntity IFromXmlContext.GetQuery(string queryKey)
+            {
+                var qn = QueryLogic.ToQueryName(queryKey);
+                
+                return QueryLogic.GetQueryEntity(qn);
             }
 
             QueryEntity IFromXmlContext.TryGetQuery(string queryKey)
@@ -231,6 +257,11 @@ namespace Signum.Engine.UserAssets
                 return TypeLogic.TypeToEntity.GetOrThrow(TypeLogic.GetType(cleanName)).ToLite();
             }
 
+            public SystemEmailEntity GetSystemEmail(string fullClassName)
+            {
+                return SystemEmailLogic.GetSystemEmailEntity(fullClassName);
+            }
+
             public IPartEntity GetPart(IPartEntity old, XElement element)
             {
                 Type type = PartNames.GetOrThrow(element.Name.ToString());
@@ -257,12 +288,17 @@ namespace Signum.Engine.UserAssets
 
             public QueryDescription GetQueryDescription(QueryEntity Query)
             {
-                return DynamicQueryManager.Current.QueryDescription(QueryLogic.QueryNames.GetOrThrow(Query.Key));
+                return QueryLogic.Queries.QueryDescription(QueryLogic.QueryNames.GetOrThrow(Query.Key));
             }
 
             public PermissionSymbol TryPermission(string permissionKey)
             {
                 return SymbolLogic<PermissionSymbol>.TryToSymbol(permissionKey);
+            }
+
+            public CultureInfoEntity GetCultureInfoEntity(string cultureName)
+            {
+                return CultureInfoLogic.GetCultureInfoEntity(cultureName);
             }
         }
 

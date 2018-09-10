@@ -1,12 +1,13 @@
 ﻿import * as React from 'react'
-import { ValueLine, EntityLine, TypeContext, FormGroup, ValueLineType, LiteAutocompleteConfig } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { PropertyRoute, Binding } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { ValueLine, EntityLine, TypeContext, LiteAutocompleteConfig } from '@framework/Lines'
+import { PropertyRoute, Binding } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
 import CSharpCodeMirror from '../../Codemirror/CSharpCodeMirror'
-import { WorkflowConditionEntity, ICaseMainEntity, DecisionResult } from '../Signum.Entities.Workflow'
-import { WorkflowConditionTestResponse, API, DecisionResultValues, showWorkflowTransitionContextCodeHelp } from '../WorkflowClient'
+import { WorkflowConditionEntity, ICaseMainEntity } from '../Signum.Entities.Workflow'
+import { WorkflowConditionTestResponse, API, showWorkflowTransitionContextCodeHelp } from '../WorkflowClient'
 import TypeHelpComponent from '../../TypeHelp/TypeHelpComponent'
-import ValueLineModal from '../../../../Framework/Signum.React/Scripts/ValueLineModal'
+import ValueLineModal from '@framework/ValueLineModal'
 
 interface WorkflowConditionComponentProps {
     ctx: TypeContext<WorkflowConditionEntity>;
@@ -14,7 +15,6 @@ interface WorkflowConditionComponentProps {
 
 interface WorkflowConditionComponentState {
     exampleEntity?: ICaseMainEntity;
-    decisionResult: DecisionResult;
     response?: WorkflowConditionTestResponse;
 }
 
@@ -22,14 +22,13 @@ export default class WorkflowConditionComponent extends React.Component<Workflow
 
     constructor(props: WorkflowConditionComponentProps) {
         super(props);
-        this.state = { decisionResult: "Approve" };
+        this.state = {  };
     }
 
     handleMainEntityTypeChange = () => {
         this.props.ctx.value.eval!.script = "";
         this.setState({
             exampleEntity: undefined,
-            decisionResult: "Approve",
             response: undefined
         });
     }
@@ -49,16 +48,16 @@ export default class WorkflowConditionComponent extends React.Component<Workflow
                 <ValueLine ctx={ctx.subCtx(wc => wc.name)} />
                 <EntityLine ctx={ctx.subCtx(wc => wc.mainEntityType)}
                     onChange={this.handleMainEntityTypeChange}
-                    autoComplete={new LiteAutocompleteConfig((ac, str) => API.findMainEntityType({ subString: str, count: 5 }, ac), false)}
+                    autocomplete={new LiteAutocompleteConfig((ac, str) => API.findMainEntityType({ subString: str, count: 5 }, ac), false, false)}
                     find={false} />
                 {ctx.value.mainEntityType &&
                     <div>
                         <br />
                         <div className="row">
                             <div className="col-sm-7">
-                                {this.state.exampleEntity && <button className="btn btn-success" onClick={this.handleEvaluate}><i className="fa fa-play" aria-hidden="true"></i> Evaluate</button>}
+                                {this.state.exampleEntity && <button className="btn btn-success" onClick={this.handleEvaluate}><FontAwesomeIcon icon="play" /> Evaluate</button>}
                                 <div className="btn-group" style={{ marginBottom: "3px" }}>
-                                    <input type="button" className="btn btn-success btn-xs sf-button" value="ctx" onClick={() => showWorkflowTransitionContextCodeHelp()} />
+                                    <input type="button" className="btn btn-success btn-sm sf-button" value="ctx" onClick={() => showWorkflowTransitionContextCodeHelp()} />
                                 </div>
                                 <div className="code-container">
                                     <pre style={{ border: "0px", margin: "0px" }}>{"boolean Evaluate(" + ctx.value.mainEntityType.cleanName + "Entity e, WorkflowTransitionContext ctx)\n{"}</pre>
@@ -98,7 +97,6 @@ export default class WorkflowConditionComponent extends React.Component<Workflow
             API.conditionTest({
                 workflowCondition: this.props.ctx.value,
                 exampleEntity: this.state.exampleEntity,
-                decisionResult: this.state.decisionResult
             })
                 .then(r => this.setState({ response: r }))
                 .done();
@@ -112,12 +110,6 @@ export default class WorkflowConditionComponent extends React.Component<Workflow
             <fieldset>
                 <legend>TEST</legend>
                 {this.renderExampleEntity(ctx.value.mainEntityType!.cleanName)}
-
-                <FormGroup ctx={ctx} labelText="Decision Result">
-                    <select value={this.state.decisionResult} className="form-control" onChange={this.handleDecisionResultChange}>
-                        {DecisionResultValues.map((v, i) => <option key={i} value={v}>{v}</option>)}
-                    </select>
-                </FormGroup>
                 <br />
                 {res && this.renderMessage(res)}
             </fieldset>
@@ -132,12 +124,7 @@ export default class WorkflowConditionComponent extends React.Component<Workflow
                 type={{ name: typeName }} labelText="Example Entity" />
         );
     }
-
-    handleDecisionResultChange = (e: React.SyntheticEvent<HTMLSelectElement>) => {
-        this.setState({ decisionResult: e.currentTarget.value as DecisionResult }, () =>
-            this.handleEvaluate());
-    }
-
+    
     handleOnView = (exampleEntity: ICaseMainEntity) => {
         return Navigator.view(exampleEntity, { requiresSaveOperation: false });
     }

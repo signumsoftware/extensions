@@ -1,16 +1,15 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab } from 'react-bootstrap'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTabRepeater, EntityTable,  EntityCheckboxList, EnumCheckboxList, EntityDetail, EntityStrip } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { ModifiableEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
-import { classes, Dic } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import { ColumnOptionsMode, FilterOperation, OrderType, PaginationMode, FindOptions, FilterOption, OrderOption, ColumnOption, Pagination, QueryToken } from '../../../../Framework/Signum.React/Scripts/FindOptions'
-import { SearchControl, ValueSearchControl } from '../../../../Framework/Signum.React/Scripts/Search'
-import { getQueryNiceName, TypeInfo, MemberInfo, getTypeInfo, EntityData, EntityKind, getTypeInfos, KindOfType, PropertyRoute, PropertyRouteType, LambdaMemberType, isTypeEntity } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { TypeContext, FormGroupStyle } from '../../../../Framework/Signum.React/Scripts/TypeContext'
-import { EntityBase, EntityBaseProps } from '../../../../Framework/Signum.React/Scripts/Lines/EntityBase'
-import { EntityTableColumn } from '../../../../Framework/Signum.React/Scripts/Lines/EntityTable'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityCombo, EntityList, EntityRepeater, EntityTabRepeater, EntityTable,  EntityCheckboxList, EnumCheckboxList, EntityDetail, EntityStrip } from '@framework/Lines'
+import { ModifiableEntity } from '@framework/Signum.Entities'
+import { classes, Dic } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import { ColumnOptionsMode, FilterOperation, OrderType, PaginationMode, FindOptions, FilterOption, OrderOption, ColumnOption, Pagination, QueryToken } from '@framework/FindOptions'
+import { SearchControl, ValueSearchControl } from '@framework/Search'
+import { getQueryNiceName, TypeInfo, MemberInfo, getTypeInfo, EntityData, EntityKind, getTypeInfos, KindOfType, PropertyRoute, PropertyRouteType, MemberType, isTypeEntity } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
+import { EntityBase, EntityBaseProps } from '@framework/Lines/EntityBase'
+import { EntityTableColumn } from '@framework/Lines/EntityTable'
 import { DynamicViewValidationMessage } from '../Signum.Entities.Dynamic'
 import { ExpressionOrValueComponent, FieldComponent } from './Designer'
 import { ExpressionOrValue } from './NodeUtils'
@@ -19,8 +18,8 @@ import * as NodeUtils from './NodeUtils'
 
 export interface FindOptionsExpr {
     queryName?: string;
-    parentColumn?: string;
-    parentToken?: QueryToken;
+    parentToken?: string;
+    parsedParentToken?: QueryToken;
     parentValue?: ExpressionOrValue<any>;
 
     filterOptions?: FilterOptionExpr[];
@@ -33,8 +32,8 @@ export interface FindOptionsExpr {
 }
 
 export interface FilterOptionExpr {
-    columnName?: string;
-    token?: QueryToken;
+    token?: string;
+    parsedToken?: QueryToken;
     operation?: ExpressionOrValue<FilterOperation>;
     value: ExpressionOrValue<any>;
     frozen?: ExpressionOrValue<boolean>;
@@ -42,30 +41,30 @@ export interface FilterOptionExpr {
 }
 
 export interface OrderOptionExpr {
-    columnName?: string;
-    token?: QueryToken;
+    token?: string;
+    parsedToken?: QueryToken;
     orderType: ExpressionOrValue<OrderType>;
     applicable: ExpressionOrValue<boolean>;
 }
 
 export interface ColumnOptionExpr {
-    columnName?: string;
-    token?: QueryToken;
+    token?: string;
+    parsedToken?: QueryToken;
     displayName?: ExpressionOrValue<string>;
     applicable: ExpressionOrValue<boolean>;
 }
 
-export function toFindOptions(ctx: TypeContext<ModifiableEntity>, foe: FindOptionsExpr): FindOptions{
+export function toFindOptions(ctx: TypeContext<ModifiableEntity>, foe: FindOptionsExpr): FindOptions {
     return {
         queryName: foe.queryName!,
-        parentColumn: foe.parentColumn,
+        parentToken: foe.parentToken,
         parentValue: NodeUtils.evaluate(ctx, foe, f => f.parentValue),
 
         filterOptions: foe.filterOptions ?
             foe.filterOptions
                 .filter(fo => NodeUtils.evaluateAndValidate(ctx, fo, f => f.applicable, NodeUtils.isBooleanOrNull) != false)
                 .map(fo => ({
-                    columnName: fo.columnName,
+                    token: fo.token,
                     frozen: NodeUtils.evaluateAndValidate(ctx, fo, f => f.frozen, NodeUtils.isBooleanOrNull),
                     operation: NodeUtils.evaluateAndValidate(ctx, fo, f => f.operation, v => NodeUtils.isEnumOrNull(v, FilterOperation)),
                     value: NodeUtils.evaluate(ctx, fo, f => f.value)
@@ -75,7 +74,7 @@ export function toFindOptions(ctx: TypeContext<ModifiableEntity>, foe: FindOptio
             foe.orderOptions
                 .filter(oo => NodeUtils.evaluateAndValidate(ctx, oo, o => o.applicable, NodeUtils.isBooleanOrNull) != false)
                 .map(oo => ({
-                    columnName: oo.columnName,
+                    token: oo.token,
                     orderType: NodeUtils.evaluateAndValidate(ctx, oo, o => o.orderType, v => NodeUtils.isEnumOrNull(v, OrderType))
                 } as OrderOption)) : undefined,
 
@@ -85,7 +84,7 @@ export function toFindOptions(ctx: TypeContext<ModifiableEntity>, foe: FindOptio
             foe.columnOptions
                 .filter(co => NodeUtils.evaluateAndValidate(ctx, co, c => c.applicable, NodeUtils.isBooleanOrNull) != false)
                 .map(co => ({
-                    columnName: co.columnName,
+                    token: co.token,
                     displayName: NodeUtils.evaluateAndValidate(ctx, co, c => c.displayName, NodeUtils.isStringOrNull)
                 } as ColumnOption)) : undefined,
 

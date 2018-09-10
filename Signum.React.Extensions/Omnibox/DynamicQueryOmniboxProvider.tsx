@@ -1,10 +1,9 @@
 ﻿import * as React from 'react'
 import { OmniboxMessage } from './Signum.Entities.Omnibox'
 import { OmniboxResult, OmniboxMatch, OmniboxProvider } from './OmniboxClient'
-import { QueryToken, FilterOperation, FindOptions, FilterOption } from '../../../Framework/Signum.React/Scripts/FindOptions'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-
+import { QueryToken, FilterOperation, FindOptions, FilterOption } from '@framework/FindOptions'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
 
 const UNKNOWN = "??UNKNOWN??";
 
@@ -15,7 +14,7 @@ export default class DynamicQueryOmniboxProvider extends OmniboxProvider<Dynamic
     }
 
     icon() {
-        return this.coloredIcon("glyphicon glyphicon-search", "orange");
+        return this.coloredIcon("search", "orange");
     }
 
 
@@ -75,7 +74,7 @@ export default class DynamicQueryOmniboxProvider extends OmniboxProvider<Dynamic
 
         result.Filters.forEach(f => {
             fo.filterOptions!.push({
-                columnName: f.QueryToken.fullKey,
+                token: f.QueryToken.fullKey,
                 operation: f.Operation,
                 value: f.Value,
             });
@@ -128,7 +127,7 @@ interface OmniboxFilterResult {
     CanFilter: string;
 }
 
-class FilterSyntax {
+interface FilterSyntax {
     Index: number;
     TokenLength: number;
     Length: number;

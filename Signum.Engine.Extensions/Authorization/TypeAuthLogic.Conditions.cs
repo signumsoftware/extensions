@@ -602,20 +602,28 @@ namespace Signum.Engine.Authorization
             }
         }
 
-        public static DynamicQueryCore<T> ToDynamicDisableAutoFilter<T>(this IQueryable<T> query)
+        public static DynamicQueryCore<T> ToDynamicDisableAuth<T>(this IQueryable<T> query, bool disableQueryFilter = false, bool authDisable = true)
         {
-            return new AutoDynamicQueryNoFilterCore<T>(query);
+            return new AutoDynamicQueryNoFilterCore<T>(query)
+            {
+                DisableQueryFilter = disableQueryFilter,
+                AuthDisable = authDisable,
+            };
         }
 
         internal class AutoDynamicQueryNoFilterCore<T> : AutoDynamicQueryCore<T>
         {
+            public bool DisableQueryFilter { get; internal set; }
+            public bool AuthDisable { get; internal set; }
+
             public AutoDynamicQueryNoFilterCore(IQueryable<T> query)
                 : base(query)
             { }
 
             public override async Task<ResultTable> ExecuteQueryAsync(QueryRequest request, CancellationToken token)
             {
-                using (TypeAuthLogic.DisableQueryFilter())
+                using (this.AuthDisable ? AuthLogic.Disable(): null)
+                using (this.DisableQueryFilter ? TypeAuthLogic.DisableQueryFilter(): null)
                 {
                     return await base.ExecuteQueryAsync(request, token);
                 }
@@ -623,7 +631,8 @@ namespace Signum.Engine.Authorization
 
             public override async Task<Lite<Entity>> ExecuteUniqueEntityAsync(UniqueEntityRequest request, CancellationToken token)
             {
-                using (TypeAuthLogic.DisableQueryFilter())
+                using (this.AuthDisable ? AuthLogic.Disable() : null)
+                using (this.DisableQueryFilter ? TypeAuthLogic.DisableQueryFilter() : null)
                 {
                     return await base.ExecuteUniqueEntityAsync(request, token);
                 }
@@ -631,7 +640,8 @@ namespace Signum.Engine.Authorization
 
             public override async Task<object> ExecuteQueryValueAsync(QueryValueRequest request, CancellationToken token)
             {
-                using (TypeAuthLogic.DisableQueryFilter())
+                using (this.AuthDisable ? AuthLogic.Disable() : null)
+                using (this.DisableQueryFilter ? TypeAuthLogic.DisableQueryFilter() : null)
                 {
                     return await base.ExecuteQueryValueAsync(request, token);
                 }
@@ -656,7 +666,7 @@ namespace Signum.Engine.Authorization
         public static TypeAllowedAndConditions ToTypeAllowedAndConditions(this RuleTypeEntity rule)
         {
             return new TypeAllowedAndConditions(rule.Allowed,
-                rule.Conditions.Select(c => new TypeConditionRuleEmbedded(c.Condition, c.Allowed)).ToMList());
+                rule.Conditions.Select(c => new TypeConditionRuleEmbedded(c.Condition, c.Allowed)));
         }
 
         static SqlPreCommand Schema_Synchronizing(Replacements rep)
@@ -669,14 +679,20 @@ namespace Signum.Engine.Authorization
                 .Where(gr =>
                 {
                     if (gr.Key.Condition.FieldInfo == null)
-                        return rep.TryGetC(typeof(TypeConditionSymbol).Name)?.TryGetC(gr.Key.Condition.Key) == null;
+                    {
+                        var replacedName = rep.TryGetC(typeof(TypeConditionSymbol).Name)?.TryGetC(gr.Key.Condition.Key);
+                        if (replacedName == null)
+                            return false; // Other Syncronizer will do it
+
+                        return !TypeConditionLogic.ConditionsFor(gr.Key.Resource.ToType()).Any(a => a.Key == replacedName);
+                    }
 
                     return !TypeConditionLogic.IsDefined(gr.Key.Resource.ToType(), gr.Key.Condition);
                 })
                 .ToList();
 
             using (rep.WithReplacedDatabaseName())
-                return errors.Select(a => Administrator.UnsafeDeletePreCommand((RuleTypeEntity rt) => rt.Conditions, Database.MListQuery((RuleTypeEntity rt) => rt.Conditions)
+                return errors.Select(a => Administrator.UnsafeDeletePreCommandMList((RuleTypeEntity rt) => rt.Conditions, Database.MListQuery((RuleTypeEntity rt) => rt.Conditions)
                     .Where(mle => mle.Element.Condition.Is(a.Key.Condition) && mle.Parent.Resource.Is(a.Key.Resource)))
                     .AddComment("TypeCondition {0} not defined for {1} (roles {2})".FormatWith(a.Key.Condition, a.Key.Resource, a.ToString(", "))))
                     .Combine(Spacing.Double);

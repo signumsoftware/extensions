@@ -24,7 +24,7 @@ namespace Signum.Engine.Dashboard
         public static ResetLazy<Dictionary<Lite<DashboardEntity>, DashboardEntity>> Dashboards;
         public static ResetLazy<Dictionary<Type, List<Lite<DashboardEntity>>>> DashboardsByType;
 
-        public static void Start(SchemaBuilder sb, DynamicQueryManager dqm)
+        public static void Start(SchemaBuilder sb)
         {
             if (sb.NotDefined(MethodInfo.GetCurrentMethod()))
             {
@@ -44,7 +44,7 @@ namespace Signum.Engine.Dashboard
                 });
 
                 sb.Include<DashboardEntity>()
-                    .WithQuery(dqm, () => cp => new
+                    .WithQuery(() => cp => new
                     {
                         Entity = cp,
                         cp.Id,
@@ -55,7 +55,7 @@ namespace Signum.Engine.Dashboard
                     });
 
                 sb.Include<LinkListPartEntity>()
-                    .WithQuery(dqm, () => cp => new
+                    .WithQuery(() => cp => new
                     {
                         Entity = cp,
                         ToStr = cp.ToString(),
@@ -63,7 +63,7 @@ namespace Signum.Engine.Dashboard
                     });
                 
                 sb.Include<ValueUserQueryListPartEntity>()
-                    .WithQuery(dqm, () => cp => new
+                    .WithQuery(() => cp => new
                     {
                         Entity = cp,
                         ToStr = cp.ToString(),
@@ -76,13 +76,14 @@ namespace Signum.Engine.Dashboard
                     {
                         Database.MListQuery((DashboardEntity cp) => cp.Parts).Where(mle => query.Contains(((UserQueryPartEntity)mle.Element.Content).UserQuery)).UnsafeDeleteMList();
                         Database.Query<UserQueryPartEntity>().Where(uqp => query.Contains(uqp.UserQuery)).UnsafeDelete();
+                        return null;
                     };
 
                     sb.Schema.Table<UserQueryEntity>().PreDeleteSqlSync += arg =>
                     {
                         var uq = (UserQueryEntity)arg;
 
-                        var parts = Administrator.UnsafeDeletePreCommand((DashboardEntity cp) => cp.Parts, Database.MListQuery((DashboardEntity cp) => cp.Parts)
+                        var parts = Administrator.UnsafeDeletePreCommandMList((DashboardEntity cp) => cp.Parts, Database.MListQuery((DashboardEntity cp) => cp.Parts)
                             .Where(mle => ((UserQueryPartEntity)mle.Element.Content).UserQuery == uq));
 
                         var parts2 = Administrator.UnsafeDeletePreCommand(Database.Query<UserQueryPartEntity>()
@@ -98,13 +99,14 @@ namespace Signum.Engine.Dashboard
                     {
                         Database.MListQuery((DashboardEntity cp) => cp.Parts).Where(mle => query.Contains(((UserChartPartEntity)mle.Element.Content).UserChart)).UnsafeDeleteMList();
                         Database.Query<UserChartPartEntity>().Where(uqp => query.Contains(uqp.UserChart)).UnsafeDelete();
+                        return null;
                     };
 
                     sb.Schema.Table<UserChartEntity>().PreDeleteSqlSync += arg =>
                     {
                         var uc = (UserChartEntity)arg;
 
-                        var parts = Administrator.UnsafeDeletePreCommand((DashboardEntity cp) => cp.Parts, Database.MListQuery((DashboardEntity cp) => cp.Parts)
+                        var parts = Administrator.UnsafeDeletePreCommandMList((DashboardEntity cp) => cp.Parts, Database.MListQuery((DashboardEntity cp) => cp.Parts)
                             .Where(mle => ((UserChartPartEntity)mle.Element.Content).UserChart == uc));
 
                         var parts2 = Administrator.UnsafeDeletePreCommand(Database.Query<UserChartPartEntity>()
@@ -121,7 +123,8 @@ namespace Signum.Engine.Dashboard
                     new InvalidateWith(typeof(DashboardEntity)));
 
                 DashboardsByType = sb.GlobalLazy(() => Dashboards.Value.Values.Where(a => a.EntityType != null)
-                .GroupToDictionary(a => TypeLogic.IdToType.GetOrThrow(a.EntityType.Id), a => a.ToLite()),
+                .SelectCatch(d => KVP.Create(TypeLogic.IdToType.GetOrThrow(d.EntityType.Id), d.ToLite()))
+                .GroupToDictionary(),
                     new InvalidateWith(typeof(DashboardEntity)));
             }
         }
@@ -137,8 +140,8 @@ namespace Signum.Engine.Dashboard
 
                 new Execute(DashboardOperation.Save)
                 {
-                    AllowsNew = true,
-                    Lite = false,
+                    CanBeNew = true,
+                    CanBeModified = true,
                     Execute = (cp, _) => { }
                 }.Register();
 

@@ -1,12 +1,12 @@
 ﻿import * as React from 'react'
 import * as ReactDOM from 'react-dom'
 import * as D3 from 'd3'
-import { DomUtils } from '../../../../Framework/Signum.React/Scripts/Globals'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { is, SearchMessage, parseLite } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { DomUtils } from '@framework/Globals'
+import * as Finder from '@framework/Finder'
+import * as Navigator from '@framework/Navigator'
+import { is, SearchMessage, parseLite } from '@framework/Signum.Entities'
 import * as ChartUtils_Mod from "./ChartUtils"
-import { ResultTable, FindOptions, FilterOptionParsed, FilterOption, QueryDescription, SubTokensOptions, QueryToken, QueryTokenType, ColumnOption, hasAggregate } from '../../../../Framework/Signum.React/Scripts/FindOptions'
+import { ResultTable, FindOptions, FilterOptionParsed, FilterOption, QueryDescription, SubTokensOptions, QueryToken, QueryTokenType, ColumnOption, hasAggregate } from '@framework/FindOptions'
 import {
     ChartColumnEmbedded, ChartScriptColumnEmbedded, ChartScriptParameterEmbedded, ChartRequest, GroupByChart, ChartMessage,
    ChartColorEntity, ChartScriptEntity, ChartParameterEmbedded, ChartParameterType } from '../Signum.Entities.Chart'
@@ -14,6 +14,7 @@ import * as ChartClient from '../ChartClient'
 
 import "../Chart.css"
 import { QueryTokenEmbedded } from '../../UserAssets/Signum.Entities.UserAssets';
+import { toFilterOptions } from '@framework/Finder';
 
 declare global {
     interface Error {
@@ -34,7 +35,7 @@ export interface ChartRendererProps {
 
 export default class ChartRenderer extends React.Component<ChartRendererProps> {
 
-    exceptionLine: number | null;
+    exceptionLine?: number | null;
 
     componentWillMount(){
 
@@ -117,7 +118,6 @@ export default class ChartRenderer extends React.Component<ChartRendererProps> {
             const rule = ChartUtils.rule;
             const ellipsis = ChartUtils.ellipsis;
             __baseLineNumber__ = new Error().lineNumber;
-            console.log("Redraw");
             this.lastChartRequestPath = ChartClient.Encoder.chartPath(this.props.chartRequest);
             func = eval("(" + this.props.chartRequest.chartScript.script + ")");
         } catch (e) {
@@ -159,13 +159,10 @@ export default class ChartRenderer extends React.Component<ChartRendererProps> {
                 window.open(Navigator.navigateRoute(lite));
 
             } else {
-
-
+                
                 const filters = cr.filterOptions.filter(a => !hasAggregate(a.token));
                 const columns: ColumnOption[] = [];
-
-             
-
+                
                 cr.columns.map((a, i) => {
 
                     const t = a.element.token;
@@ -185,19 +182,14 @@ export default class ChartRenderer extends React.Component<ChartRendererProps> {
 
                         if (col.parent)
                             columns.push({
-                                columnName: col.fullKey
+                                token: col.fullKey
                             });
                     }
                 });
 
                 window.open(Finder.findOptionsPath({
                     queryName: cr.queryKey,
-                    filterOptions: filters.map(fop => ({
-                        columnName: fop.token!.fullKey,
-                        operation: fop.operation,
-                        value: fop.value,
-                        frozen: fop.frozen,
-                    }) as FilterOption),
+                    filterOptions: toFilterOptions(filters),
                     columnOptions: columns,
                 }));
             }

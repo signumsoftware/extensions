@@ -1,8 +1,7 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab } from 'react-bootstrap'
 import { JoyrideEntity, JoyrideStepEntity } from '../Signum.Entities.Joyride'
-import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater, TypeContext, RenderEntity } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl } from "../../../../Framework/Signum.React/Scripts/Search";
+import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater, TypeContext, RenderEntity } from '@framework/Lines'
+import { SearchControl } from "@framework/Search";
 import { TranslatedInstanceEntity } from "../../Translation/Signum.Entities.Translation";
 
 export default class JoyrideStep extends React.Component<{ ctx: TypeContext<JoyrideEntity> }> {
@@ -17,7 +16,7 @@ export default class JoyrideStep extends React.Component<{ ctx: TypeContext<Joyr
                 <EntityStrip ctx={ctx.subCtx(a => a.steps)}
                     findOptions={{
                         queryName: JoyrideStepEntity,
-                        parentColumn: "Culture",
+                        parentToken: "Culture",
                         parentValue: ctx.value.culture
                     }}
                 />

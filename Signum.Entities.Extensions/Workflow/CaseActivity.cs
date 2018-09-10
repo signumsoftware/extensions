@@ -23,9 +23,9 @@ namespace Signum.Entities.Workflow
         [NotNullValidator]
         public CaseEntity Case { get; set; }
         
-        [NotNullValidator]
-        public WorkflowActivityEntity WorkflowActivity { get; set; }
-
+        [ImplementedBy(typeof(WorkflowActivityEntity), typeof(WorkflowEventEntity))]
+        public IWorkflowNodeEntity WorkflowActivity { get; set; }
+        
         [StringLengthValidator(AllowNulls = false, Min = 3, Max = 255)]
         public string OriginalWorkflowActivityName { get; set; }
 
@@ -50,7 +50,7 @@ namespace Signum.Entities.Workflow
         }
 
         static Expression<Func<CaseActivityEntity, double?>> DurationRatioExpression =
-        @this => @this.Duration / @this.WorkflowActivity.EstimatedDuration;
+        @this => @this.Duration / (@this.WorkflowActivity as WorkflowActivityEntity).EstimatedDuration;
         [ExpressionField]
         public double? DurationRatio
         {
@@ -58,7 +58,7 @@ namespace Signum.Entities.Workflow
         }
 
         static Expression<Func<CaseActivityEntity, double?>> DurationRealTimeRatioExpression =
-            @this => @this.DurationRealTime / @this.WorkflowActivity.EstimatedDuration;
+            @this => @this.DurationRealTime / (@this.WorkflowActivity as WorkflowActivityEntity).EstimatedDuration;
         [ExpressionField]
         public double? DurationRealTimeRatio
         {
@@ -73,7 +73,7 @@ namespace Signum.Entities.Workflow
 
         static Expression<Func<CaseActivityEntity, CaseActivityState>> StateExpression =
         @this => @this.DoneDate.HasValue ? CaseActivityState.Done :
-        @this.WorkflowActivity.Type == WorkflowActivityType.Decision ? CaseActivityState.PendingDecision : 
+        (@this.WorkflowActivity as WorkflowActivityEntity).Type == WorkflowActivityType.Decision ? CaseActivityState.PendingDecision : 
         CaseActivityState.PendingNext;
         [ExpressionField("StateExpression")]
         public CaseActivityState State
@@ -94,9 +94,9 @@ namespace Signum.Entities.Workflow
             return ToStringExpression.Evaluate(this);
         }
 
-        protected override void PreSaving(ref bool graphModified)
-        {
-            base.PreSaving(ref graphModified);
+        protected override void PreSaving(PreSavingContext ctx)
+        { 
+            base.PreSaving(ctx);
             this.Duration = this.DoneDate == null ? (double?)null :
                 (this.DoneDate.Value - this.StartDate).TotalMinutes;
         }
@@ -116,10 +116,10 @@ namespace Signum.Entities.Workflow
         Approve,
         Decline,
         Jump,
-        Rejected,
         Timeout,
         ScriptSuccess,
         ScriptFailure,
+        Recompose,
     }
 
     public enum CaseActivityState
@@ -143,8 +143,7 @@ namespace Signum.Entities.Workflow
         public static readonly ExecuteSymbol<CaseActivityEntity> Approve;
         public static readonly ExecuteSymbol<CaseActivityEntity> Decline;
         public static readonly ExecuteSymbol<CaseActivityEntity> Jump;
-        public static readonly ExecuteSymbol<CaseActivityEntity> Reject;
-        public static readonly ExecuteSymbol<CaseActivityEntity> Timeout;
+        public static readonly ExecuteSymbol<CaseActivityEntity> Timer;
         public static readonly ExecuteSymbol<CaseActivityEntity> MarkAsUnread;
         public static readonly ExecuteSymbol<CaseActivityEntity> Undo;
         public static readonly ExecuteSymbol<CaseActivityEntity> ScriptExecute;
@@ -186,13 +185,14 @@ namespace Signum.Entities.Workflow
         Only0CanUndoThisOperation,
         [Description("Activity '{0}' has no jumps")]
         Activity0HasNoJumps,
-        [Description("Activity '{0}' has no reject")]
-        Activity0HasNoReject,
         [Description("Activity '{0}' has no timeout")]
-        Activity0HasNoTimeout,
+        Activity0HasNoTimers,
         ThereIsNoPreviousActivity,
         OnlyForScriptWorkflowActivities,
-        Pending
+        Pending,
+        NoWorkflowActivity,
+        [Description("Impossible to delete Case Activity {0} (on Workflow Activity '{1}') because has no previouos activity")]
+        ImpossibleToDeleteCaseActivity0OnWorkflowActivity1BecauseHasNoPreviousActivity
     }
 
 
@@ -211,5 +211,18 @@ namespace Signum.Entities.Workflow
         public string remarks { get; set; }
         public int alerts { get; set; }
         public List<CaseTagTypeEntity> tags { get; set; }
+    }
+
+    [Serializable, EntityKind(EntityKind.System, EntityData.Transactional)]
+    public class CaseActivityExecutedTimerEntity : Entity
+    {
+        public DateTime CreationDate { get; private set; } = TimeZoneManager.Now;
+
+        [NotNullValidator]
+        public Lite<CaseActivityEntity> CaseActivity { get; set; }
+
+
+        [NotNullValidator]
+        public Lite<WorkflowEventEntity> BoundaryEvent { get; set; }
     }
 }

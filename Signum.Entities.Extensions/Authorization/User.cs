@@ -23,7 +23,7 @@ namespace Signum.Entities.Authorization
     {
         public static Func<string, string> ValidatePassword = p =>
         {
-            if (p.Length > 5)
+            if (p.Length >= 5)
                 return null;
 
             return AuthMessage.ThePasswordMustHaveAtLeast5Characters.NiceToString();
@@ -81,7 +81,7 @@ namespace Signum.Entities.Authorization
             return base.PropertyValidation(pi);
         }
 
-        static Expression<Func<UserEntity, string>> ToStringExpression = e => e.UserName;
+        public static Expression<Func<UserEntity, string>> ToStringExpression = e => e.UserName;
         [ExpressionField]
         public override string ToString()
         {

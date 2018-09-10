@@ -1,22 +1,22 @@
 ﻿import * as React from 'react'
 import { Route } from 'react-router'
-import { ajaxPost, ajaxGet } from '../../../Framework/Signum.React/Scripts/Services';
-import { EntitySettings, ViewPromise } from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Finder from '../../../Framework/Signum.React/Scripts/Finder'
-import { EntityOperationSettings } from '../../../Framework/Signum.React/Scripts/Operations'
-import { Entity, Lite, liteKey } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import * as Constructor from '../../../Framework/Signum.React/Scripts/Constructor'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
-import * as QuickLinks from '../../../Framework/Signum.React/Scripts/QuickLinks'
-import { FindOptionsParsed, FindOptions, FilterOption, FilterOperation, OrderOption, ColumnOption, FilterRequest, QueryRequest, Pagination } from '../../../Framework/Signum.React/Scripts/FindOptions'
+import { ajaxPost, ajaxGet } from '@framework/Services';
+import { EntitySettings, ViewPromise } from '@framework/Navigator'
+import * as Navigator from '@framework/Navigator'
+import * as Finder from '@framework/Finder'
+import { EntityOperationSettings } from '@framework/Operations'
+import { Entity, Lite, liteKey } from '@framework/Signum.Entities'
+import * as Constructor from '@framework/Constructor'
+import * as Operations from '@framework/Operations'
+import * as QuickLinks from '@framework/QuickLinks'
+import { FindOptionsParsed, FindOptions, FilterOption, FilterOperation, OrderOption, ColumnOption, FilterRequest, QueryRequest, Pagination, isFilterGroupOption, isFilterGroupRequest, FilterGroupOptionParsed, FilterGroupOption, FilterConditionOption } from '@framework/FindOptions'
 import * as AuthClient  from '../Authorization/AuthClient'
 import { UserQueryEntity, UserQueryPermission, UserQueryMessage,
     QueryFilterEmbedded, QueryColumnEmbedded, QueryOrderEmbedded } from './Signum.Entities.UserQueries'
 import { QueryTokenEmbedded } from '../UserAssets/Signum.Entities.UserAssets'
 import UserQueryMenu from './UserQueryMenu'
 import * as UserAssetsClient from '../UserAssets/UserAssetClient'
-import { ImportRoute } from "../../../Framework/Signum.React/Scripts/AsyncImport";
+import { ImportRoute } from "@framework/AsyncImport";
 
 export function start(options: { routes: JSX.Element[] }) {
 
@@ -45,7 +45,7 @@ export function start(options: { routes: JSX.Element[] }) {
         return promise.then(uqs =>
             uqs.map(uq => new QuickLinks.QuickLinkAction(liteKey(uq), uq.toStr || "", e => {
                 window.open(Navigator.toAbsoluteUrl(`~/userQuery/${uq.id}/${liteKey(ctx.lite)}`));
-            }, { icon: "glyphicon glyphicon-list-alt", iconColor: "dodgerblue" })));
+            }, { icon: ["far", "list-alt"], iconColor: "dodgerblue" })));
     });
 
     QuickLinks.registerQuickLink(UserQueryEntity, ctx => new QuickLinks.QuickLinkAction("preview", UserQueryMessage.Preview.niceToString(),
@@ -75,14 +75,14 @@ export function start(options: { routes: JSX.Element[] }) {
 
 
 export module Converter {
-
+    
     export function toFindOptions(uq: UserQueryEntity, entity: Lite<Entity> | undefined): Promise<FindOptions> {
 
         var query = uq.query!;
 
         var fo = { queryName: query.key, groupResults: uq.groupResults } as FindOptions;
 
-        const convertedFilters = uq.withoutFilters ? Promise.resolve([] as FilterRequest[]) : UserAssetsClient.API.parseFilters({
+        const convertedFilters = UserAssetsClient.API.parseFilters({
             queryKey: query.key,
             canAggregate: uq.groupResults || false,
             entity: entity,
@@ -95,25 +95,17 @@ export module Converter {
 
         return convertedFilters.then(filters => {
 
-            if (!uq.withoutFilters && filters) {
-                fo.filterOptions = (fo.filterOptions || []).filter(f => f.frozen);
-                fo.filterOptions.push(...filters.map(f => ({
-                    columnName: f.token,
-                    operation: f.operation,
-                    value: f.value,
-                    frozen: false
-                }) as FilterOption));
-            }
+            fo.filterOptions = filters.map(f => UserAssetsClient.Converter.toFilterOption(f));
 
             fo.columnOptionsMode = uq.columnsMode;
 
             fo.columnOptions = (uq.columns || []).map(f => ({
-                columnName: f.element.token!.tokenString,
+                token: f.element.token!.tokenString,
                 displayName: f.element.displayName
             }) as ColumnOption);
 
             fo.orderOptions = (uq.orders || []).map(f => ({
-                columnName: f.element.token!.tokenString,
+                token: f.element.token!.tokenString,
                 orderType: f.element.orderType
             }) as OrderOption);
 
@@ -135,7 +127,9 @@ export module Converter {
         return toFindOptions(uq, entity)
             .then(fo => Finder.getQueryDescription(fo.queryName).then(qd => Finder.parseFindOptions(fo, qd)))
             .then(fop2 => {
-                fop.filterOptions = fop.filterOptions.filter(a => a.frozen);
+                if (!uq.appendFilters)
+                    fop.filterOptions = fop.filterOptions.filter(a => a.frozen);
+
                 fop.filterOptions.push(...fop2.filterOptions);
                 fop.groupResults = fop2.groupResults;
                 fop.orderOptions = fop2.orderOptions;
@@ -160,14 +154,14 @@ export module API {
     }
 }
 
-declare module '../../../Framework/Signum.React/Scripts/Signum.Entities' {
+declare module '@framework/Signum.Entities' {
 
     export interface EntityPack<T extends ModifiableEntity> {
         userQueries?: Array<Lite<UserQueryEntity>>;
     }
 }
 
-declare module '../../../Framework/Signum.React/Scripts/SearchControl/SearchControlLoaded' {
+declare module '@framework/SearchControl/SearchControlLoaded' {
 
     export interface ShowBarExtensionOption {
         showUserQuery?: boolean;

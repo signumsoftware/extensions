@@ -171,6 +171,9 @@ namespace Signum.Engine.Migrations
                 }
                 else
                 {
+                    SafeConsole.WriteLineColor(ConsoleColor.Yellow, "Some changes found, here is the script:");
+                    Console.WriteLine();
+
                     SafeConsole.WriteLineColor(ConsoleColor.DarkGray, script.ToString().Indent(4));
 
                     Console.WriteLine();
@@ -219,7 +222,7 @@ namespace Signum.Engine.Migrations
 
         }
 
-        public static int Timeout = 5 * 60; 
+        public static int Timeout = 20 * 60; 
 
         private static void Execute(MigrationInfo mi)
         {
@@ -297,7 +300,7 @@ namespace Signum.Engine.Migrations
 
                     Console.WriteLine();
 
-                    throw new MigrationException();
+                    throw new MigrationException(ex.Message, ex);
                 }
             }
         }

@@ -1,7 +1,32 @@
 ﻿import * as d3 from "d3"
 import * as d3sc from "d3-scale-chromatic";
 import { ChartValue, ChartTable, ChartColumn, ChartRow } from "../ChartClient"
+import googleMapStyles from "./GoogleMapStyles"
+import { parseLite } from "@framework/Signum.Entities"
+import * as Navigator from '@framework/Navigator'
 
+export function getNavigateRoute(liteData: string) {
+    var lite = parseLite(liteData);
+    return Navigator.navigateRoute(lite);
+}
+
+export function navigateEntity(liteData: string) {
+    var lite = parseLite(liteData);
+    window.open(Navigator.navigateRoute(lite));
+}
+
+export function getMapStyles() {
+    return googleMapStyles;
+}
+
+export function getScript(source: string, onload?: () => void) {
+    var script = document.createElement('script');
+    var prior = document.getElementsByTagName('script')[0];
+    script.async = true;
+    script.src = source;
+    script.onload = onload || null;
+    prior.parentNode!.insertBefore(script, prior);
+}
 
 ((d3.select(document) as any).__proto__ as d3.Selection<any, any, any, any>).enterData = function (this: d3.Selection<any, any, any, any>, data: any, tag: string, cssClass: string) {
     return this.selectAll(tag + "." + cssClass).data(data)
@@ -381,12 +406,9 @@ export function getColorInterpolation(interpolationName: string): ((value: numbe
     return undefined;
 }
 
-export function getColorScheme(schemeName: string): string[] | undefined {
+export function getColorScheme(schemeName: string, k: number = 11): ReadonlyArray<string> | undefined {
     switch (schemeName) {
         case "category10": return d3.schemeCategory10;
-        case "category20": return d3.schemeCategory20;
-        case "category20b": return d3.schemeCategory20b;
-        case "category20c": return d3.schemeCategory20c;
         case "accent": return d3sc.schemeAccent;
         case "dark2": return d3sc.schemeDark2;
         case "paired": return d3sc.schemePaired;
@@ -395,6 +417,31 @@ export function getColorScheme(schemeName: string): string[] | undefined {
         case "set1": return d3sc.schemeSet1;
         case "set2": return d3sc.schemeSet2;
         case "set3": return d3sc.schemeSet3;
+        case "BrBG[K]": return d3sc.schemeBrBG[k];
+        case "PRGn[K]": return d3sc.schemePRGn[k];
+        case "PiYG[K]": return d3sc.schemePiYG[k];
+        case "PuOr[K]": return d3sc.schemePuOr[k];
+        case "RdBu[K]": return d3sc.schemeRdBu[k];
+        case "RdGy[K]": return d3sc.schemeRdGy[k];
+        case "RdYlBu[K]": return d3sc.schemeRdYlBu[k];
+        case "RdYlGn[K]": return d3sc.schemeRdYlGn[k];
+        case "Spectral[K]": return d3sc.schemeSpectral[k];
+        case "Blues[K]": return d3sc.schemeBlues[k];
+        case "Greys[K]": return d3sc.schemeGreys[k];
+        case "Oranges[K]": return d3sc.schemeOranges[k];
+        case "Purples[K]": return d3sc.schemePurples[k];
+        case "Reds[K]": return d3sc.schemeReds[k];
+        case "BuGn[K]": return d3sc.schemeBuGn[k];
+        case "BuPu[K]": return d3sc.schemeBuPu[k];
+        case "OrRd[K]": return d3sc.schemeOrRd[k];
+        case "PuBuGn[K]": return d3sc.schemePuBuGn[k];
+        case "PuBu[K]": return d3sc.schemePuBu[k];
+        case "PuRd[K]": return d3sc.schemePuRd[k];
+        case "RdPu[K]": return d3sc.schemeRdPu[k];
+        case "YlGnBu[K]": return d3sc.schemeYlGnBu[k];
+        case "YlGn[K]": return d3sc.schemeYlGn[k];
+        case "YlOrBr[K]": return d3sc.schemeYlOrBr[k];
+        case "YlOrRd[K]": return d3sc.schemeYlOrRd[k];
     }
 
     return undefined;
@@ -409,7 +456,7 @@ export function stratifyTokens(
     d3.HierarchyNode<ChartRow | Folder | Root> {
 
     const folders = data.rows
-        .filter(r => r[keyColumnParent] && r[keyColumnParent].key)
+        .filter(r => r[keyColumnParent] && r[keyColumnParent].key != null)
         .map(r => ({ folder: r[keyColumnParent] }) as Folder)
         .toObjectDistinct(r => r.folder.key!.toString());
 
@@ -430,7 +477,7 @@ export function stratifyTokens(
                 return root;
 
             const parentValue = r[keyColumnParent];
-            if (!parentValue || !parentValue.key)
+            if (!parentValue || parentValue.key == null)
                 return root;  //Either null
 
             return folders[parentValue.key as string]; // Parent folder
@@ -445,7 +492,7 @@ export function stratifyTokens(
 
             const parentValue = r[keyColumnParent];
 
-            const parentFolder = parentValue && parentValue.key && folders[parentValue.key as string];
+            const parentFolder = parentValue && parentValue.key != null && folders[parentValue.key as string];
 
             if (!parentFolder)
                 return root; //No key an no parent
@@ -586,3 +633,4 @@ interface PivotValue {
     value: ChartValue;
     valueTitle: string;
 }
+

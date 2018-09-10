@@ -1,19 +1,19 @@
 ﻿import * as React from 'react'
 import * as moment from 'moment'
-import { Button } from "react-bootstrap"
-import { Binding, LambdaMemberType } from '../../../../Framework/Signum.React/Scripts/Reflection'
-import { Dic, classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { newMListElement, Lite, liteKey, Entity, is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { Binding, MemberType } from '@framework/Reflection'
+import { Dic, classes } from '@framework/Globals'
+import { newMListElement, Lite, liteKey, Entity, is } from '@framework/Signum.Entities'
 import {
     CaseActivityMessage, CaseNotificationEntity, CaseNotificationOperation, CaseActivityEntity, WorkflowActivityEntity, CaseTagTypeEntity,
     CaseTagsModel, CaseOperation, CaseEntity
 } from '../Signum.Entities.Workflow'
-import { TypeContext, ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater, EnumCheckboxList, FormGroup, FormGroupStyle, FormGroupSize, ValueLineType } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl, ValueSearchControl, FilterOperation, OrderType, PaginationMode, ISimpleFilterBuilder, FilterOption, FindOptions  } from '../../../../Framework/Signum.React/Scripts/Search'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import * as Operations from '../../../../Framework/Signum.React/Scripts/Operations'
-import ValueLineModal from '../../../../Framework/Signum.React/Scripts/ValueLineModal'
+import { TypeContext, ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater, EnumCheckboxList, FormGroup, FormGroupStyle, ValueLineType } from '@framework/Lines'
+import { SearchControl, ValueSearchControl, FilterOperation, OrderType, PaginationMode, ISimpleFilterBuilder, FilterOption, FindOptions  } from '@framework/Search'
+import * as Finder from '@framework/Finder'
+import * as Navigator from '@framework/Navigator'
+import * as Operations from '@framework/Operations'
+import ValueLineModal from '@framework/ValueLineModal'
 import { AlertEntity, AlertState } from '../../Alerts/Signum.Entities.Alerts'
 import * as WorkflowClient from '../WorkflowClient'
 import { Color } from '../../Basics/Color'
@@ -67,15 +67,14 @@ export default class ActivityWithRemarksComponent extends React.Component<Activi
             <span>
                 {this.props.data.workflowActivity.toStr}
                 &nbsp;
-                <a href="" onClick={this.handleRemarksClick} className={classes(
+                <a href="#" onClick={this.handleRemarksClick} className={classes(
                         "case-icon",
                         !this.state.remarks && "case-icon-ghost")}>
-                    <span className={classes(
-                        this.state.remarks ? "glyphicon glyphicon-comment" : "glyphicon glyphicon-pencil")} />
+                    <FontAwesomeIcon icon={this.state.remarks ? "comment-dots" : ["far", "comment"]} />
                 </a>
                 {this.state.alerts > 0 && " "}
-                {this.state.alerts > 0 && <a href="" onClick={this.handleAlertsClick} style={{ color: "orange" }}>
-                    <span className={"fa fa-bell"} />
+                {this.state.alerts > 0 && <a href="#" onClick={this.handleAlertsClick} style={{ color: "orange" }}>
+                    <FontAwesomeIcon icon={"bell"} />
                 </a>}
                 &nbsp;
                <InlineCaseTags case={this.props.data.case} defaultTags={this.state.tags} />
@@ -90,16 +89,16 @@ export default class ActivityWithRemarksComponent extends React.Component<Activi
         var fo: FindOptions = {
             queryName: AlertEntity,
             filterOptions: [
-                { columnName: "Target", value: this.props.data.caseActivity },
-                { columnName: "Entity.Recipient", value: Navigator.currentUser },
-                { columnName: "Entity.CurrentState", value: "Alerted" }
+                { token: "Target", value: this.props.data.caseActivity },
+                { token: "Entity.Recipient", value: Navigator.currentUser },
+                { token: "Entity.CurrentState", value: "Alerted" }
             ],
-            columnOptions: [{ columnName: "Target" }],
+            columnOptions: [{ token: "Target" }],
             columnOptionsMode: "Remove",
         }; 
 
         Finder.exploreOrNavigate(fo)
-            .then(() => Finder.getCount(fo.queryName, fo.filterOptions!))
+            .then(() => Finder.getQueryValue(fo.queryName, fo.filterOptions!))
             .then(alerts => this.setState({ alerts: alerts }))
             .done();
     }

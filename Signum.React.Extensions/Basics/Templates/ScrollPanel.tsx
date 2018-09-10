@@ -1,7 +1,6 @@
 ﻿import * as React from 'react'
-import { Panel, PanelGroup } from "react-bootstrap";
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { BsStyle } from "../../../../Framework/Signum.React/Scripts/Operations";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { classes } from '@framework/Globals'
 
 export interface ScrollPanelsProps {
     children: React.ReactElement<ScrollPanelProps>[];
@@ -17,7 +16,7 @@ export class ScrollPanels extends React.Component<ScrollPanelsProps> {
                 <ul className="nav nav-pills" role="tablist" id={this.props.backId}>
                     {
                         this.props.children.map(p =>
-                            <li role="presentation" key={p.props.id}>
+                            <li className="nav-item" role="presentation" key={p.props.id}>
                                 <Scrollchor to={p.props.id}>{p.props.title}</Scrollchor>
                             </li>
                         )
@@ -41,7 +40,7 @@ export class ScrollPanel extends React.Component<ScrollPanelProps> {
     render() {
         return (
             <div>
-                <h3 id={this.props.id}>{this.props.title}&nbsp;{this.props.backId && <Scrollchor to={this.props.backId} className="pull-right flip"><small><i className="fa fa-level-up" /></small></Scrollchor>}</h3>
+                <h3 id={this.props.id}>{this.props.title}&nbsp;{this.props.backId && <Scrollchor to={this.props.backId} className="float-right flip"><small><FontAwesomeIcon icon="level-up"/></small></Scrollchor>}</h3>
                 {this.props.children}
             </div>
         );
@@ -64,7 +63,7 @@ export class Scrollchor extends React.Component<ScrollchorProps> {
 
         return !this.props.children
             ? null
-            : <a {...props} href={'#' + this.props.to} onClick={this.handleClick} />;
+            : <a className="nav-link" {...props} href={'#' + this.props.to} onClick={this.handleClick} />;
     }
 }
 

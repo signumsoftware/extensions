@@ -1,21 +1,22 @@
 ﻿import * as React from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { Route } from 'react-router'
-import { classes } from '../../../Framework/Signum.React/Scripts/Globals'
-import { ajaxPost, ajaxGet } from '../../../Framework/Signum.React/Scripts/Services';
-import { EntitySettings, ViewPromise } from '../../../Framework/Signum.React/Scripts/Navigator'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import { EntityData, EntityKind, isTypeEnum, PropertyRoute } from '../../../Framework/Signum.React/Scripts/Reflection'
-import { EntityOperationSettings } from '../../../Framework/Signum.React/Scripts/Operations'
-import * as Operations from '../../../Framework/Signum.React/Scripts/Operations'
-import { Entity } from '../../../Framework/Signum.React/Scripts/Signum.Entities'
-import * as Constructor from '../../../Framework/Signum.React/Scripts/Constructor'
-import { StyleContext } from '../../../Framework/Signum.React/Scripts/TypeContext'
+import { classes } from '@framework/Globals'
+import { ajaxPost, ajaxGet } from '@framework/Services';
+import { EntitySettings, ViewPromise } from '@framework/Navigator'
+import * as Navigator from '@framework/Navigator'
+import { EntityData, EntityKind, isTypeEnum, PropertyRoute } from '@framework/Reflection'
+import { EntityOperationSettings } from '@framework/Operations'
+import * as Operations from '@framework/Operations'
+import { Entity } from '@framework/Signum.Entities'
+import * as Constructor from '@framework/Constructor'
+import { StyleContext } from '@framework/TypeContext'
 
-import Typeahead from '../../../Framework/Signum.React/Scripts/Lines/Typeahead'
-import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater } from '../../../Framework/Signum.React/Scripts/Lines'
+import { Typeahead } from '@framework/Components'
+import { ValueLine, EntityLine, EntityCombo, EntityList, EntityDetail, EntityStrip, EntityRepeater } from '@framework/Lines'
 import * as TypeHelpClient from './TypeHelpClient'
-import ContextMenu from '../../../Framework/Signum.React/Scripts/SearchControl/ContextMenu'
-import { ContextMenuPosition } from '../../../Framework/Signum.React/Scripts/SearchControl/ContextMenu'
+import ContextMenu from '@framework/SearchControl/ContextMenu'
+import { ContextMenuPosition } from '@framework/SearchControl/ContextMenu'
 
 import "./TypeHelpComponent.css"
 
@@ -113,7 +114,7 @@ export default class TypeHelpComponent extends React.Component<TypeHelpComponent
         return (
             <div className="sf-type-help" ref={(th) => this.typeHelpContainer = th!}>
                 {this.renderHeader()}
-                {this.state.help == undefined ? <h4>Loading {this.currentType()}…</h4> : 
+                {this.state.help == undefined ? <h4>Loading {this.currentType()}…</h4> :
                     this.state.help == false ? <h4>Not found {this.currentType()}</h4> :
                         this.renderHelp(this.state.help)}
                 {this.state.contextualMenu && this.renderContextualMenu()}
@@ -136,9 +137,6 @@ export default class TypeHelpComponent extends React.Component<TypeHelpComponent
         });
     }
 
-    input: HTMLInputElement;
-
-
     handleGetItems = (query: string) => {
         return TypeHelpClient.API.autocompleteEntityCleanType({
             query: query,
@@ -146,10 +144,10 @@ export default class TypeHelpComponent extends React.Component<TypeHelpComponent
         });
     }
 
-    handleSelect = (item: string) => {
+    handleSelect = (item: unknown) => {
         this.setState({ tempQuery: undefined });
-        this.goTo(item);
-        return item;
+        this.goTo(item as string);
+        return item as string;
     }
 
     currentType(): string {
@@ -166,39 +164,43 @@ export default class TypeHelpComponent extends React.Component<TypeHelpComponent
 
     renderHeader() {
         return (
-            <div className="form-sm sf-type-help-bar">
-                <div className="input-group">
-                    <span className="input-group-btn">
-                        <button className="btn btn-default" disabled={!this.canBack()}
+            <div className="sf-type-help-bar">
+                <div className="input-group input-group-sm">
+                    <span className="input-group-prepend">
+                        <button className="btn input-group-text" disabled={!this.canBack()}
                             onClick={e => this.handleGoHistory(e, this.state.historyIndex - 1)} type="button">
-                            <span className="glyphicon glyphicon-circle-arrow-left" />
+                            <FontAwesomeIcon icon="arrow-circle-left" />
                         </button>
-                        <button className="btn btn-default" disabled={!this.canForth()}
+                        <button className="btn input-group-text" disabled={!this.canForth()}
                             onClick={e => this.handleGoHistory(e, this.state.historyIndex + 1)} type="button">
-                            <span className="glyphicon glyphicon-circle-arrow-right" />
+                            <FontAwesomeIcon icon="arrow-circle-right" />
                         </button>
                     </span>
-                    <div style={{ position: "relative" }}>
-                        <Typeahead
-                            inputAttrs={{ className: "form-control sf-entity-autocomplete" }}
-                            getItems={this.handleGetItems}
-                            value={this.state.tempQuery == undefined ? this.currentType() : this.state.tempQuery}
-                            onBlur={() => this.setState({ tempQuery: undefined })}
-                            onChange={newValue => this.setState({ tempQuery: newValue })}
-                            onSelect={this.handleSelect} />
-                    </div>
+                    <Typeahead
+                        inputAttrs={{ className: "form-control form-control-sm sf-entity-autocomplete" }}
+                        getItems={this.handleGetItems}
+                        value={this.state.tempQuery == undefined ? this.currentType() : this.state.tempQuery}
+                        onBlur={() => this.setState({ tempQuery: undefined })}
+                        onChange={newValue => this.setState({ tempQuery: newValue })}
+                        onSelect={this.handleSelect} />
+                    <span className="input-group-append">
+                        <div className="input-group-text" style={{ color: "white", backgroundColor: this.props.mode == "CSharp" ? "#007e01" : "#017acc" }}>
+                            {this.props.mode == "CSharp" ? "C#" : this.props.mode}
+                        </div>
+                    </span>
                 </div>
+
             </div>
         );
     }
 
-    typeHelpContainer: HTMLElement;
+    typeHelpContainer!: HTMLElement;
 
     renderHelp(h: TypeHelpClient.TypeHelp) {
         return (
             <div>
-                <h4>{h.type}</h4>
-             
+                <h4 className="mb-1 mt-2">{h.type}</h4>
+
                 <ul className="sf-members" style={{ paddingLeft: "0px" }}>
                     {h.members.map((m, i) => this.renderMember(h, m, i))}
                 </ul>
@@ -287,8 +289,8 @@ export default class TypeHelpComponent extends React.Component<TypeHelpComponent
             return (
                 <span>
                     {this.renderType(type.substr(0, type.length - 1), cleanType)}
-                    {this.props.mode == "TypeScript"? " | " : "?"}
-                    {this.props.mode == "TypeScript" && <span className="sf-member-primitive">null</span> }
+                    {this.props.mode == "TypeScript" ? " | " : "?"}
+                    {this.props.mode == "TypeScript" && <span className="sf-member-primitive">null</span>}
                 </span>
             );
         }
@@ -296,8 +298,8 @@ export default class TypeHelpComponent extends React.Component<TypeHelpComponent
         if (cleanType != null)
             return (
                 <span>
-                    <a href="" className={"sf-member-" + (isTypeEnum(type) ? "enum" : "class")}
-                        onClick={(e) => { e.preventDefault(); this.goTo(cleanType); } }>
+                    <a href="#" className={"sf-member-" + (isTypeEnum(type) ? "enum" : "class")}
+                        onClick={(e) => { e.preventDefault(); this.goTo(cleanType); }}>
                         {type}
                     </a>
                 </span>

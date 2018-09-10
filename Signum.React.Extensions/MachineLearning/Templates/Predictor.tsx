@@ -1,35 +1,37 @@
 ﻿import * as React from 'react'
-import { Tabs, Tab } from 'react-bootstrap';
 import * as numbro from 'numbro';
-import * as OrderUtils from '../../../../Framework/Signum.React/Scripts/Frames/OrderUtils'
-import { classes } from '../../../../Framework/Signum.React/Scripts/Globals'
-import { FormGroup, FormControlStatic, ValueLine, ValueLineType, EntityLine, EntityDetail, EntityCombo, EntityList, EntityRepeater, EntityTable, IRenderButtons, EntityTabRepeater } from '../../../../Framework/Signum.React/Scripts/Lines'
-import { SearchControl, FilterOption, ColumnOption, FindOptions } from '../../../../Framework/Signum.React/Scripts/Search'
-import { TypeContext, FormGroupStyle, ButtonsContext } from '../../../../Framework/Signum.React/Scripts/TypeContext'
+import * as OrderUtils from '@framework/Frames/OrderUtils'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { classes } from '@framework/Globals'
+import { Tab, Tabs, UncontrolledTabs } from '@framework/Components/Tabs'
+import { FormGroup, FormControlReadonly, ValueLine, ValueLineType, EntityLine, EntityDetail, EntityCombo, EntityList, EntityRepeater, EntityTable, IRenderButtons, EntityTabRepeater } from '@framework/Lines'
+import { SearchControl, FilterOption, ColumnOption, FindOptions } from '@framework/Search'
+import { TypeContext, FormGroupStyle, ButtonsContext } from '@framework/TypeContext'
 import FileLine from '../../Files/FileLine'
-import { PredictorEntity, PredictorColumnEmbedded, PredictorMessage, PredictorSubQueryEntity, PredictorFileType, PredictorCodificationEntity, PredictorSubQueryColumnEmbedded, PredictorEpochProgressEntity, NeuralNetworkSettingsEntity } from '../Signum.Entities.MachineLearning'
-import * as Finder from '../../../../Framework/Signum.React/Scripts/Finder'
-import * as Navigator from '../../../../Framework/Signum.React/Scripts/Navigator'
-import { getQueryNiceName } from '../../../../Framework/Signum.React/Scripts/Reflection'
+import { PredictorEntity, PredictorColumnEmbedded, PredictorMessage, PredictorSubQueryEntity, PredictorFileType, PredictorCodificationEntity, PredictorSubQueryColumnEmbedded, PredictorEpochProgressEntity, NeuralNetworkSettingsEntity, DefaultColumnEncodings } from '../Signum.Entities.MachineLearning'
+import * as Finder from '@framework/Finder'
+import * as Navigator from '@framework/Navigator'
+import { getQueryNiceName } from '@framework/Reflection'
 import QueryTokenEntityBuilder from '../../UserAssets/Templates/QueryTokenEntityBuilder'
 import { QueryFilterEmbedded } from '../../UserQueries/Signum.Entities.UserQueries'
-import { QueryDescription, SubTokensOptions } from '../../../../Framework/Signum.React/Scripts/FindOptions'
+import { QueryDescription, SubTokensOptions } from '@framework/FindOptions'
 import * as PredictorClient from '../PredictorClient';
-import { toLite } from "../../../../Framework/Signum.React/Scripts/Signum.Entities";
-import FilterBuilder from '../../../../Framework/Signum.React/Scripts/SearchControl/FilterBuilder';
-import { MList, newMListElement } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
+import { toLite } from "@framework/Signum.Entities";
+import FilterBuilder from '@framework/SearchControl/FilterBuilder';
+import { MList, newMListElement } from '@framework/Signum.Entities';
 import FilterBuilderEmbedded from './FilterBuilderEmbedded';
 import PredictorSubQuery from './PredictorSubQuery';
 import { QueryTokenEmbedded } from '../../UserAssets/Signum.Entities.UserAssets';
-import { QueryEntity } from '../../../../Framework/Signum.React/Scripts/Signum.Entities.Basics';
+import { QueryEntity } from '@framework/Signum.Entities.Basics';
 import { FilePathEmbedded } from '../../Files/Signum.Entities.Files';
-import { is } from '../../../../Framework/Signum.React/Scripts/Signum.Entities';
+import { is } from '@framework/Signum.Entities';
 import ProgressBar from './ProgressBar'
 import LineChart, { LineChartSerie } from './LineChart'
-import { QueryToken } from '../../../../Framework/Signum.React/Scripts/FindOptions';
+import { QueryToken } from '@framework/FindOptions';
 import PredictorMetrics from './PredictorMetrics';
 import PredictorClassificationMetrics from './PredictorClassificationMetrics';
 import PredictorRegressionMetrics from './PredictorRegressionMetrics';
+import { CellFormatter, toFilterOptions } from '@framework/Finder';
 
 export default class Predictor extends React.Component<{ ctx: TypeContext<PredictorEntity> }, { queryDescription?: QueryDescription }> implements IRenderButtons {
 
@@ -42,9 +44,9 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
             Finder.find({
                 queryName: this.state.queryDescription!.queryKey,
                 columnOptionsMode: "Add",
-                columnOptions: p.mainQuery.columns.map(mle => ({ columnName: mle.element.token && mle.element.token.token!.fullKey }) as ColumnOption)
+                columnOptions: p.mainQuery.columns.map(mle => ({ token: mle.element.token && mle.element.token.token!.fullKey }) as ColumnOption)
             })
-                .then(lite => PredictorClient.predict(toLite(p), lite && { "Entity" : lite }))
+                .then(lite => PredictorClient.predict(p, lite && { "Entity": lite }))
                 .done();
 
         } else {
@@ -55,16 +57,16 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
                 queryName: this.state.queryDescription!.queryKey,
                 groupResults: p.mainQuery.groupResults,
                 columnOptionsMode: "Replace",
-                columnOptions: fullKeys.map(fk => ({ columnName: fk }) as ColumnOption)
+                columnOptions: fullKeys.map(fk => ({ token: fk }) as ColumnOption)
             }, { searchControlProps: { allowChangeColumns: false, showGroupButton: false } })
-                .then(row => PredictorClient.predict(toLite(p), row && fullKeys.map((fk, i) => ({ tokenString: fk, value: row!.columns[i] })).toObject(a => a.tokenString, a => a.value)))
+                .then(row => PredictorClient.predict(p, row && fullKeys.map((fk, i) => ({ tokenString: fk, value: row!.columns[i] })).toObject(a => a.tokenString, a => a.value)))
                 .done();
         }
     }
 
     renderButtons(ctx: ButtonsContext): (React.ReactElement<any> | undefined)[] {
         if ((ctx.pack.entity as PredictorEntity).state == "Trained") {
-            return [OrderUtils.setOrder(10000, <button className="btn btn-info" onClick={this.handleClick}><i className="fa fa-lightbulb-o"></i>&nbsp;{PredictorMessage.Predict.niceToString()}</button >)];
+            return [OrderUtils.setOrder(10000, <button className="btn btn-info" onClick={this.handleClick}><FontAwesomeIcon icon={["far", "lightbulb"]} />&nbsp;{PredictorMessage.Predict.niceToString()}</button >)];
         } else {
             return [];
         }
@@ -92,9 +94,8 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
     handleQueryChange = () => {
 
         const p = this.props.ctx.value;
-        p.mainQuery.filters.forEach(a => a.element.token = fixTokenEmbedded(a.element.token || null, p.mainQuery.groupResults || false));
-        p.mainQuery.columns.forEach(a => a.element.token = fixTokenEmbedded(a.element.token || null, p.mainQuery.groupResults || false));
-        this.forceUpdate();
+        p.mainQuery.filters.clear();
+        p.mainQuery.columns.clear();
 
         this.setState({
             queryDescription: undefined
@@ -103,6 +104,15 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
                 this.loadData(p.mainQuery.query);
         });
     }
+
+    handleGroupChange = () => {
+
+        const p = this.props.ctx.value;
+        p.mainQuery.filters.forEach(a => a.element.token = fixTokenEmbedded(a.element.token || null, p.mainQuery.groupResults || false));
+        p.mainQuery.columns.forEach(a => a.element.token = fixTokenEmbedded(a.element.token || null, p.mainQuery.groupResults || false));
+        this.forceUpdate();
+    }
+
 
     handleCreate = () => {
 
@@ -160,13 +170,9 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
                 var fo: FindOptions = {
                     queryName: mq.query!.key,
                     groupResults: mq.groupResults,
-                    filterOptions: filters.map(f => ({
-                        columnName: f.token!.fullKey,
-                        operation: f.operation,
-                        value: f.value
-                    }) as FilterOption),
+                    filterOptions: toFilterOptions(filters),
                     columnOptions: mq.columns.orderBy(mle => mle.element.usage == "Input" ? 0 : 1).map(mle => ({
-                        columnName: mle.element.token && mle.element.token.tokenString,
+                        token: mle.element.token && mle.element.token.tokenString,
                     } as ColumnOption)),
                     columnOptionsMode: "Replace",
                 };
@@ -182,7 +188,7 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
         if (ctx.value.state != "Draft")
             ctx = ctx.subCtx({ readOnly: true });
 
-        const ctxxs = ctx.subCtx({ formGroupSize: "ExtraSmall" });
+        const ctxxs = ctx.subCtx({ formSize: "ExtraSmall" });
         const ctxxs4 = ctx.subCtx({ labelColumns: 4 });
         const ctxmq = ctxxs.subCtx(a => a.mainQuery);
         const entity = ctx.value;
@@ -205,14 +211,14 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
                     </div>
                 </div>
                 {ctx.value.state == "Training" && <TrainingProgressComponent ctx={ctx} onStateChanged={this.handleOnFinished} />}
-                <Tabs id={ctx.prefix + "tabs"} unmountOnExit={true}>
+                <UncontrolledTabs>
                     <Tab eventKey="query" title={ctxmq.niceName(a => a.query)}>
                         <div>
                             <fieldset>
                                 <legend>{ctxmq.niceName()}</legend>
                                 <EntityLine ctx={ctxmq.subCtx(f => f.query)} remove={ctx.value.isNew} onChange={this.handleQueryChange} />
                                 {queryKey && <div>
-                                    <ValueLine ctx={ctxmq.subCtx(f => f.groupResults)} onChange={this.handleQueryChange} />
+                                    <ValueLine ctx={ctxmq.subCtx(f => f.groupResults)} onChange={this.handleGroupChange} />
 
                                     <FilterBuilderEmbedded ctx={ctxmq.subCtx(a => a.filters)}
                                         queryKey={queryKey}
@@ -250,13 +256,13 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
                     </Tab>
                     {
                         ctx.value.state != "Draft" && <Tab eventKey="codifications" title={PredictorMessage.Codifications.niceToString()}>
-                            <SearchControl findOptions={{ queryName: PredictorCodificationEntity, parentColumn: "Predictor", parentValue: ctx.value }} />
+                            <SearchControl findOptions={{ queryName: PredictorCodificationEntity, parentToken: "Predictor", parentValue: ctx.value }} />
                         </Tab>
                     }
                     {
                         ctx.value.state != "Draft" && <Tab eventKey="progress" title={PredictorMessage.Progress.niceToString()}>
                             {ctx.value.state == "Trained" && <EpochProgressComponent ctx={ctx} />}
-                            <SearchControl findOptions={{ queryName: PredictorEpochProgressEntity, parentColumn: "Predictor", parentValue: ctx.value }} />
+                            <SearchControl findOptions={{ queryName: PredictorEpochProgressEntity, parentToken: "Predictor", parentValue: ctx.value }} />
                         </Tab>
                     }
                     {
@@ -265,14 +271,12 @@ export default class Predictor extends React.Component<{ ctx: TypeContext<Predic
                             {ctx.value.classificationTraining && ctx.value.classificationValidation && <PredictorClassificationMetrics ctx={ctx} />}
                             {ctx.value.regressionTraining && ctx.value.regressionTraining && <PredictorRegressionMetrics ctx={ctx} />}
                             {ctx.value.resultSaver && PredictorClient.getResultRendered(ctx)}
-                            <div className="form-vertical">
-                                <EntityRepeater ctx={ctxxs.subCtx(f => f.files)} getComponent={ec =>
-                                    <FileLine ctx={ec.subCtx({ formGroupStyle: "SrOnly" })} remove={false} fileType={PredictorFileType.PredictorFile} />
-                                } />
-                            </div>
+                            <EntityRepeater ctx={ctxxs.subCtx(f => f.files)} getComponent={ec =>
+                                <FileLine ctx={ec.subCtx({ formGroupStyle: "SrOnly" })} remove={false} fileType={PredictorFileType.PredictorFile} />
+                            } />
                         </Tab>
                     }
-                </Tabs>
+                </UncontrolledTabs>
             </div>
         );
     }
@@ -282,9 +286,9 @@ export function initializeColumn(p: PredictorEntity, pc: PredictorColumnEmbedded
     var token = pc.token && pc.token.token;
     if (token) {
         pc.encoding =
-            token.type.name == "number" || token.type.name == "decimal" ? "NormalizeZScore" :
-                NeuralNetworkSettingsEntity.isInstance(p.algorithmSettings) ? (token.type.name == "boolean" ? "None" : "OneHot") :
-                    "Codified";
+            token.type.name == "number" || token.type.name == "decimal" ? DefaultColumnEncodings.NormalizeZScore :
+                token.type.name == "boolean" ? DefaultColumnEncodings.None :
+                    DefaultColumnEncodings.OneHot;
 
         pc.nullHandling = "Zero";
     }
@@ -323,7 +327,7 @@ export class TrainingProgressComponent extends React.Component<TrainingProgressC
 
     refreshInterval = 500;
 
-    timeoutHandler: number;
+    timeoutHandler!: number;
 
     loadData(props: TrainingProgressComponentProps) {
         PredictorClient.API.getTrainingState(toLite(props.ctx.value))
@@ -345,7 +349,7 @@ export class TrainingProgressComponent extends React.Component<TrainingProgressC
         return (
             <div>
                 {tp && tp.EpochProgressesParsed && <LineChart height={200} series={getSeries(tp.EpochProgressesParsed, this.props.ctx.value)} />}
-                <ProgressBar color={tp == null || tp.Running == false ? "info" : "default"}
+                <ProgressBar color={tp == null || tp.Running == false ? "warning" : null}
                     value={tp && tp.Progress}
                     message={tp == null ? PredictorMessage.StartingTraining.niceToString() : tp.Message}
                 />
@@ -405,41 +409,46 @@ function getSeries(eps: Array<PredictorClient.EpochProgress>, predictor: Predict
 
     const algSet = predictor.algorithmSettings;
 
-    const isClassification = NeuralNetworkSettingsEntity.isInstance(algSet) && algSet.predictionType == "Classification";
+    const nns = NeuralNetworkSettingsEntity.isInstance(algSet) ? algSet : undefined;
 
-    var totalMax = isClassification ? undefined : eps.flatMap(a => [a.LossTraining, a.LossValidation]).filter(a => a != null).max();
+    var maxLoss = eps.flatMap(a => [a.LossTraining, a.LossValidation]).filter(a => a != null).max();
+    var maxEvaluation = eps.flatMap(a => [a.EvaluationTraining, a.EvaluationValidation]).filter(a => a != null).max();
 
     return [
         {
-            color: "black",
             name: PredictorEpochProgressEntity.nicePropertyName(a => a.lossTraining),
+            title: nns && nns!.lossFunction,
+            color: "#1A5276",
             values: eps.filter(a => a.LossTraining != null).map(ep => ({ x: ep.TrainingExamples, y: ep.LossTraining })),
             minValue: 0,
-            maxValue: totalMax,
+            maxValue: maxLoss,
             strokeWidth: "2px",
         },
         {
-            color: "darkgray",
+            name: PredictorEpochProgressEntity.nicePropertyName(a => a.lossValidation),
+            title: nns && nns!.lossFunction,
+            color: "#5DADE2",
+            values: eps.filter(a => a.LossValidation != null).map(ep => ({ x: ep.TrainingExamples, y: ep.LossValidation! })),
+            minValue: 0,
+            maxValue: maxLoss,
+            strokeWidth: "2px",
+        },
+        {
             name: PredictorEpochProgressEntity.nicePropertyName(a => a.evaluationTraining),
+            title: nns && nns!.evalErrorFunction,
+            color: "#731c7b",
             values: eps.filter(a => a.EvaluationTraining != null).map(ep => ({ x: ep.TrainingExamples, y: ep.EvaluationTraining })),
             minValue: 0,
-            maxValue: isClassification ? 1 : totalMax,
+            maxValue: maxEvaluation,
             strokeWidth: "1px",
         },
         {
-            color: "red",
-            name: PredictorEpochProgressEntity.nicePropertyName(a => a.lossValidation),
-            values: eps.filter(a => a.LossValidation != null).map(ep => ({ x: ep.TrainingExamples, y: ep.LossValidation! })),
-            minValue: 0,
-            maxValue: totalMax,
-            strokeWidth: "2px",
-        },
-        {
-            color: "pink",
             name: PredictorEpochProgressEntity.nicePropertyName(a => a.evaluationValidation),
+            title: nns && nns!.evalErrorFunction,
+            color: "#d980d9",
             values: eps.filter(a => a.EvaluationValidation != null).map(ep => ({ x: ep.TrainingExamples, y: ep.EvaluationValidation! })),
             minValue: 0,
-            maxValue: isClassification ? 1 : totalMax,
+            maxValue: maxEvaluation,
             strokeWidth: "1px",
         }
     ];

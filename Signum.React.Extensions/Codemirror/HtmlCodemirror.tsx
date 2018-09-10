@@ -1,7 +1,7 @@
 ﻿import * as React from 'react'
-import { getQueryNiceName } from '../../../Framework/Signum.React/Scripts/Reflection'
-import * as Navigator from '../../../Framework/Signum.React/Scripts/Navigator'
-import { TypeContext, FormGroupStyle } from '../../../Framework/Signum.React/Scripts/TypeContext'
+import { getQueryNiceName } from '@framework/Reflection'
+import * as Navigator from '@framework/Navigator'
+import { TypeContext, FormGroupStyle } from '@framework/TypeContext'
 import CodeMirrorComponent from '../Codemirror/CodeMirrorComponent'
 import * as CodeMirror from 'codemirror'
 
@@ -24,13 +24,6 @@ import "codemirror/addon/search/searchcursor"
 
 export default class HtmlCodemirror extends React.Component<{ ctx: TypeContext<string | null | undefined>, onChange?: (newValue: string) => void }> {
 
-    get entity() {
-        return this.props.ctx.value;
-    }
-
-    changedHandler: number;
-    exceptionHandler: number;
-
     handleOnChange = (newValue: string) => {
         const { ctx, onChange } = this.props;
 
@@ -39,7 +32,7 @@ export default class HtmlCodemirror extends React.Component<{ ctx: TypeContext<s
             onChange(ctx.value);
     };
     
-    codeMirrorComponent: CodeMirrorComponent;
+    codeMirrorComponent!: CodeMirrorComponent;
     
     render() {
 

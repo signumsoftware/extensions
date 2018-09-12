@@ -108,6 +108,7 @@ namespace Signum.Entities.Processes
 
         public DateTime? ExceptionDate { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         [NumberBetweenValidator(0, 1), Format("p")]
@@ -228,7 +229,7 @@ namespace Signum.Entities.Processes
         [NotNullValidator]
         public Lite<ProcessEntity> Process { get; set; }
 
-        [NotNullValidator]
+        [NotNullValidator, AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
     }
 }

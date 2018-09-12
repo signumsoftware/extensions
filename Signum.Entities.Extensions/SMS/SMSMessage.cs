@@ -54,6 +54,7 @@ namespace Signum.Entities.SMS
         [ImplementedBy()]
         public Lite<Entity> Referred { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         public override string ToString()

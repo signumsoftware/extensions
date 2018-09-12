@@ -79,6 +79,7 @@ namespace Signum.Entities.Mailing
 
         public bool IsBodyHtml { get; set; } = false;
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         public EmailMessageState State { get; set; }

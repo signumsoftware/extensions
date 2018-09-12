@@ -42,6 +42,7 @@ namespace Signum.Entities.Disconnected
 
         public DisconnectedImportState State { get; set; }
 
+        [AvoidForeignKey]
         public Lite<ExceptionEntity> Exception { get; set; }
 
         public double Ratio(DisconnectedImportEntity orientative)

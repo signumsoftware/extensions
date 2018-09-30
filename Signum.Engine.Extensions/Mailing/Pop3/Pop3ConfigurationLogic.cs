@@ -32,7 +32,7 @@ namespace Signum.Engine.Mailing.Pop3
     public static class Pop3ConfigurationLogic
     {
 
-        public static bool GettingCancel = false; 
+        public static bool GettingCancel = false;
 
         static Expression<Func<Pop3ConfigurationEntity, IQueryable<Pop3ReceptionEntity>>> ReceptionsExpression =
             c => Database.Query<Pop3ReceptionEntity>().Where(r => r.Pop3Configuration.RefersTo(c));
@@ -180,6 +180,9 @@ namespace Signum.Engine.Mailing.Pop3
             using (HeavyProfiler.Log("ReciveEmails"))
             using (Disposable.Combine(SurroundReceiveEmail, func => func(config)))
             {
+
+                var maxReceptionForTime = 15;
+
                 Pop3ReceptionEntity reception = Transaction.ForceNew().Using(tr => tr.Commit(
                     new Pop3ReceptionEntity { Pop3Configuration = config.ToLite(), StartDate = TimeZoneManager.Now }.Save()));
 
@@ -188,33 +191,9 @@ namespace Signum.Engine.Mailing.Pop3
                 {
                     using (var client = GetPop3Client(config))
                     {
-                        var messageInfos = client.GetMessageInfos().OrderBy(m => m.Number);
 
+                        List<MessageUid> messagesToSave = GetMessagesToSave(config, maxReceptionForTime, client);
 
-                        var lastsEmails = Database.Query<EmailMessageEntity>()
-                            .Where(e => e.Mixin<EmailReceptionMixin>().ReceptionInfo.Reception.Entity.Pop3Configuration.RefersTo(config))
-                            .Select(d => new { d.CreationDate, d.Mixin<EmailReceptionMixin>().ReceptionInfo.UniqueId })
-                            .OrderByDescending(c => c.CreationDate).Take(10).ToDictionary(e => e.UniqueId);
-
-
-                        List<MessageUid> messagesToSave;
-                        if (lastsEmails.Any())
-                        {
-                            var messageJoinDict = messageInfos.ToDictionary(e => e.Uid).OuterJoinDictionarySC(lastsEmails, (key, v1, v2) => new { key, v1, v2 });
-                            var messageMachings = messageJoinDict.Where(e => e.Value.v1 != null && e.Value.v2 != null).ToList();
-                            var maxId = !messageMachings.Any() ? 0: messageMachings.Select(e => e.Value.v1.Value.Number).Max();
-                            messagesToSave = !messageMachings.Any()? 
-                                messageInfos.ToList():
-                                messageInfos.Where(m => m.Number > maxId).OrderBy(m=>m.Number).Take(15).ToList();// max 20 message per time
-                        }
-                        else
-                        {
-
-                            // the first time only get the last 10 messages
-                            messagesToSave = messageInfos.OrderByDescending(m => m.Number).Take(10).ToList();
-
-                        }
-                           
 
                         using (Transaction tr = Transaction.ForceNew())
                         {
@@ -223,19 +202,29 @@ namespace Signum.Engine.Mailing.Pop3
                             tr.Commit();
                         }
 
+
+                        Boolean anomalousReception = false;
+                        string lastSuid = null;
                         foreach (var mi in messagesToSave)
                         {
                             if (GettingCancel)
                                 break;
 
-                            var sent = SaveEmail(config, reception, client, mi);
-
+                            var sent = SaveEmail(config, reception, client, mi, ref anomalousReception);
+                            lastSuid = mi.Uid;
                             DeleteSavedEmail(config, now, client, mi, sent);
+
                         }
+
+
+
+
 
                         using (Transaction tr = Transaction.ForceNew())
                         {
                             reception.EndDate = TimeZoneManager.Now;
+                            reception.LastServerMessageUID =   lastSuid ;
+                            reception.MailsFromDifferentAccounts = anomalousReception;
                             reception.Save();
                             tr.Commit();
                         }
@@ -264,6 +253,59 @@ namespace Signum.Engine.Mailing.Pop3
 
                 return reception;
             }
+        }
+
+        private static List<MessageUid> GetMessagesToSave(Pop3ConfigurationEntity config, int maxReceptionForTime, IPop3Client client)
+        {
+            var messageInfos = client.GetMessageInfos().OrderBy(m => m.Number);
+
+
+            List<MessageUid> messagesToSave = null;
+
+
+            var lastSuid = Database.Query<Pop3ReceptionEntity>()
+               .Where(e => e.Pop3Configuration.RefersTo(config))
+               .OrderByDescending(r => r.EndDate)
+               .Select(e => new { e.MailsFromDifferentAccounts, e.LastServerMessageUID }).FirstOrDefault();
+
+            if (lastSuid != null && lastSuid.MailsFromDifferentAccounts) //it seems that the account can download emails from other accounts so it will be last id
+            {
+                var maxId = messageInfos.Where(e => e.Uid == lastSuid.LastServerMessageUID).Select(e => e.Number).SingleOrDefaultEx();
+                messagesToSave = messageInfos.Where(e => e.Number > maxId).Take(maxReceptionForTime).ToList();
+            }
+            else
+            {
+
+                var lastsEmails = Database.Query<EmailMessageEntity>()
+                 .Where(e => e.Mixin<EmailReceptionMixin>().ReceptionInfo.Reception.Entity.Pop3Configuration.RefersTo(config))
+                 .Select(d => new { d.CreationDate, d.Mixin<EmailReceptionMixin>().ReceptionInfo.UniqueId })
+                 .OrderByDescending(c => c.CreationDate).Take(maxReceptionForTime).ToDictionary(e => e.UniqueId);
+
+                if (lastsEmails.Any())
+                {
+                    var messageJoinDict = messageInfos.ToDictionary(e => e.Uid).OuterJoinDictionarySC(lastsEmails, (key, v1, v2) => new { key, v1, v2 });
+                    var messageMachings = messageJoinDict.Where(e => e.Value.v1 != null && e.Value.v2 != null).ToList();
+                    var maxId = !messageMachings.Any() ? 0 : messageMachings.Select(e => e.Value.v1.Value.Number).Max();
+
+
+                    messagesToSave = !messageMachings.Any() ?
+                        messageInfos.ToList() :
+                        messageInfos.Where(m => m.Number > maxId).OrderBy(m => m.Number)
+                        .Take(maxReceptionForTime).ToList();// max maxReceptionForTime message per time
+
+
+                }
+                else
+                {
+
+                    // the first time only get the last maxReceptionForTime messages
+                    messagesToSave = messageInfos.OrderByDescending(m => m.Number).Take(maxReceptionForTime).ToList();
+
+                }
+
+            }
+
+            return messagesToSave;
         }
 
         private static void DeleteSavedEmail(Pop3ConfigurationEntity config, DateTime now, IPop3Client client, MessageUid mi, DateTime? sent)
@@ -320,9 +362,9 @@ namespace Signum.Engine.Mailing.Pop3
                                 break;
 
                             var sent = already.TryGetS(mi.Uid);
-
+                            Boolean anomalousReception = false;
                             if (sent == null)
-                                sent = SaveEmail(config, reception, client, mi);
+                                sent = SaveEmail(config, reception, client, mi, ref anomalousReception);
 
                             DeleteSavedEmail(config, now, client, mi, sent);
                         }
@@ -360,19 +402,25 @@ namespace Signum.Engine.Mailing.Pop3
             }
         }
 
-        private static DateTime? SaveEmail(Pop3ConfigurationEntity config, Pop3ReceptionEntity reception, IPop3Client client, MessageUid mi)
+        private static DateTime? SaveEmail(Pop3ConfigurationEntity config, Pop3ReceptionEntity reception, IPop3Client client, MessageUid mi, ref bool anomalousReception)
         {
             DateTime? sent = null;
 
             {
+
+
+
+
+
+
                 using (OperationLogic.AllowSave<EmailMessageEntity>())
                 using (Transaction tr = Transaction.ForceNew())
                 {
                     string rawContent = null;
                     try
                     {
+                        anomalousReception = false;
                         var email = client.GetMessage(mi, reception.ToLite());
-
                         email.Subject = email.Subject == null ? "No Subject" : email.Subject.Replace('\n', ' ').Replace('\r', ' ');
 
                         if (email.Recipients.IsEmpty())
@@ -384,28 +432,37 @@ namespace Signum.Engine.Mailing.Pop3
                             });
                         }
 
-                        Lite<EmailMessageEntity> duplicate = Database.Query<EmailMessageEntity>()
-                            .Where(a => a.BodyHash == email.BodyHash)
-                            .Select(a => a.ToLite())
-                            .FirstOrDefault();
+                        var duplicateList = Database.Query<EmailMessageEntity>()
+                               .Where(a => a.BodyHash == email.BodyHash)
+                               .Select(a => new { l = a.ToLite(), date =(DateTime?) a.Mixin<EmailReceptionMixin>().ReceptionInfo.ReceivedDate, bh = a.BodyHash, suid = a.Mixin<EmailReceptionMixin>().ReceptionInfo.UniqueId })
+                               .Distinct().ToList();
 
-                        if (duplicate != null && AreDuplicates(email, duplicate.Retrieve()))
+                        if (duplicateList.Any(e => e.suid == email.Mixin<EmailReceptionMixin>().ReceptionInfo.UniqueId))
                         {
-                            var dup = duplicate.Entity;
-
-                            email.AssignEntities(dup);
-
-                            AssociateDuplicateEmail?.Invoke(email, dup);
+                            // for some reason the account is receiving emails where she is not in the destiantarios and has already been previously received
+                            anomalousReception = true;
                         }
                         else
                         {
-                            AssociateNewEmail?.Invoke(email);
+                            var duplicate = duplicateList.OrderByDescending(e => e.date).FirstOrDefault();
+
+                            if (duplicate != null && AreDuplicates(email, duplicate.l.Retrieve()))
+                            {
+                                var dup = duplicate.l.Entity;
+
+                                email.AssignEntities(dup);
+
+                                AssociateDuplicateEmail?.Invoke(email, dup);
+                            }
+                            else
+                            {
+                                AssociateNewEmail?.Invoke(email);
+                            }
+
+                            email.Save();
+
+                            sent = email.Mixin<EmailReceptionMixin>().ReceptionInfo.SentDate;
                         }
-
-                        email.Save();
-
-                        sent = email.Mixin<EmailReceptionMixin>().ReceptionInfo.SentDate;
-
                         tr.Commit();
                     }
                     catch (Exception e)

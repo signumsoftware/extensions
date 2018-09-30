@@ -85,7 +85,8 @@ namespace Signum.Entities.Mailing
         public DateTime? EndDate { get; set; }
 
         public int NewEmails { get; set; }
-
+        public string  LastServerMessageUID { get; set; }
+        public bool MailsFromDifferentAccounts { get; set; }
         public Lite<ExceptionEntity> Exception { get; set; }
     }
 

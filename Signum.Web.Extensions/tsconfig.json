@@ -1,6 +1,16 @@
 ﻿// tsconfig.json
 {
   "compilerOptions": {
+    //"outDir": "./Signum/Scripts",
+
+    //"baseUrl": ".",
+    //"paths": {
+    //  "*": [
+    //    "./*"
+    //  ]
+    //},
+
+
     "module": "amd",
     "sourceMap": true,
     "target": "es5",
@@ -10,4 +20,5 @@
       "dom"
     ]
   }
+
 }

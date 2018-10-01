@@ -132,6 +132,8 @@ function updateHtmlEditorTextArea(idTargetTextArea: string) {
 export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile: boolean) {
 
     CKEDITOR.config.scayt_sLang = culture.replace("-", "_");
+    CKEDITOR.config.disableNativeSpellChecker = false;
+    var config = CKEDITOR.config;
 
     if (mobile) {
         var toolbarMobile = [
@@ -147,17 +149,24 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
         ];
 
         //var config = {};
-        var config = CKEDITOR.config;
+       
         config.toolbar = toolbarMobile;
         config.extraPlugins = 'simpleuploads,autogrow';
         config.autoGrow_onStartup = true;
         config.autoGrow_bottomSpace = 50;
         //CKEDITOR.instances.editor1.destroy();//destroy the existing editor
-        CKEDITOR.replace(idTargetTextArea, config);
+      
     }
     else {
-        CKEDITOR.replace(idTargetTextArea);
+        //CKEDITOR.replace(idTargetTextArea);
+
+
     }
+
+    config.removeButtons = 'Scayt';
+    config.removePlugins = 'wsc,scayt';
+
+    CKEDITOR.replace(idTargetTextArea, config);
 
     // Update origin textarea
     // Make this more elegant once http://dev.ckeditor.com/ticket/9794 is fixed.

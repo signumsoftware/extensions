@@ -31,6 +31,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <TypeScriptToolsVersion>2.3</TypeScriptToolsVersion>
+    <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -1039,35 +1040,8 @@
     <Compile Include="Word\WordClient.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Word\Scripts\Word.js">
-      <DependentUpon>Word.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Maps\Scripts\SchemaMap.js">
-      <DependentUpon>SchemaMap.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Maps\Scripts\MapColors.js">
-      <DependentUpon>MapColors.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Cache\Scripts\CacheColors.js">
-      <DependentUpon>CacheColors.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Disconnected\Scripts\DisconnectedColors.js">
-      <DependentUpon>DisconnectedColors.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Isolation\Scripts\IsolationColors.js">
-      <DependentUpon>IsolationColors.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="AuthAdmin\Scripts\AuthAdminColors.js">
-      <DependentUpon>AuthAdminColors.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Mailing\Scripts\AsyncEmailSender.js">
-      <DependentUpon>AsyncEmailSender.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Maps\Content\operationMap.css" />
     <Content Include="Maps\Content\schemaMap.css" />
-    <EmbeddedResource Include="Maps\Scripts\OperationMap.js">
-      <DependentUpon>OperationMap.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="SqlServerTypes\readme.htm" />
     <Content Include="SqlServerTypes\x64\msvcr120.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1099,10 +1073,6 @@
       <LastGenOutput>ViewLog.generated.cs</LastGenOutput>
     </Content>
     <Content Include="ViewLog\Views\Web.config" />
-    <TypeScriptCompile Include="Alerts\Scripts\Alerts.ts" />
-    <EmbeddedResource Include="Alerts\Scripts\Alerts.js">
-      <DependentUpon>Alerts.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="AuthAdmin\Content\AuthAdmin.css" />
     <Content Include="AuthAdmin\Images\namespace.png" />
     <Content Include="AuthAdmin\Images\operation.png" />
@@ -1114,10 +1084,8 @@
     <Content Include="AuthAdmin\Images\radioYellow.png" />
     <Content Include="AuthAdmin\Images\thumb.png" />
     <Content Include="AuthAdmin\Images\treeView.png" />
+    <TypeScriptCompile Include="Alerts\Scripts\Alerts.ts" />
     <TypeScriptCompile Include="AuthAdmin\Scripts\AuthAdmin.ts" />
-    <EmbeddedResource Include="AuthAdmin\Scripts\AuthAdmin.js">
-      <DependentUpon>AuthAdmin.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="AuthAdmin\Views\PasswordValidInterval.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>PasswordValidInterval.generated.cs</LastGenOutput>
@@ -1165,9 +1133,6 @@
     </None>
     <TypeScriptCompile Include="AuthAdmin\Scripts\AuthAdminColors.ts" />
     <TypeScriptCompile Include="Auth\Scripts\Auth.ts" />
-    <EmbeddedResource Include="Auth\Scripts\Auth.js">
-      <DependentUpon>Auth.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Auth\Views\SetPassword.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>SetPassword.generated.cs</LastGenOutput>
@@ -1181,29 +1146,14 @@
       <LastGenOutput>_ViewStart.generated.cs</LastGenOutput>
     </None>
     <TypeScriptCompile Include="Cache\Scripts\Cache.ts" />
-    <EmbeddedResource Include="Cache\Scripts\Cache.js">
-      <DependentUpon>Cache.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Calendar\Content\calendar.css" />
     <TypeScriptCompile Include="Cache\Scripts\CacheColors.ts" />
     <TypeScriptCompile Include="Calendar\Scripts\calendar.ts" />
-    <EmbeddedResource Include="Calendar\Scripts\calendar.js">
-      <DependentUpon>calendar.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Chart\Content\Chart.css" />
     <Content Include="Chart\Images\unknown.png" />
     <TypeScriptCompile Include="Chart\Scripts\Chart.ts" />
     <TypeScriptCompile Include="Chart\Scripts\ChartColors.ts" />
     <TypeScriptCompile Include="Chart\Scripts\ChartScript.ts" />
-    <EmbeddedResource Include="Chart\Scripts\Chart.js">
-      <DependentUpon>Chart.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Chart\Scripts\ChartColors.js">
-      <DependentUpon>ChartColors.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Chart\Scripts\ChartScript.js">
-      <DependentUpon>ChartScript.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Chart\Views\ChartRequestView.cshtml">
       <SubType>Code</SubType>
       <Generator>RazorGenerator</Generator>
@@ -1213,15 +1163,6 @@
     <TypeScriptCompile Include="Chart\Scripts\ChartUtils.ts" />
     <TypeScriptCompile Include="Dashboard\Scripts\Dashboard.ts" />
     <TypeScriptCompile Include="Dashboard\Scripts\GridRepeater.ts" />
-    <EmbeddedResource Include="Chart\Scripts\ChartUtils.js">
-      <DependentUpon>ChartUtils.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dashboard\Scripts\Dashboard.js">
-      <DependentUpon>Dashboard.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dashboard\Scripts\GridRepeater.js">
-      <DependentUpon>GridRepeater.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Dashboard\Views\LinkListPart.cshtml">
       <SubType>Code</SubType>
       <Generator>RazorGenerator</Generator>
@@ -1244,34 +1185,16 @@
     <TypeScriptCompile Include="Disconnected\Scripts\DisconnectedColors.ts" />
     <TypeScriptCompile Include="Isolation\Scripts\IsolationColors.ts" />
     <TypeScriptCompile Include="Isolation\Scripts\Isolation.ts" />
-    <EmbeddedResource Include="Excel\Scripts\Excel.js">
-      <DependentUpon>Excel.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Files\Content\Files.css" />
     <Content Include="Files\Images\loading.gif" />
     <TypeScriptCompile Include="Files\Scripts\Files.ts" />
     <TypeScriptCompile Include="Help\Scripts\help.ts" />
-    <EmbeddedResource Include="Files\Scripts\Files.js">
-      <DependentUpon>Files.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Help\Scripts\help.js">
-      <DependentUpon>help.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Help\Scripts\helpWidget.js">
-      <DependentUpon>helpWidget.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Isolation\Scripts\Isolation.js">
-      <DependentUpon>Isolation.ts</DependentUpon>
-    </EmbeddedResource>
     <TypeScriptCompile Include="Help\Scripts\helpWidget.ts" />
     <Content Include="Help\Content\helpWidget.css" />
     <Content Include="Mailing\Content\Mailing.css" />
     <TypeScriptCompile Include="Mailing\Scripts\AsyncEmailSender.ts" />
     <TypeScriptCompile Include="Mailing\Scripts\Mailing.ts" />
     <TypeScriptCompile Include="Mailing\Scripts\ckeditor.d.ts" />
-    <EmbeddedResource Include="Mailing\Scripts\Mailing.js">
-      <DependentUpon>Mailing.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Mailing\Views\_ViewStart.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>_ViewStart.generated.cs</LastGenOutput>
@@ -1282,15 +1205,6 @@
     <TypeScriptCompile Include="Omnibox\Scripts\Omnibox.ts" />
     <TypeScriptCompile Include="Processes\Scripts\Processes.ts" />
     <TypeScriptCompile Include="Notes\Scripts\Notes.ts" />
-    <EmbeddedResource Include="Notes\Scripts\Notes.js">
-      <DependentUpon>Notes.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Omnibox\Scripts\Omnibox.js">
-      <DependentUpon>Omnibox.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Processes\Scripts\Processes.js">
-      <DependentUpon>Processes.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Processes\Views\_ViewStart.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>_ViewStart.generated.cs</LastGenOutput>
@@ -1318,9 +1232,6 @@
     </Content>
     <Content Include="Profiler\Content\Profiler.css" />
     <TypeScriptCompile Include="Profiler\Scripts\Profiler.ts" />
-    <EmbeddedResource Include="Profiler\Scripts\Profiler.js">
-      <DependentUpon>Profiler.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Profiler\Views\Statistics.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>Statistics.generated.cs</LastGenOutput>
@@ -1620,9 +1531,6 @@
     </None>
     <TypeScriptCompile Include="Excel\Scripts\Excel.ts" />
     <TypeScriptCompile Include="Scheduler\Scripts\Scheduler.ts" />
-    <EmbeddedResource Include="Scheduler\Scripts\Scheduler.js">
-      <DependentUpon>Scheduler.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Scheduler\Views\ScheduleRuleMinutely.cshtml">
       <Generator>RazorGenerator</Generator>
       <LastGenOutput>ScheduleRuleMinutely.generated.cs</LastGenOutput>
@@ -1657,21 +1565,12 @@
     </None>
     <Content Include="SMS\Content\SMS.css" />
     <TypeScriptCompile Include="SMS\Scripts\SMS.ts" />
-    <EmbeddedResource Include="SMS\Scripts\SMS.js">
-      <DependentUpon>SMS.ts</DependentUpon>
-    </EmbeddedResource>
     <Content Include="Translation\Content\Translation.css" />
     <TypeScriptCompile Include="Translation\Scripts\Translation.ts" />
     <TypeScriptCompile Include="UserQueries\Scripts\UserQuery.ts" />
     <TypeScriptCompile Include="UserAssets\Scripts\UserAssets.ts" />
     <EmbeddedResource Include="Translation\Scripts\Translation.js">
       <DependentUpon>Translation.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UserAssets\Scripts\UserAssets.js">
-      <DependentUpon>UserAssets.ts</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="UserQueries\Scripts\UserQuery.js">
-      <DependentUpon>UserQuery.ts</DependentUpon>
     </EmbeddedResource>
     <Content Include="Web.config">
       <SubType>Designer</SubType>

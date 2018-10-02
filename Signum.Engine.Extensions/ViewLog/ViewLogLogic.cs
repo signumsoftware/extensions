@@ -139,6 +139,10 @@ namespace Signum.Engine.ViewLog
 
         public static IDisposable LogView(Lite<IEntity> entity, string viewAction)
         {
+            if (!LogType(entity.EntityType))
+                return new Disposable(() => { });
+
+
             var viewLog = new ViewLogEntity
             {
                 Target = (Lite<Entity>)entity.Clone(),

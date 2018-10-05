@@ -133,6 +133,7 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
 
     CKEDITOR.config.scayt_sLang = culture.replace("-", "_");
     CKEDITOR.config.disableNativeSpellChecker = false;
+    CKEDITOR.config.BrowserContextMenuOnCtrl  = false;
     var config = CKEDITOR.config;
 
     if (mobile) {
@@ -154,6 +155,7 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
         config.extraPlugins = 'simpleuploads,autogrow';
         config.autoGrow_onStartup = true;
         config.autoGrow_bottomSpace = 50;
+
         //CKEDITOR.instances.editor1.destroy();//destroy the existing editor
       
     }
@@ -163,8 +165,9 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
 
     }
 
-    config.removeButtons = 'Scayt';
-    config.removePlugins = 'wsc,scayt';
+
+    config.BrowserContextMenuOnCtrl = false;
+    config.removePlugins = 'wsc,scayt,contextmenu,liststyle,tabletools';
 
     CKEDITOR.replace(idTargetTextArea, config);
 
@@ -175,6 +178,7 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
             updateHtmlEditorTextArea(idTargetTextArea);
         }, 0);
     };
+
     CKEDITOR.instances[idTargetTextArea].on('key', changed);
     CKEDITOR.instances[idTargetTextArea].on('paste', changed);
     CKEDITOR.instances[idTargetTextArea].on('afterCommandExec', changed);

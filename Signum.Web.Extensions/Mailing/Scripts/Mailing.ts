@@ -133,8 +133,7 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
 
     CKEDITOR.config.scayt_sLang = culture.replace("-", "_");
     CKEDITOR.config.disableNativeSpellChecker = false;
-    CKEDITOR.config.BrowserContextMenuOnCtrl  = false;
-    var config = CKEDITOR.config;
+    CKEDITOR.config.removePlugins = 'wsc,scayt,contextmenu,liststyle,tabletools';
 
     if (mobile) {
         var toolbarMobile = [
@@ -150,26 +149,17 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
         ];
 
         //var config = {};
-       
+        var config = CKEDITOR.config;
         config.toolbar = toolbarMobile;
         config.extraPlugins = 'simpleuploads,autogrow';
         config.autoGrow_onStartup = true;
         config.autoGrow_bottomSpace = 50;
-
         //CKEDITOR.instances.editor1.destroy();//destroy the existing editor
-      
+        CKEDITOR.replace(idTargetTextArea, config);
     }
     else {
-        //CKEDITOR.replace(idTargetTextArea);
-
-
+        CKEDITOR.replace(idTargetTextArea);
     }
-
-
-    config.BrowserContextMenuOnCtrl = false;
-    config.removePlugins = 'wsc,scayt,contextmenu,liststyle,tabletools';
-
-    CKEDITOR.replace(idTargetTextArea, config);
 
     // Update origin textarea
     // Make this more elegant once http://dev.ckeditor.com/ticket/9794 is fixed.
@@ -178,7 +168,6 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
             updateHtmlEditorTextArea(idTargetTextArea);
         }, 0);
     };
-
     CKEDITOR.instances[idTargetTextArea].on('key', changed);
     CKEDITOR.instances[idTargetTextArea].on('paste', changed);
     CKEDITOR.instances[idTargetTextArea].on('afterCommandExec', changed);
@@ -191,7 +180,7 @@ export function initHtmlEditor(idTargetTextArea: string, culture: string, mobile
 
 export function initHtmlEditorMasterTemplate(idTargetTextArea: string, culture: string) {
 
-    initHtmlEditor(idTargetTextArea, culture,false);
+    initHtmlEditor(idTargetTextArea, culture, false);
 
     var $insertContent = $("#" + idTargetTextArea).closest(".sf-email-template-message")
         .find(".sf-master-template-insert-content");
@@ -204,7 +193,7 @@ export function initHtmlEditorMasterTemplate(idTargetTextArea: string, culture: 
 
 export function initHtmlEditorWithTokens(idTargetTextArea: string, culture: string) {
 
-    initHtmlEditor(idTargetTextArea, culture,false);
+    initHtmlEditor(idTargetTextArea, culture, false);
 
     var lastCursorPosition;
 
@@ -298,7 +287,7 @@ export function activateIFrame($iframe: JQuery) {
     });
 }
 
-export function createMailFromTemplate(options: Operations.EntityOperationOptions, event : MouseEvent, findOptions: Finder.FindOptions, url: string) {
+export function createMailFromTemplate(options: Operations.EntityOperationOptions, event: MouseEvent, findOptions: Finder.FindOptions, url: string) {
     Finder.find(findOptions).then(entity => {
         if (entity == null)
             return;
@@ -328,13 +317,13 @@ export function attachEmailReportTemplate(el: Lines.EntityLine, targetId: string
         targetId.get().toggle(!!templateRI);
 
         if (templateRI)
-            SF.ajaxPost({ url: controllerUrl, data: { template: templateRI.key() } }).then((types: Entities.TypeInfo[])=> {
+            SF.ajaxPost({ url: controllerUrl, data: { template: templateRI.key() } }).then((types: Entities.TypeInfo[]) => {
 
                 targetId.get().toggle(!!types.length);
 
-                targetId.get().SFControl<Lines.EntityLine>().then(el2=> {
+                targetId.get().SFControl<Lines.EntityLine>().then(el2 => {
 
-                    if (el2.getRuntimeInfo() && !types.some(t=> t.name == el2.getRuntimeInfo().type))
+                    if (el2.getRuntimeInfo() && !types.some(t => t.name == el2.getRuntimeInfo().type))
                         el2.setEntity(null);
                     el2.options.types = types;
                     el2.options.create = false;

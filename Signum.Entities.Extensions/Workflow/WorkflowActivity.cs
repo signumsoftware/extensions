@@ -14,6 +14,7 @@ namespace Signum.Entities.Workflow
     [Serializable, EntityKind(EntityKind.Main, EntityData.Master)]
     public class WorkflowActivityEntity : Entity, IWorkflowNodeEntity, IWithModel
     {
+        [AvoidDumpEntity]
         public WorkflowLaneEntity Lane { get; set; }
 
         [StringLengthValidator(Min = 3, Max = 100)]
@@ -33,6 +34,7 @@ namespace Signum.Entities.Workflow
 
         [Ignore, QueryableProperty]
         [NoRepeatValidator]
+        [AvoidDumpEntity]
         public MList<WorkflowEventEntity> BoundaryTimers { get; set; } = new MList<WorkflowEventEntity>();
 
         [Unit("min")]
@@ -58,8 +60,6 @@ namespace Signum.Entities.Workflow
 
         [AutoExpressionField]
         public override string ToString() => As.Expression(() => Name ?? BpmnElementId);
-
-
 
         protected override string? PropertyValidation(PropertyInfo pi)
         {
@@ -231,6 +231,7 @@ namespace Signum.Entities.Workflow
     [Serializable]
     public class SubWorkflowEmbedded : EmbeddedEntity
     {   
+        [AvoidDumpEntity]
         public WorkflowEntity Workflow { get; set; }
 
         [NotifyChildProperty]

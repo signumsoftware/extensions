@@ -11,10 +11,12 @@ namespace Signum.Entities.Workflow
     {
         [ImplementedBy(typeof(WorkflowActivityEntity), typeof(WorkflowEventEntity), typeof(WorkflowGatewayEntity))]
         [ForceNullable]
+        [AvoidDumpEntity]
         public IWorkflowNodeEntity From { get; set; }
 
         [ImplementedBy(typeof(WorkflowActivityEntity), typeof(WorkflowEventEntity), typeof(WorkflowGatewayEntity))]
         [ForceNullable]
+        [AvoidDumpEntity]
         public IWorkflowNodeEntity To { get; set; }
 
         [StringLengthValidator(Min = 3, Max = 100)]

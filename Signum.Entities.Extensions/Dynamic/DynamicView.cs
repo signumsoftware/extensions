@@ -15,6 +15,7 @@ namespace Signum.Entities.Dynamic
         [StringLengthValidator(Min = 3, Max = 100)]
         public string ViewName { get; set; } = "Default";
 
+        [AvoidDumpEntity]
         public TypeEntity EntityType { get; set; }
 
         [PreserveOrder]
@@ -110,7 +111,7 @@ namespace Signum.Entities.Dynamic
     [Serializable, EntityKind(EntityKind.Main, EntityData.Master)]
     public class DynamicViewOverrideEntity : Entity
     {
-        
+        [AvoidDumpEntity]
         public TypeEntity EntityType { get; set; }
 
         [StringLengthValidator(Min = 3, Max = 100)]

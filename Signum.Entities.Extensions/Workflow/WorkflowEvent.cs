@@ -16,7 +16,8 @@ namespace Signum.Entities.Workflow
 
         [StringLengthValidator(Min = 1, Max = 100)]
         public string BpmnElementId { get; set; }
-        
+
+        [AvoidDumpEntity]
         public WorkflowLaneEntity Lane { get; set; }
 
         public WorkflowEventType Type { get; set; }

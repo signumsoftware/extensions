@@ -10,10 +10,10 @@ namespace Signum.Entities.Dynamic
     [Serializable, EntityKind(EntityKind.Main, EntityData.Transactional)]
     public class DynamicTypeConditionEntity : Entity
     {
-        
+        [AvoidDumpEntity]
         public DynamicTypeConditionSymbolEntity SymbolName { get; set; }
 
-        
+        [AvoidDumpEntity]
         public TypeEntity EntityType { get; set; }
 
         [NotifyChildProperty, InTypeScript(Undefined = false, Null = false)]

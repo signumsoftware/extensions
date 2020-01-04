@@ -1,3 +1,4 @@
+
 using Signum.Entities.Authorization;
 using Signum.Utilities;
 using System;
@@ -13,10 +14,11 @@ namespace Signum.Entities.Workflow
     [Serializable, EntityKind(EntityKind.System, EntityData.Transactional), InTypeScript(Undefined = false)]
     public class CaseActivityEntity : Entity
     {
-        
+        [AvoidDumpEntity]
         public CaseEntity Case { get; set; }
         
         [ImplementedBy(typeof(WorkflowActivityEntity), typeof(WorkflowEventEntity))]
+        [AvoidDumpEntity]
         public IWorkflowNodeEntity WorkflowActivity { get; set; }
         
         [StringLengthValidator(Min = 3, Max = 255)]
@@ -197,12 +199,7 @@ namespace Signum.Entities.Workflow
     public class CaseActivityExecutedTimerEntity : Entity
     {
         public DateTime CreationDate { get; private set; } = TimeZoneManager.Now;
-
-        
         public Lite<CaseActivityEntity> CaseActivity { get; set; }
-
-
-        
         public Lite<WorkflowEventEntity> BoundaryEvent { get; set; }
     }
 }

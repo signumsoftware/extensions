@@ -9,16 +9,18 @@ namespace Signum.Entities.Workflow
     [Serializable, EntityKind(EntityKind.System, EntityData.Transactional), InTypeScript(Undefined = false)]
     public class CaseEntity : Entity
     {
-        
+        [AvoidDumpEntity]
         public WorkflowEntity Workflow { get; set; }
 
+        [AvoidDumpEntity]
         public CaseEntity? ParentCase { get; set; }
 
         [StringLengthValidator(Min = 3, Max = 100)]
         public string Description { get; set; }
 
         [ImplementedByAll]
-        
+
+        [AvoidDumpEntity]
         public ICaseMainEntity MainEntity { get; set; }
 
         public DateTime StartDate { get; set; } = TimeZoneManager.Now;

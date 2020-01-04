@@ -13,7 +13,8 @@ namespace Signum.Entities.Workflow
 {
     [Serializable,  EntityKind(EntityKind.Shared, EntityData.Master)]
     public class WorkflowEventTaskEntity : Entity, ITaskEntity
-    {   
+    {
+        [AvoidDumpEntity]
         public Lite<WorkflowEntity> Workflow { get; set; }
 
         [Ignore]

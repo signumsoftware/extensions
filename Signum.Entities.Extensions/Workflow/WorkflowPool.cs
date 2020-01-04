@@ -6,7 +6,8 @@ namespace Signum.Entities.Workflow
 {
     [Serializable, EntityKind(EntityKind.String, EntityData.Master)]
     public class WorkflowPoolEntity : Entity, IWorkflowObjectEntity, IWithModel
-    {   
+    {
+        [AvoidDumpEntity]
         public WorkflowEntity Workflow { get; set; }
 
         [StringLengthValidator(Min = 3, Max = 100)]

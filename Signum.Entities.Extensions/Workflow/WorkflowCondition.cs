@@ -14,7 +14,8 @@ namespace Signum.Entities.Workflow
         [UniqueIndex]
         [StringLengthValidator(Min = 3, Max = 100)]
         public string Name { get; set; }
-        
+
+        [AvoidDumpEntity]
         public TypeEntity MainEntityType { get; set; }
 
         [NotifyChildProperty]

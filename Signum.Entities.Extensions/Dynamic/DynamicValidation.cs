@@ -16,8 +16,10 @@ namespace Signum.Entities.Dynamic
         [StringLengthValidator(Min = 3, Max = 100)]
         public string Name { get; set; }
 
+        [AvoidDumpEntity]
         public TypeEntity EntityType { get; set; }
 
+        [AvoidDumpEntity]
         public PropertyRouteEntity? SubEntity { get; set; }
 
         public static Func<DynamicValidationEntity, Type> GetMainType; 

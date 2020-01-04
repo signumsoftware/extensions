@@ -6,7 +6,8 @@ namespace Signum.Entities.Workflow
 {
     [Serializable, EntityKind(EntityKind.String, EntityData.Master)]
     public class WorkflowGatewayEntity : Entity, IWorkflowNodeEntity, IWithModel
-    {   
+    {
+        [AvoidDumpEntity]
         public WorkflowLaneEntity Lane { get; set; }
 
         [StringLengthValidator(Min = 3, Max = 100)]

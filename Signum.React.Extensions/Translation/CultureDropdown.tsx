@@ -9,7 +9,7 @@ import { useAPI } from '@framework/Hooks';
 
 export default function CultureDropdown(p: { fullName?: boolean }) {
 
-  var cultures = useAPI(signal => CultureClient.getCultures(false), []);
+  var cultures = useAPI(signal => CultureClient.getCultures(null), []);
 
   if (!cultures)
     return null;

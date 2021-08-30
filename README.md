@@ -1,4 +1,4 @@
 # Signum Extensions
-Set of modules that complements [Signum Framework](https://www.signumsoftware.com/es/Framework) like Authorization, Charting, Dashboards, Mailing, Processes, Scheduled Tasks, Disconnected, User Queries...
+This repository is deprecated and all commits have been merged into https://github.com/signumsoftware/framework to improve developer ergonomics. 
 
-Check the different modules in https://www.signumsoftware.com/es/Extensions
+Check https://github.com/signumsoftware/framework/commit/b7848eff42f5d242ed73035a5cc91f35d5ec20c8#commitcomment-55557696
